@@ -27,7 +27,7 @@
       if (!res.ok) return false;
       const h = await res.json();
       if (!h || h.mode !== 'live') return false;
-      L.on = true; L.devLogin = !!h.devLogin; A.live = true;
+      L.on = true; L.devLogin = !!h.devLogin; L.signupOpen = h.signup !== false; L.accessCodeRequired = !!h.accessCodeRequired; A.live = true;
       A.Engine.now = new Date();
       return true;
     } catch (e) { return false; }
@@ -57,10 +57,21 @@
     if (L.devLogin) { try { L.members = await call('GET', 'api/members'); } catch (e) { L.members = []; } }
   };
 
-  L.signIn = async function (memberId) {
-    await call('POST', 'api/session', { memberId: memberId });
+  L.signIn = async function (memberId, accessCode) {
+    await call('POST', 'api/session', { memberId: memberId, accessCode: accessCode || null });
     await L.bootstrap();
   };
+  /** Real accounts: email + password. */
+  L.login = async function (email, password) {
+    await call('POST', 'api/auth/login', { email: email, password: password });
+    await L.bootstrap();
+  };
+  L.signup = async function (body) {
+    const r = await call('POST', 'api/auth/signup', body);
+    await L.bootstrap();
+    return r;
+  };
+  L.updateProfile = async function (body) { L.apply(await call('PUT', 'api/profile', body)); };
   L.signOut = async function () {
     try { await call('DELETE', 'api/session'); } catch (e) { /* already signed out */ }
     A.S.signedIn = false;

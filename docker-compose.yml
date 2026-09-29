@@ -1,0 +1,63 @@
+# Hetzner (or any VPS): app + Caddy with automatic HTTPS (Let's Encrypt).
+# Usage: cp .env.example .env && edit it, point your domain's A/AAAA record at the server,
+# then: docker compose up -d --build        (full guide: deploy/HETZNER.md)
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      Auth__DevLogin: ${DEV_LOGIN:-true}
+      Auth__AccessCode: ${ACCESS_CODE:-}
+      Auth__Signup: ${SIGNUP:-true}
+      Auth__AttemptsPer10Min: ${AUTH_ATTEMPTS_PER_10_MIN:-20}
+      Seed__Demo: ${SEED_DEMO:-true}
+      Protocol__SubmitPerHour: ${SUBMIT_PER_HOUR:-30}
+      App__PublicUrl: https://${DOMAIN}
+      Email__Smtp__Host: ${SMTP_HOST:-}
+      Email__Smtp__Port: ${SMTP_PORT:-587}
+      Email__Smtp__User: ${SMTP_USER:-}
+      Email__Smtp__Password: ${SMTP_PASSWORD:-}
+      Email__FromAddress: ${MAIL_FROM:-no-reply@localhost}
+      Email__FromName: ${MAIL_FROM_NAME:-Agentic Business Network}
+      Invites__PerDay: ${INVITES_PER_DAY:-200}
+    volumes:
+      - data:/data
+    healthcheck:
+      test: ["CMD", "dotnet", "Agentic.Api.dll", "--healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # Online SQLite backup into ./backups (keeps the newest 14): docker compose run --rm backup
+  backup:
+    image: alpine:3.20
+    profiles: ["tools"]
+    volumes:
+      - data:/data
+      - ./backups:/backup
+    entrypoint:
+      - sh
+      - -c
+      - >-
+        apk add --no-cache sqlite >/dev/null &&
+        sqlite3 /data/agentic.db ".backup /backup/agentic-$$(date +%Y%m%d-%H%M%S).db" &&
+        ls -1t /backup/agentic-*.db | tail -n +15 | xargs -r rm -f &&
+        ls -lh /backup
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [app]
+
+volumes:
+  data:
+  caddy_data:
+  caddy_config:

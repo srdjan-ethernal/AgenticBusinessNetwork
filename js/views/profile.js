@@ -79,7 +79,7 @@
       const conn = A.S.conn[id], fol = A.S.follows[id];
       const mutualIds = ['grace-liu', 'jonas-lindqvist', 'hannah-schulz'].filter(function (x) { return x !== id; }).slice(0, 2);
       const btns = isMe
-        ? '<a class="btn btn--primary" href="#policy">Edit agent policy</a><button class="btn btn--secondary" data-act="copy" data-text="' + esc(addr) + '" data-msg="Agent address copied.">Share agent address</button><a class="btn btn--muted" href="#a.' + id + '">View as sender</a>'
+        ? (A.live ? '<button class="btn btn--secondary" data-act="edit-profile">' + I('edit', 'ico-20') + 'Edit profile</button>' : '') + '<a class="btn btn--primary" href="#policy">Edit agent policy</a><button class="btn btn--secondary" data-act="copy" data-text="' + esc(addr) + '" data-msg="Agent address copied.">Share agent address</button><a class="btn btn--muted" href="#a.' + id + '">View as sender</a>'
         : (p.kind === 'agent' ? '<button class="btn btn--danger" data-act="soon" data-msg="This agent is already blocked by your policy.">' + I('block', 'ico-20') + 'Blocked by your agent</button>'
           : '<a class="btn btn--primary" href="#send.' + id + '">' + I('spark', 'ico-20') + 'Send Business Intent</a><button class="btn btn--secondary" data-act="connect" data-id="' + id + '"' + (conn || p.degree === '1st' ? ' disabled' : '') + '>' + (p.degree === '1st' ? I('check', 'ico-20') + 'Connected' : conn ? I('clock', 'ico-20') + 'Pending' : I('plus', 'ico-20') + 'Connect') + '</button><button class="btn btn--muted" data-act="follow" data-id="' + id + '">' + (fol ? 'Following' : 'Follow') + '</button>');
       return '<div class="page"><div class="scaffold scaffold--mr"><div class="main">' +
@@ -152,4 +152,26 @@
     },
   });
   A.act['co-jump'] = function (el) { const t = document.getElementById(el.dataset.to); if (t) window.scrollTo(0, t.getBoundingClientRect().top + window.scrollY - 70); };
+  A.act['edit-profile'] = function () {
+    const p = A.P(A.me);
+    const f = function (id, label, val, max, extra) { return '<div class="field"><label class="label" for="' + id + '">' + label + '</label><input class="input" id="' + id + '" maxlength="' + max + '" value="' + esc(val || '') + '"' + (extra || '') + '></div>'; };
+    A.modal({
+      title: 'Edit profile',
+      wide: true,
+      body: '<div class="stack-16">' +
+        '<div class="grid2">' + f('pe-name', 'Full name', p.name, 80, ' autocomplete="name"') + f('pe-loc', 'Location', p.loc, 80) + '</div>' +
+        f('pe-head', 'Headline', p.headline, 160) +
+        '<div class="field"><label class="label" for="pe-about">About</label><textarea class="textarea" id="pe-about" rows="5" maxlength="2000">' + esc(p.about || '') + '</textarea></div>' +
+        '<div class="stack"><span class="label">Topics you work on</span><div class="pills wrap" id="pe-topics">' + A.ui.topicPills(p.topics || []) + '</div><span class="small muted">The topics your agent is open to are set separately, under Policy.</span></div>' +
+        '<p class="small err" id="pe-err" role="alert" hidden></p></div>',
+      foot: '<button class="btn btn--tertiary" data-act="modal-close">Cancel</button><button class="btn btn--primary" data-act="save-profile">Save</button>',
+    });
+  };
+  A.act['save-profile'] = function (el) {
+    const v = function (id) { return document.getElementById(id).value; };
+    el.disabled = true;
+    A.Live.updateProfile({ name: v('pe-name'), headline: v('pe-head'), location: v('pe-loc'), about: v('pe-about'), topics: A.ui.pickedTopics('pe-topics') })
+      .then(function () { A.closeModal(); A._keep = true; A.render(); A.toast('Profile saved.', 'info'); },
+        function (err) { el.disabled = false; const e = document.getElementById('pe-err'); e.textContent = err.message; e.hidden = false; });
+  };
 })(window.ABN);

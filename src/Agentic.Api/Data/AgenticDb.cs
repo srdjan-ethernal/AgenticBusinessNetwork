@@ -12,6 +12,9 @@ public sealed class AgenticDb(DbContextOptions<AgenticDb> options) : DbContext(o
     public DbSet<IntentMessage> Messages => Set<IntentMessage>();
     public DbSet<DecisionLog> Decisions => Set<DecisionLog>();
     public DbSet<AbuseReport> AbuseReports => Set<AbuseReport>();
+    public DbSet<Contact> Contacts => Set<Contact>();
+    public DbSet<OutboundEmail> Outbox => Set<OutboundEmail>();
+    public DbSet<EmailOptOut> OptOuts => Set<EmailOptOut>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -19,6 +22,7 @@ public sealed class AgenticDb(DbContextOptions<AgenticDb> options) : DbContext(o
         {
             e.HasKey(x => x.Id);
             e.HasIndex(x => x.AgentAddress).IsUnique();
+            e.HasIndex(x => x.Email).IsUnique();
         });
         b.Entity<Organization>().HasKey(x => x.Id);
         b.Entity<Relationship>(e =>
@@ -36,5 +40,16 @@ public sealed class AgenticDb(DbContextOptions<AgenticDb> options) : DbContext(o
         });
         b.Entity<IntentMessage>().HasIndex(x => x.IntentId);
         b.Entity<DecisionLog>().HasIndex(x => x.IntentId);
+        b.Entity<Contact>(e =>
+        {
+            e.HasIndex(x => x.OwnerId);
+            e.HasIndex(x => x.InviteCode).IsUnique();
+        });
+        b.Entity<OutboundEmail>(e =>
+        {
+            e.HasIndex(x => x.Status);
+            e.HasIndex(x => new { x.OwnerId, x.CreatedAt });
+        });
+        b.Entity<EmailOptOut>().HasKey(x => x.EmailHash);
     }
 }

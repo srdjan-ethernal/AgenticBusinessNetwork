@@ -62,7 +62,7 @@
   // ---------- router ----------
   const R = {};
   A.view = function (name, def) { R[name] = def; };
-  const PUBLIC = { welcome: 1, signin: 1, join: 1, a: 1, pricing: 1, developers: 1, about: 1 };
+  const PUBLIC = { welcome: 1, signin: 1, join: 1, a: 1, pricing: 1, developers: 1, about: 1, invite: 1, optout: 1 };
   function parse(h) {
     h = String(h || '').replace(/^#/, '');
     const i = h.indexOf('.');
@@ -137,7 +137,7 @@
       '<div class="menu-wrap"><button class="gnav__me" data-act="menu" data-menu="me" aria-haspopup="true" aria-expanded="false" aria-label="Your account">' + A.avatar(me, 30) + '<span class="gnav__label">' + esc(me.name.split(' ')[0]) + '</span>' + A.icon('down') + '</button>' +
       '<div class="menu" id="menu-me" hidden>' +
         '<div class="menu__sec"><div class="row-top">' + A.avatar(me, 48) + '<div class="grow"><div class="b">' + esc(me.name) + '</div><div class="small muted">' + esc(me.headline) + '</div></div></div><a class="btn btn--secondary btn--sm btn--block" style="margin-top:10px" href="#in.' + A.me + '">View profile</a></div>' +
-        '<div class="menu__sec"><div class="menu__h">Your agent</div>' + link('a.' + A.me, 'eye', 'Public agent page') + link('policy', 'sliders', 'Attention policy') + link('developers', 'code', 'API keys and webhooks') + '</div>' +
+        '<div class="menu__sec"><div class="menu__h">Your agent</div>' + link('a.' + A.me, 'eye', 'Public agent page') + link('policy', 'sliders', 'Attention policy') + link('contacts', 'users', 'Invite LinkedIn connections') + link('developers', 'code', 'API keys and webhooks') + '</div>' +
         '<div class="menu__sec"><div class="menu__h">Explore</div>' + link('company.tidewell', 'building', 'Tidewell Ventures') + link('pricing', 'star', 'Plans') + link('about.trust', 'shieldo', 'Trust center') + link('about.brief', 'trend', 'Investor brief') + '</div>' +
         '<div class="menu__sec"><div class="menu__h">Theme</div>' + [['', 'System'], ['light', 'Light'], ['dark', 'Dark']].map(function (o) { return '<button class="menu__a' + (th === o[0] ? ' is-on' : '') + '" data-act="theme" data-v="' + o[0] + '">' + A.icon(th === o[0] ? 'check' : o[0] === 'dark' ? 'moon' : 'sun') + o[1] + '</button>'; }).join('') + '</div>' +
         '<div class="menu__sec">' + (A.live ? '' : '<button class="menu__a" data-act="reset-demo">' + A.icon('repost') + 'Reset demo data</button>') + '<button class="menu__a" data-act="signout">' + A.icon('left') + 'Sign out</button></div>' +

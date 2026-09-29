@@ -27,6 +27,7 @@
     render: function () {
       const pending = A.invitations.filter(function (x) { return !A.S.inv[x.who]; }).length;
       return '<div class="page"><div class="scaffold scaffold--lm">' + manageRail() + '<div class="main">' +
+        '<section class="card pad row wrap ct-promo"><span class="ct-promo__ic">' + I('users') + '</span><div class="grow stack-4"><b>Bring your LinkedIn network</b><span class="small muted">Import your connections from LinkedIn’s data export and invite them. Your agent then knows who you already work with.</span></div><a class="btn btn--primary btn--sm" href="#contacts">Import connections</a></section>' +
         '<section class="card"><div class="pad row between" style="padding-bottom:12px"><div><h2 class="card__h">Invitations (' + pending + ')</h2><div class="small muted">Screened by your agent. Each one says why it’s worth a look.</div></div><a class="link-muted small" href="#policy.categories">Manage</a></div>' +
           A.invitations.map(function (x) { return invitation(x, false); }).join('') + '</section>' +
         '<section class="card"><div class="pad" style="padding-bottom:12px"><h2 class="card__h">Held by your agent (' + A.held.length + ')</h2><div class="small muted">Not shown as invitations until you review them.</div></div>' + A.held.map(function (x) { return invitation(x, true); }).join('') + '</section>' +

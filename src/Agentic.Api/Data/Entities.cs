@@ -16,6 +16,9 @@ public sealed class Member
     public int AbuseFlags { get; set; }
     public List<string> Verified { get; set; } = [];
     public string Template { get; set; } = "founder";
+    /// <summary>Sign-in email for real accounts; null for seeded demo members (development sign-in only).</summary>
+    public string? Email { get; set; }
+    public string? PasswordHash { get; set; }
     /// <summary>Profile fields the web client renders (colors, about, experience…), stored as a JSON document.</summary>
     public string ProfileJson { get; set; } = "{}";
     public DateTime CreatedAt { get; set; }
@@ -143,4 +146,55 @@ public sealed class AbuseReport
     public string? SubjectId { get; set; }
     public string Reason { get; set; } = "";
     public DateTime At { get; set; }
+}
+
+/// <summary>A connection a member imported (LinkedIn export) and may invite. Private to its owner.</summary>
+public sealed class Contact
+{
+    public int Id { get; set; }
+    public string OwnerId { get; set; } = "";
+    public string FirstName { get; set; } = "";
+    public string LastName { get; set; } = "";
+    public string? Email { get; set; }
+    public string? Company { get; set; }
+    public string? Position { get; set; }
+    public string? LinkedInUrl { get; set; }
+    public string? ConnectedOn { get; set; }
+    /// <summary>new · invited · joined · member (already on the network) · opted_out</summary>
+    public string Status { get; set; } = "new";
+    /// <summary>Single-use code in the invite link; lets the contact join even while sign-up is invite-only.</summary>
+    public string? InviteCode { get; set; }
+    public DateTime? InvitedAt { get; set; }
+    public int InviteCount { get; set; }
+    public string? JoinedMemberId { get; set; }
+    public DateTime ImportedAt { get; set; }
+}
+
+/// <summary>Queued email, sent by <c>EmailDispatcher</c> in the background with throttling and retries.</summary>
+public sealed class OutboundEmail
+{
+    public int Id { get; set; }
+    public string Kind { get; set; } = "invite";
+    public string? OwnerId { get; set; }
+    public int? ContactId { get; set; }
+    public string To { get; set; } = "";
+    public string? ReplyTo { get; set; }
+    public string FromName { get; set; } = "";
+    public string Subject { get; set; } = "";
+    public string Text { get; set; } = "";
+    public string Html { get; set; } = "";
+    public string? UnsubscribeUrl { get; set; }
+    /// <summary>pending · sent · failed</summary>
+    public string Status { get; set; } = "pending";
+    public int Attempts { get; set; }
+    public string? Error { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? SentAt { get; set; }
+}
+
+/// <summary>Addresses that asked not to receive invitations (SHA-256 of the lowercased address).</summary>
+public sealed class EmailOptOut
+{
+    public string EmailHash { get; set; } = "";
+    public DateTime CreatedAt { get; set; }
 }

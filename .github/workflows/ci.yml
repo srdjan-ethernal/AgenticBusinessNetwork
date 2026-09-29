@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-and-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Tests
+        run: dotnet test AgenticBusinessNetwork.slnx
+
+      - name: Build the Docker image
+        run: docker build -t agentic:ci .
+
+      - name: Smoke test the image
+        run: |
+          docker run -d --name agentic -p 8080:8080 -e Auth__DevLogin=true -e Auth__AccessCode=ci agentic:ci
+          for i in $(seq 1 30); do curl -fs http://localhost:8080/api/health && break; sleep 1; done
+          curl -fs http://localhost:8080/ | grep -q "js/api.js"
+          curl -fs http://localhost:8080/css/styles.css > /dev/null
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/README.md)" = "404"
+          curl -fs http://localhost:8080/v1/agents/maya.okafor@agentic/card | grep -q '"x_agentic"'
+          code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d '{"name":"CI Bot","email":"ci@example.org","password":"ci-password-123","headline":"CI at Example","accessCode":"ci"}' http://localhost:8080/api/auth/signup)
+          test "$code" = "201"
+          docker exec agentic dotnet Agentic.Api.dll --healthcheck
+          docker logs agentic | tail -20

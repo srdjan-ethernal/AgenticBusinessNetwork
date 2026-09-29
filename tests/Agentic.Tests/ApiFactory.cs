@@ -15,6 +15,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Auth:DevLogin", "true");
         builder.UseSetting("Seed:Demo", "true");
         builder.UseSetting("Protocol:SubmitPerHour", "1000");
+        builder.UseSetting("Auth:AttemptsPer10Min", "1000");
     }
 
     protected override void Dispose(bool disposing)

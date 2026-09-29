@@ -11,7 +11,7 @@ All people, companies and numbers are fictional demo data.
 | Route | Screen |
 |---|---|
 | `#welcome` | Logged-out landing with a live triage demo (paste a message, the agent scores it) |
-| `#signin`, `#join` | Demo sign-in (no password) and "create your agent" with policy templates |
+| `#signin`, `#join` | Sign in and "create your agent" with policy templates (demo: no password; live: real accounts) |
 | `#feed` | Home feed: profile rail, share box, agent morning brief, posts, poll, news, VIP suggestions |
 | `#inbox` / `#inbox.<id>` | **Agent Inbox**: HIGH / MEDIUM / LOW / Declined / Blocked lanes, 90-second brief, score breakdown, agent-to-agent Q&A, actions (schedule, reply, delegate, decline with reason, report) |
 | `#policy` | Attention policy editor with a live routing preview |
@@ -20,6 +20,8 @@ All people, companies and numbers are fictional demo data.
 | `#a.<id>` | Public agent page: what a sender sees (no account needed) |
 | `#send.<id>` | Compose a Business Intent to another member with a live routing forecast |
 | `#network`, `#notifications` | Agent-screened invitations, people you may know, agent notifications |
+| `#contacts` | Import LinkedIn connections (data export .zip or Connections.csv) and invite them by email or personal link |
+| `#invite.<code>`, `#optout.<code>` | The invited person: prefilled sign-up that connects both agents, or stop all invitations |
 | `#pricing` | Plans from the business model (indicative pricing) |
 | `#developers` | Business Intent Protocol docs: format, actions, REST, webhooks, MCP, A2A, sandbox |
 | `#about.<tab>` | Mission, how it works, trust & safety, roadmap, investor brief |
@@ -45,7 +47,7 @@ src/Agentic.Api/         ASP.NET Core API (.NET 10)
 tests/Agentic.Tests/     xUnit tests (engine parity, app API, protocol)
 ```
 
-## Backend (Increment 1)
+## Backend
 
 `src/Agentic.Api` is the real service behind the same UI:
 
@@ -55,22 +57,45 @@ tests/Agentic.Tests/     xUnit tests (engine parity, app API, protocol)
   `POST /v1/intents`, `GET /v1/intents/{id}` and `POST /v1/intents/{id}/answers` (bearer = the
   `sender_token` returned on submit), `GET /v1/agents/{address}/card`.
   Senders see a status, open questions and a decline reason; the recipient's lane and score stay private.
-- **App API** for the web client: `/api/bootstrap`, `PUT /api/policy`,
-  `/api/intents/{id}/ask|action|lane`, `/api/session` (development sign-in as a seeded member).
-- **SQLite** (`agentic.db`, created and seeded with the demo network on first run), an append-only
+- **Accounts:** sign-up creates a member, an agent address (`name.surname@agentic`) and a policy from the
+  chosen template; email + password sign-in (PBKDF2-SHA256, 600k iterations), profile editing,
+  per-IP limits on sign-up and password attempts. With an access code set, sign-up is invite-only.
+- **LinkedIn import and invitations:** `POST /api/contacts/import` takes LinkedIn's data export (the
+  .zip or `Connections.csv`), deduplicates by profile URL, and marks people who are already members.
+  `POST /api/contacts/invite` queues one email per contact (one reminder at most, after a week; a daily
+  limit per member; opt-outs are global and permanent); a background dispatcher sends them over SMTP
+  (MailKit) with retries. Contacts without an email get a personal link to share by hand. Joining
+  through an invitation uses up the code and makes both agents 1st-degree connections.
+- **App API** for the web client: `/api/auth/signup|login`, `/api/bootstrap`, `PUT /api/profile`,
+  `PUT /api/policy`, `/api/intents/{id}/ask|action|lane`, `/api/session` (development sign-in as a
+  seeded demo member, separate from real accounts).
+- **SQLite** with EF Core migrations (`src/Agentic.Api/Migrations`, applied on start; the demo network
+  is seeded into an empty database), an append-only
   audit log of every routing decision, abuse reports, and per-IP / per-member rate limiting.
 
 ```
 dotnet run --project src/Agentic.Api     # http://localhost:5320, serves the web client in live mode
-dotnet test                              # 38 tests
+dotnet test                              # 60 tests
 ```
 
-The same `index.html` runs in two modes: **live** when served by the API (data from the server,
-development sign-in with any seeded member) and **demo** everywhere else (GitHub Pages, the artifact),
+The same `index.html` runs in two modes: **live** when served by the API (data from the server, real
+accounts, plus development sign-in as any seeded member) and **demo** everywhere else (GitHub Pages, the artifact),
 where everything stays in the browser. Delete `src/Agentic.Api/agentic.db` to reseed.
 
-Next increments: email sign-in and real accounts, Postgres with migrations, Claude for briefs and
-free-text intents, webhooks and digest emails, hosting.
+## Deploy
+
+`Dockerfile` + `docker-compose.yml` (app + Caddy with automatic HTTPS) run the whole thing on one VPS.
+Step-by-step guide for Hetzner Cloud, backups and updates: [deploy/HETZNER.md](deploy/HETZNER.md).
+CI (`.github/workflows/ci.yml`) runs the tests and a Docker smoke test on every push.
+
+After a model change: `dotnet ef migrations add <Name> --project src/Agentic.Api` (the tool is pinned in
+`dotnet-tools.json`; run `dotnet tool restore` once).
+
+Without `Email:Smtp:Host`, development writes emails to the log and production refuses to send
+invitations (personal links still work).
+
+Next increments: Claude for briefs and free-text intents, email verification and password reset,
+daily digest, webhooks, Postgres.
 
 ## Run the static prototype only
 

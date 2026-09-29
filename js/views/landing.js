@@ -200,7 +200,9 @@
   }
   A.signIn = function (tpl, memberId) {
     if (A.live) {
-      return A.Live.signIn(memberId || 'maya-okafor').then(function () {
+      if (A.Live.accessCodeRequired && !document.getElementById('access-code')) { A.go('signin'); return Promise.resolve(false); }
+      const code = (document.getElementById('access-code') || {}).value;
+      return A.Live.signIn(memberId || 'maya-okafor', code).then(function () {
         if (tpl && tpl !== A.S.policy.template) A.applyTemplate(tpl);
         A.save();
         afterSignIn();
@@ -227,11 +229,23 @@
     render: function () {
       if (A.live) {
         const list = A.Live.members || [];
+        const dev = A.Live.devLogin
+          ? '<details class="devlogin"><summary>Development accounts (seeded demo network)</summary><div class="stack-12" style="margin-top:12px">' +
+            (A.Live.accessCodeRequired ? '<div class="field"><label class="label" for="access-code">Access code</label><input class="input" id="access-code" type="password" autocomplete="off" placeholder="Ask the owner of this server"></div>' : '') +
+            '<div class="stack" style="max-height:360px;overflow:auto">' + list.map(function (m) {
+              return '<button class="acct" data-act="signin-as" data-id="' + esc(m.id) + '">' + A.avatar({ name: m.name, c: m.c }, 40) + '<span class="grow stack-4"><b>' + esc(m.name) + '</b><span class="small muted clamp1">' + esc(m.headline) + '</span></span>' + I('right') + '</button>';
+            }).join('') + '</div></div></details>'
+          : '';
         return '<div class="auth"><div class="card auth__card">' +
-          '<h1>Sign in</h1><p class="muted">Development sign-in: pick a member of the seeded network. Email sign-in replaces this in the next increment.</p>' +
-          '<div class="stack" style="max-height:420px;overflow:auto">' + (list.length ? list.map(function (m) {
-            return '<button class="acct" data-act="signin-as" data-id="' + esc(m.id) + '">' + A.avatar({ name: m.name, c: m.c }, 40) + '<span class="grow stack-4"><b>' + esc(m.name) + '</b><span class="small muted clamp1">' + esc(m.headline) + '</span></span>' + I('right') + '</button>';
-          }).join('') : '<p class="muted">Development sign-in is turned off on this server.</p>') + '</div>' +
+          '<h1>Sign in</h1>' +
+          '<form id="login-form" class="stack-12" novalidate>' +
+            '<div class="field"><label class="label" for="login-email">Email</label><input class="input" id="login-email" type="email" autocomplete="email" required></div>' +
+            '<div class="field"><label class="label" for="login-pass">Password</label><input class="input" id="login-pass" type="password" autocomplete="current-password" required></div>' +
+            '<p class="small err" id="auth-err" role="alert" hidden></p>' +
+            '<button class="btn btn--primary btn--lg btn--block" type="submit">Sign in</button>' +
+          '</form>' +
+          (A.Live.signupOpen ? '<p class="small muted">New here? <a class="link" href="#join">Create your agent</a></p>' : '') +
+          dev +
           '<a class="btn btn--tertiary btn--block" href="#a.maya-okafor">Send an intent without an account</a>' +
           '</div></div>';
       }
@@ -245,17 +259,78 @@
         '<a class="btn btn--tertiary btn--block" href="#a.' + A.me + '">Send an intent without an account</a>' +
         '</div></div>';
     },
+    mount: function () {
+      const f = document.getElementById('login-form');
+      if (!f) return;
+      f.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value.trim(), pass = document.getElementById('login-pass').value;
+        if (!email || !pass) { authErr('Enter your email and password.'); return; }
+        busy(f, true);
+        A.Live.login(email, pass).then(function () {
+          A.save();
+          afterSignIn();
+          A.toast('Welcome back, ' + esc(A.P(A.me).name.split(' ')[0]) + '.', 'info');
+        }, function (err) { busy(f, false); authErr(err.status === 429 ? 'Too many attempts. Wait a few minutes and try again.' : err.message); });
+      });
+    },
   });
+
+  function authErr(msg) { const e = document.getElementById('auth-err'); if (e) { e.textContent = msg; e.hidden = false; } }
+  function busy(form, on) { const b = form.querySelector('button[type=submit]'); if (b) b.disabled = on; }
 
   function tplButtons() {
     return Object.keys(A.templates).map(function (k) {
       const t = A.templates[k];
-      return '<button class="tpl' + (k === joinTpl ? ' is-on' : '') + '" role="radio" aria-checked="' + (k === joinTpl) + '" data-act="pick-tpl" data-k="' + k + '"><span class="tpl__ic">' + I(t.icon) + '</span><span><b>' + esc(t.name) + '</b><span>' + esc(t.desc) + '</span></span></button>';
+      return '<button type="button" class="tpl' + (k === joinTpl ? ' is-on' : '') + '" role="radio" aria-checked="' + (k === joinTpl) + '" data-act="pick-tpl" data-k="' + k + '"><span class="tpl__ic">' + I(t.icon) + '</span><span><b>' + esc(t.name) + '</b><span>' + esc(t.desc) + '</span></span></button>';
     }).join('');
   }
+  function topicPills(on) {
+    return A.TOPICS.map(function (t) {
+      const sel = on.indexOf(t) >= 0;
+      return '<button type="button" class="pill' + (sel ? ' is-on' : '') + '" aria-pressed="' + sel + '" data-act="toggle-pill" data-v="' + esc(t) + '">' + esc(t) + '</button>';
+    }).join('');
+  }
+  function pickedTopics(id) {
+    return Array.prototype.map.call(document.querySelectorAll('#' + id + ' .pill.is-on'), function (b) { return b.dataset.v; });
+  }
+  A.act['toggle-pill'] = function (el) {
+    const on = !el.classList.contains('is-on');
+    el.classList.toggle('is-on', on);
+    el.setAttribute('aria-pressed', on);
+  };
+  A.ui.topicPills = topicPills;
+  A.ui.pickedTopics = pickedTopics;
+
   A.view('join', {
     lo: true,
     render: function () {
+      if (A.live) {
+        if (!A.Live.signupOpen) {
+          return '<div class="auth"><div class="card auth__card"><h1>Create your agent</h1><p class="muted">Sign-up is closed on this server.</p><a class="btn btn--secondary btn--block" href="#signin">Sign in</a></div></div>';
+        }
+        const inv = A.invite, pre = inv ? { name: ((inv.first || '') + ' ' + (inv.last || '')).trim(), email: inv.email || '', head: inv.headline || '' } : { name: '', email: '', head: '' };
+        const val = function (s) { return s ? ' value="' + esc(s) + '"' : ''; };
+        return '<div class="auth"><div class="card auth__card" style="width:min(680px,100%)">' +
+          '<h1>Create your agent</h1><p class="muted t16">Your agent gets its own address and screens every Business Intent sent to it, by rules you control.</p>' +
+          (inv ? '<div class="inv-banner">' + A.avatar({ name: inv.inviter.name, c: inv.inviter.c }, 40) + '<div class="grow small"><b>' + esc(inv.inviter.name) + '</b> invited you. Once you join, your agents know each other, so requests between you two score higher.</div></div>' : '') +
+          '<form id="join-form" class="stack-16" novalidate>' +
+            '<div class="grid2">' +
+              '<div class="field"><label class="label" for="j-name">Full name</label><input class="input" id="j-name" autocomplete="name" maxlength="80" required' + val(pre.name) + '></div>' +
+              '<div class="field"><label class="label" for="j-email">Work email</label><input class="input" id="j-email" type="email" autocomplete="email" maxlength="200" required' + val(pre.email) + '></div>' +
+              '<div class="field"><label class="label" for="j-pass">Password</label><input class="input" id="j-pass" type="password" autocomplete="new-password" minlength="10" required><span class="small muted">At least 10 characters.</span></div>' +
+              '<div class="field"><label class="label" for="j-loc">Location <span class="muted">(optional)</span></label><input class="input" id="j-loc" autocomplete="address-level2" maxlength="80"></div>' +
+            '</div>' +
+            '<div class="field"><label class="label" for="j-head">Headline</label><input class="input" id="j-head" maxlength="160" placeholder="Founder at Acme · Developer tools for data teams" required' + val(pre.head) + '></div>' +
+            '<div class="stack"><span class="label" id="j-tpl-l">What do you receive most?</span><div class="tpl-grid" role="radiogroup" aria-labelledby="j-tpl-l" id="tpl-grid">' + tplButtons() + '</div></div>' +
+            '<div class="stack"><span class="label">Topics you’re open to</span><div class="pills wrap" id="j-topics">' + topicPills([]) + '</div><span class="small muted">Intents on these topics score higher. You can change them any time under Policy.</span></div>' +
+            (A.Live.accessCodeRequired && !inv ? '<div class="field"><label class="label" for="access-code">Invite code</label><input class="input" id="access-code" type="password" autocomplete="off" placeholder="Sign-up is invite-only on this server"></div>' : '') +
+            '<p class="small err" id="auth-err" role="alert" hidden></p>' +
+            '<button class="btn btn--primary btn--lg btn--block" type="submit">Create my agent</button>' +
+          '</form>' +
+          '<p class="small muted">Already have an agent? <a class="link" href="#signin">Sign in</a></p>' +
+          '</div></div>';
+      }
       return '<div class="auth"><div class="card auth__card" style="width:min(680px,100%)">' +
         '<h1>Create your agent</h1><p class="muted t16">What do you receive most? Your agent starts from a policy template, and you can change every rule later.</p>' +
         '<div class="tpl-grid" role="radiogroup" aria-label="Policy template" id="tpl-grid">' + tplButtons() + '</div>' +
@@ -263,11 +338,34 @@
         '<p class="lo-fine">In this prototype you continue as Maya Okafor, a fictional investor, with the template you picked applied to her policy.</p>' +
         '</div></div>';
     },
+    mount: function () {
+      const f = document.getElementById('join-form');
+      if (!f) return;
+      f.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const v = function (id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+        const body = {
+          name: v('j-name'), email: v('j-email'), password: document.getElementById('j-pass').value,
+          headline: v('j-head'), location: v('j-loc'), template: joinTpl, topics: pickedTopics('j-topics'),
+          accessCode: v('access-code') || null, inviteCode: A.invite ? A.invite.code : null,
+        };
+        if (!body.name || !body.email || !body.headline) { authErr('Fill in your name, email and headline.'); return; }
+        if (body.password.length < 10) { authErr('Use a password of at least 10 characters.'); return; }
+        busy(f, true);
+        A.Live.signup(body).then(function (r) {
+          const inviter = A.invite && A.invite.inviter;
+          A.invite = null;
+          A.save();
+          A.afterSignin = 'in.' + A.me;
+          afterSignIn();
+          A.toast('Your agent is live at <b>' + esc(r.agentAddress) + '</b>.' + (inviter ? ' You’re connected with ' + esc(inviter.name) + '.' : '') + ' Share the address, or tune its rules under Policy.', 'info');
+        }, function (err) { busy(f, false); authErr(err.status === 429 ? 'Too many attempts. Wait a few minutes and try again.' : err.message); });
+      });
+    },
   });
   A.act['pick-tpl'] = function (el) { joinTpl = el.dataset.k; document.getElementById('tpl-grid').innerHTML = tplButtons(); };
   A.act['create-agent'] = function () {
     const t = A.templates[joinTpl];
-    if (A.live) { A.go('signin'); A.toast('Creating accounts arrives with email sign-in in the next increment. Pick a development account for now.', 'info'); return; }
     A.signIn(joinTpl);
     A.toast('Agent created with the <b>' + esc(t.name) + '</b> template. Review it any time under Policy.');
   };
