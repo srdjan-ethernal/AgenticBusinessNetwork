@@ -32,26 +32,50 @@ closed categories, VIP bypass, thesis cap, prompt-injection quarantine) enforced
 ## Structure
 
 ```
-index.html          full HTML document (local / GitHub Pages)
-page.html           same page without <html>/<head>/<body> (Claude Artifact publish)
-css/styles.css      LinkedIn-style tokens, light + dark themes, responsive layout
-js/icons.js         icon set, logo, avatars
-js/data.js          brand, demo people, companies, intents, posts, templates, default policy
-js/engine.js        policy evaluation, scoring, free-text parser
-js/core.js          state (localStorage), hash router, global nav, toasts, modals
-js/views/*.js       one file per screen
+index.html               full HTML document (local / GitHub Pages)
+page.html                same page without <html>/<head>/<body> (Claude Artifact publish)
+css/styles.css           design tokens, light + dark themes, responsive layout
+js/icons.js              icon set, logo, avatars
+js/data.js               brand, demo people, companies, intents, posts, templates, default policy
+js/engine.js             policy evaluation, scoring, free-text parser
+js/core.js               state (localStorage), hash router, global nav, toasts, modals
+js/api.js                live mode: talks to the API when the page is served by it
+js/views/*.js            one file per screen
+src/Agentic.Api/         ASP.NET Core API (.NET 10)
+tests/Agentic.Tests/     xUnit tests (engine parity, app API, protocol)
 ```
 
-## Run locally
+## Backend (Increment 1)
 
-Any static file server works, for example:
+`src/Agentic.Api` is the real service behind the same UI:
+
+- **Policy engine in C#** with exactly the scoring and hard rules of `js/engine.js`; parity with the
+  web client is covered by tests for all 15 demo intents.
+- **Business Intent Protocol v0.1** (snake_case JSON, no account needed):
+  `POST /v1/intents`, `GET /v1/intents/{id}` and `POST /v1/intents/{id}/answers` (bearer = the
+  `sender_token` returned on submit), `GET /v1/agents/{address}/card`.
+  Senders see a status, open questions and a decline reason; the recipient's lane and score stay private.
+- **App API** for the web client: `/api/bootstrap`, `PUT /api/policy`,
+  `/api/intents/{id}/ask|action|lane`, `/api/session` (development sign-in as a seeded member).
+- **SQLite** (`agentic.db`, created and seeded with the demo network on first run), an append-only
+  audit log of every routing decision, abuse reports, and per-IP / per-member rate limiting.
 
 ```
-cd AgenticBusinessNetwork
-npx serve .            # or: python -m http.server 5321
+dotnet run --project src/Agentic.Api     # http://localhost:5320, serves the web client in live mode
+dotnet test                              # 38 tests
 ```
 
-In Claude Code the `agentic` launch configuration serves it on http://localhost:5321/.
+The same `index.html` runs in two modes: **live** when served by the API (data from the server,
+development sign-in with any seeded member) and **demo** everywhere else (GitHub Pages, the artifact),
+where everything stays in the browser. Delete `src/Agentic.Api/agentic.db` to reseed.
+
+Next increments: email sign-in and real accounts, Postgres with migrations, Claude for briefs and
+free-text intents, webhooks and digest emails, hosting.
+
+## Run the static prototype only
+
+Any static file server works, for example `npx serve .` in this folder. In Claude Code the `agentic`
+launch configuration serves it on http://localhost:5321/ and `agentic-api` runs the API on 5320.
 
 ## Rename the brand
 

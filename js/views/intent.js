@@ -30,7 +30,7 @@
     return '<form class="card pad-24 form" data-sub="intent" id="intent-form" novalidate>' +
       '<div class="stack-4"><h2 class="t20">Send a Business Intent</h2><p class="small muted">Structured intents get faster, fairer answers than free text. ' + esc(f) + '’s agent may ask follow-up questions, and every decline comes with a reason.</p></div>' +
       (mode === 'public'
-        ? '<div class="grid2"><div class="field"><label class="label" for="f-name">Your name</label><input class="input" id="f-name" autocomplete="off" placeholder="e.g. Lucas Moreau"></div><div class="field"><label class="label" for="f-org">Company</label><input class="input" id="f-org" autocomplete="off" placeholder="e.g. Driftline"></div></div><label class="check" for="f-ver"><input type="checkbox" id="f-ver" data-ch="f-upd"> I can verify a work email and company domain <span class="small muted">(simulated here)</span></label>'
+        ? '<div class="grid2"><div class="field"><label class="label" for="f-name">Your name</label><input class="input" id="f-name" autocomplete="off" placeholder="e.g. Lucas Moreau"></div><div class="field"><label class="label" for="f-org">Company</label><input class="input" id="f-org" autocomplete="off" placeholder="e.g. Driftline"></div></div>' + (A.live ? '<p class="small muted">You are sending without an account, so your intent counts as unverified.</p>' : '<label class="check" for="f-ver"><input type="checkbox" id="f-ver" data-ch="f-upd"> I can verify a work email and company domain <span class="small muted">(simulated here)</span></label>')
         : '<div class="row">' + A.avatar(me, 40) + '<div><div class="b">Sending as ' + esc(me.name) + '</div><div class="small muted">Reputation ' + me.rep + ' · ' + me.verified.map(function (v) { return A.CLAIMS[v]; }).join(', ') + '</div></div></div>') +
       '<div class="grid2"><div class="field"><label class="label" for="f-cat">Category</label><select class="select" id="f-cat" data-ch="f-cat">' + Object.keys(A.CATS).map(function (k) { return '<option value="' + k + '"' + (k === ex.cat ? ' selected' : '') + '>' + esc(A.CATS[k].label) + '</option>'; }).join('') + '</select></div>' +
       '<div class="field"><label class="label" for="f-action">Requested action</label><select class="select" id="f-action" data-ch="f-upd">' + ACTIONS.map(function (a) { return '<option value="' + a[0] + '"' + (a[0] === ex.action ? ' selected' : '') + '>' + a[1] + '</option>'; }).join('') + '</select></div></div>' +
@@ -58,8 +58,14 @@
     };
     if (cat === 'fundraising') { it.stage = g('f-stage').value; it.amount = (+g('f-amt').value || 0) * 1000 || null; }
     let sender;
-    if (st.mode === 'member') sender = A.P(A.me);
-    else { const ver = g('f-ver') && g('f-ver').checked; sender = { name: (g('f-name') && g('f-name').value.trim()) || 'Anonymous sender', rep: ver ? 72 : 50, verified: ver ? ['work_email', 'company_domain'] : [], mutuals: evidence.some(function (e) { return e.type === 'context'; }) ? 8 : 0, prior: 0 }; }
+    const rel = A.P(st.to);
+    if (st.mode === 'member') sender = Object.assign({}, A.P(A.me), { mutuals: rel.mutuals || 0, prior: rel.prior || 0 });
+    else {
+      // Live senders are unverified until email verification ships; the demo simulates it.
+      const ver = !A.live && g('f-ver') && g('f-ver').checked;
+      const warm = !A.live && evidence.some(function (e) { return e.type === 'context'; });
+      sender = { name: (g('f-name') && g('f-name').value.trim()) || 'Anonymous sender', rep: ver ? 72 : 50, verified: ver ? ['work_email', 'company_domain'] : [], mutuals: warm ? 8 : 0, prior: 0 };
+    }
     return { it: it, sender: sender };
   }
 
@@ -75,7 +81,7 @@
     if (!data.it.value) tips.push('Say why it matters to ' + f);
     if (!data.sender.verified.length && pol.requireVerified) tips.push('Verify your work email');
     if (data.it.generic >= 2) tips.push('Cut the stock phrases');
-    if (r.lane === 'medium' && st.mode === 'public' && !data.it.evidence.some(function (e) { return e.type === 'context'; })) tips.push('Say who referred you (add Context evidence)');
+    if (!A.live && r.lane === 'medium' && st.mode === 'public' && !data.it.evidence.some(function (e) { return e.type === 'context'; })) tips.push('Say who referred you (add Context evidence)');
     el.innerHTML = '<div class="row between"><h2 class="card__h">Routing forecast</h2><span class="small muted">Live</span></div>' +
       '<div class="forecast">' + A.ui.gauge(r.score, r.lane) + '<div class="grow stack-4">' + A.ui.lane(r.lane) + '<div class="small b">' + esc(r.action) + '</div></div></div>' +
       '<p class="small muted">' + esc(r.why) + '</p>' +
@@ -89,7 +95,7 @@
     const f = first(p);
     const open = Object.keys(A.CATS).filter(function (k) { return pol.categories[k] === 'open'; }).map(function (k) { return A.CATS[k].label; });
     const closed = Object.keys(A.CATS).filter(function (k) { return pol.categories[k] === 'closed'; }).map(function (k) { return A.CATS[k].label; });
-    return '<div class="card pad stack-12"><h2 class="card__h">What ' + esc(f) + '’s agent looks for</h2>' +
+    return '<div class="card pad stack-12" id="f-rules"><h2 class="card__h">What ' + esc(f) + '’s agent looks for</h2>' +
       (dis.thesis && pol.openTo.length ? '<div class="stack-4"><div class="eyebrow">Topics</div><div class="pills">' + pol.openTo.map(function (t) { return '<span class="tag tag--accent">' + esc(t) + '</span>'; }).join('') + '</div></div>' : '') +
       (dis.check && pol.check.max < 1e11 ? '<div class="stack-4"><div class="eyebrow">First checks</div><div class="small">' + A.money(pol.check.min) + '–' + A.money(pol.check.max) + ' · ' + esc(pol.stages.join(', ')) + '</div></div>' : '') +
       '<div class="stack-4"><div class="eyebrow">Open</div><div class="small">' + esc(open.join(', ') || 'None') + '</div></div>' +
@@ -98,7 +104,41 @@
       '</div>';
   }
 
+  // Live mode: the sender sees the protocol status, never the recipient's lane or score.
+  const LIVE_OUTCOME = {
+    delivered: ['Delivered to {f}', 'It reaches {f} as a short brief with your evidence attached.', 'good', 'high', 'Delivered'],
+    queued_for_digest: ['Queued for {f}’s digest', 'Promising, so it will be in the next digest. You’ll get an answer either way.', 'warn', 'medium', 'In the digest'],
+    qualifying: ['{f}’s agent has questions', 'Answer them and the agent re-scores your intent.', 'warn', 'medium', 'Questions'],
+    declined: ['Declined with a reason', 'The recipient’s policy declined this intent.', '', 'low', 'Declined'],
+    rejected: ['Not delivered', 'The intent was stopped before it reached anyone.', 'bad', 'blocked', 'Not delivered'],
+    accepted: ['Accepted', '{f} replied.', 'good', 'high', 'Accepted'],
+    scheduled: ['Meeting proposed', '{f} proposed a time.', 'good', 'high', 'Meeting proposed'],
+    in_review: ['In review', 'A teammate of {f} owns the next step.', 'good', 'high', 'In review'],
+    closed: ['Closed', 'No reply is planned.', '', 'low', 'Closed'],
+  };
+  function resultLive() {
+    const v = st.view, p = A.P(st.to), f = first(p);
+    const o = LIVE_OUTCOME[v.status] || LIVE_OUTCOME.queued_for_digest;
+    const open = v.open_questions || [];
+    const title = open.length ? f + '’s agent has ' + open.length + ' question' + (open.length > 1 ? 's' : '') : o[0].replace('{f}', f);
+    const steps = [['Received', 'Stored and screened by ' + f + '’s agent', true]];
+    if (st.asked) steps.push(['Qualified', open.length ? 'Waiting for your answers' : 'You answered ' + st.answered + ' question' + (st.answered === 1 ? '' : 's'), !open.length]);
+    let h = '<div class="card pad-24 stack-16" id="intent-result"><div class="row between wrap"><h2 class="t20">' + esc(title) + '</h2><span class="lane lane--' + o[3] + '">' + esc(o[4]) + '</span></div>' +
+      '<div class="steps">' + steps.map(function (s, i) { return '<div class="step ' + (s[2] ? 'is-done' : 'is-now') + '"><span class="step__dot">' + (s[2] ? I('check') : i + 1) + '</span><div><div class="b">' + s[0] + '</div><div class="small muted">' + esc(s[1]) + '</div></div></div>'; }).join('') +
+      (open.length ? '' : '<div class="step is-done"><span class="step__dot">' + I('check') + '</span><div><div class="b">' + esc(o[0].replace('{f}', f)) + '</div><div class="small muted">' + esc(v.decline_reason || o[1].replace('{f}', f)) + '</div></div></div>') + '</div>';
+    if (open.length) {
+      h += '<form class="form" data-sub="answers">' + open.map(function (q, i) { return '<div class="field"><label class="label" for="q-' + i + '">' + esc(q.text) + '</label><input class="input" id="q-' + i + '" data-t="' + esc(q.type) + '" placeholder="' + esc((A.EVID[q.type] || {}).ph || '') + '" autocomplete="off"></div>'; }).join('') +
+        '<div class="row wrap"><button class="btn btn--primary" type="submit">Send answers</button><button class="btn btn--tertiary" type="button" data-act="f-answer-ex">Fill example answers</button></div></form>';
+    } else {
+      h += '<div class="note' + (o[2] ? ' note--' + o[2] : '') + '">' + I(v.status === 'rejected' ? 'block' : v.status === 'declined' ? 'info' : 'check') + '<div class="small">' +
+        (v.status === 'declined' ? 'You can improve the intent and send it again. A polite decline does not hurt your sender reputation.' : v.status === 'rejected' ? 'Text in an intent is treated as data. It can’t instruct the agent.' : 'You’ll get an answer either way. Declines always include a reason.') + '</div></div>' +
+        '<div class="row wrap">' + (v.status === 'declined' ? '<button class="btn btn--primary" data-act="f-edit">Improve and resend</button>' : '') + '<button class="btn btn--secondary" data-act="f-new">Send another intent</button>' + (st.mode === 'member' ? '<a class="btn btn--tertiary" href="#inbox.' + esc(v.intent_id) + '">View in Sent</a>' : '') + '</div>';
+    }
+    return h + '<div class="small faint mono">intent ' + esc(v.intent_id) + '</div></div>';
+  }
+
   function result() {
+    if (A.live && st.view) return resultLive();
     const r = st.r, p = A.P(st.to), f = first(p);
     const steps = [['Received', 'Signed and deduplicated', true], ['Screened', 'Scored ' + (st.r0 ? st.r0.score + (st.r0.score !== r.score ? ' → ' + r.score : '') : r.score) + ' against ' + f + '’s policy', true]];
     if (st.r0 && st.r0.questions.length) steps.push(['Qualified', st.phase === 'questions' ? 'Waiting for your answers' : 'You answered ' + st.answered + ' question' + (st.answered === 1 ? '' : 's'), st.phase !== 'questions']);
@@ -137,13 +177,23 @@
 
   function start(to, mode) { if (!st || st.to !== to || st.mode !== mode) st = { to: to, mode: mode, phase: 'form' }; }
 
+  /** Live mode: load the recipient's public policy summary so the forecast and rules match their agent. */
+  function loadCard() {
+    if (!A.live || !st || st.to === A.me || A.Live.cards[st.to]) return;
+    A.Live.card(st.to).then(function () {
+      const box = document.getElementById('f-rules');
+      if (box) box.outerHTML = rules(st.to);
+      if (st.phase === 'form') forecast();
+    }, function () { /* the forecast keeps the template estimate */ });
+  }
+
   A.view('a', {
     render: function (arg) {
       const to = A.people[arg] && A.P(arg).kind !== 'agent' ? arg : A.me;
       start(to, 'public');
       return page(to, 'public');
     },
-    mount: function () { if (st.phase === 'form') forecast(); },
+    mount: function () { if (st.phase === 'form') forecast(); loadCard(); },
   });
   A.view('send', {
     nav: 'feed',
@@ -156,7 +206,7 @@
       start(arg, 'member');
       return page(arg, 'member');
     },
-    mount: function (arg) { if (arg && st && st.phase === 'form') forecast(); },
+    mount: function (arg) { if (arg && st && st.phase === 'form') forecast(); if (arg) loadCard(); },
   });
 
   A.inp['f-upd'] = function () { forecast(); };
@@ -178,6 +228,29 @@
   A.sub.intent = function () {
     const data = readForm();
     if (!data.it.objective) { A.toast('Add a one-line objective so the agent knows what you want.', 'warn'); document.getElementById('f-obj').focus(); return; }
+    if (A.live) {
+      const g = function (id) { const e = document.getElementById(id); return e ? e.value.trim() : ''; };
+      const body = {
+        business_intent_version: A.brand.pv,
+        sender: st.mode === 'public' ? { display_name: g('f-name') || null, organization: g('f-org') || null } : undefined,
+        recipient: { agent_address: A.addrOf(st.to) },
+        intent: {
+          category: data.it.category, objective: data.it.objective, value_proposition: data.it.value, urgency: data.it.urgency, requested_action: data.it.action,
+          topics: data.it.tags, stage: data.it.stage || null, round_size_usd: data.it.amount || null, geo: data.it.geo,
+        },
+        fit_evidence: data.it.evidence.map(function (e) { return { type: e.type, value: e.value }; }),
+        message: g('f-msg') || null,
+      };
+      st.ex = captureEx();
+      const btn = document.querySelector('#intent-form button[type="submit"]');
+      if (btn) btn.disabled = true;
+      A.Live.submit(body).then(function (v) {
+        st.view = v; st.token = v.sender_token; st.asked = (v.open_questions || []).length > 0; st.answered = 0;
+        st.phase = st.asked ? 'questions' : 'done';
+        return st.mode === 'member' ? A.Live.bootstrap() : null;
+      }).then(function () { A.refresh(); }, function (e) { if (btn) btn.disabled = false; A.toast(esc(e.message), 'warn'); });
+      return;
+    }
     const pol = E.policyFor(st.to);
     const r = E.evaluate(data.it, pol, data.sender);
     st.it = data.it; st.sender = data.sender; st.r0 = r; st.r = r; st.answered = 0;
@@ -204,6 +277,13 @@
     const add = Array.prototype.map.call(f.querySelectorAll('input'), function (i) { return { type: i.dataset.t, value: i.value.trim() }; }).filter(function (e) { return e.value; });
     if (!add.length) { A.toast('Answer at least one question.', 'warn'); return; }
     st.answered = add.length;
+    if (A.live && st.view) {
+      A.Live.answer(st.view.intent_id, st.token, add).then(function (v) {
+        st.view = v; st.phase = 'done';
+        return st.mode === 'member' ? A.Live.bootstrap() : null;
+      }).then(function () { A.refresh(); }, function (e) { A.toast(esc(e.message), 'warn'); });
+      return;
+    }
     const it = Object.assign({}, st.it, { evidence: st.it.evidence.concat(add) });
     const round = add.filter(function (e) { return e.type === 'round'; })[0];
     if (round && it.category === 'fundraising') {

@@ -4,6 +4,9 @@
   let filter = 'all', q = '';
   const ACTION_LABEL = { meet: 'Meeting', reply: 'Reply', intro: 'Introduction', review: 'Review', quote: 'Quote' };
   A.STATUS.delegated = 'Delegated to Jonas';
+  // What a sender sees in live mode (the lane and score stay private to the recipient)
+  const SENT_LANE = { delivered: 'high', accepted: 'high', scheduled: 'high', in_review: 'high', qualifying: 'medium', queued_for_digest: 'medium', declined: 'low', closed: 'low', rejected: 'blocked' };
+  const SENT_LABEL = { delivered: 'Delivered', accepted: 'Accepted', scheduled: 'Meeting proposed', in_review: 'In review', qualifying: 'Questions for you', queued_for_digest: 'In their digest', declined: 'Declined', closed: 'Closed', rejected: 'Not delivered' };
 
   function hash(s) {
     let h = 2166136261;
@@ -34,7 +37,8 @@
       if (!A.S.sent.length) return '<div class="pad-24 stack-12"><p class="muted">Intents you send from profiles and agent pages show up here with the recipient agent’s decision.</p><a class="btn btn--secondary btn--sm" href="#send" style="align-self:flex-start">Send an intent</a></div>';
       return A.S.sent.map(function (s) {
         const u = A.P(s.to);
-        return '<a class="ib-item' + (selId === s.id ? ' is-sel' : '') + '" href="#inbox.' + s.id + '">' + A.avatar(u, 48) + '<span class="ib-item__b"><span class="ib-item__top"><span class="ib-item__nm">To ' + esc(u.name) + '</span><span class="ib-item__tm">' + esc(s.when) + '</span></span><span class="ib-item__obj">' + esc(s.objective) + '</span><span class="ib-item__meta">' + A.ui.lane(s.lane) + '<span class="small muted num">Score ' + s.score + '</span></span></span></a>';
+        const meta = s.status ? A.ui.lane(SENT_LANE[s.status] || 'medium') + '<span class="small muted">' + esc(SENT_LABEL[s.status] || s.status) + '</span>' : A.ui.lane(s.lane) + '<span class="small muted num">Score ' + s.score + '</span>';
+        return '<a class="ib-item' + (selId === s.id ? ' is-sel' : '') + '" href="#inbox.' + s.id + '">' + A.avatar(u, 48) + '<span class="ib-item__b"><span class="ib-item__top"><span class="ib-item__nm">To ' + esc(u.name) + '</span><span class="ib-item__tm">' + esc(s.when) + '</span></span><span class="ib-item__obj">' + esc(s.objective) + '</span><span class="ib-item__meta">' + meta + '</span></span></a>';
       }).join('');
     }
     const shown = filter === 'all' ? rows : rows.filter(function (r) { return r.lane === filter; });
@@ -52,12 +56,17 @@
     const me = '<span class="agent-av">' + I('spark') + '</span>';
     const them = function () { return p.kind === 'agent' ? '<span class="agent-av agent-av--ext">' + I('spark') + '</span>' : A.avatar(p, 32); };
     const msg = function (who, text, ago) {
-      const mine = who === 'agent';
-      return '<div class="msg' + (mine ? ' msg--agent' : '') + '">' + (mine ? me : them()) + '<div class="msg__b"><div class="msg__h"><b>' + (mine ? 'Your agent' : esc(p.name) + (p.kind === 'agent' ? '' : '’s agent')) + '</b>' + (ago != null ? '<span>' + E.ago(ago) + '</span>' : '') + '</div><div class="msg__t">' + esc(text) + '</div></div></div>';
+      const mine = who === 'agent', owner = who === 'owner';
+      const av = mine ? me : owner ? A.avatar(A.P(A.me), 32) : them();
+      const label = mine ? 'Your agent' : owner ? 'You' : esc(p.name) + (p.kind === 'agent' ? '' : '’s agent');
+      return '<div class="msg' + (mine || owner ? ' msg--agent' : '') + '">' + av + '<div class="msg__b"><div class="msg__h"><b>' + label + '</b>' + (ago != null ? '<span>' + E.ago(ago) + '</span>' : '') + '</div><div class="msg__t">' + esc(text) + '</div></div></div>';
     };
     let h = msg('sender', 'Submitted intent: ' + it.objective, it.ago);
     (it.thread || []).forEach(function (m) { h += msg(m.who, m.t, m.ago); });
-    if (d.asked) {
+    if (A.live) {
+      if (d.typing) h += '<div class="msg">' + them() + '<div class="typing" aria-label="Sender’s agent is answering"><i></i><i></i><i></i></div></div>';
+      else if (d.asked && !A.S.answered[it.id]) h += '<p class="small muted">The sender can answer through their agent. Your agent re-scores the intent when they do.</p>';
+    } else if (d.asked) {
       d.asked.forEach(function (x) { h += msg('agent', x.q, 0); });
       if (A.S.answered[it.id]) d.asked.forEach(function (x) { if (it.answers && it.answers[x.type]) h += msg('sender', it.answers[x.type], 0); });
       else if (d.typing) h += '<div class="msg">' + them() + '<div class="typing" aria-label="Sender’s agent is answering"><i></i><i></i><i></i></div></div>';
@@ -127,6 +136,14 @@
   }
   function sentDetail(s) {
     const u = A.P(s.to);
+    if (s.status) {
+      return '<div class="dt"><a class="btn btn--tertiary btn--sm back-sm" href="#inbox" style="align-self:flex-start">' + I('left', 'ico-16') + 'All intents</a>' +
+        '<div class="dt__who">' + A.avatar(u, 56) + '<div class="grow"><div class="b t16">To ' + esc(u.name) + '’s agent</div><div class="small muted">' + esc(u.headline) + '</div></div><div class="stack-4" style="align-items:center">' + A.ui.lane(SENT_LANE[s.status] || 'medium') + '<span class="small b">' + esc(SENT_LABEL[s.status] || s.status) + '</span></div></div>' +
+        (s.reason ? '<div class="note note--warn">' + I('info') + '<div class="small">' + esc(s.reason) + '</div></div>' : '') +
+        '<dl class="kv"><dt>Objective</dt><dd>' + esc(s.objective) + '</dd><dt>Category</dt><dd>' + esc((A.CATS[s.category] || A.CATS.other).label) + '</dd><dt>Sent</dt><dd>' + esc(s.when) + ' ago</dd></dl>' +
+        '<div class="dt__sec"><h3>Conversation</h3><div class="thread" id="sent-thread" data-id="' + esc(s.id) + '"><p class="small muted">Loading the conversation…</p></div></div>' +
+        '<div><a class="btn btn--secondary btn--sm" href="#send.' + s.to + '">Send another intent</a></div></div>';
+    }
     return '<div class="dt"><a class="btn btn--tertiary btn--sm back-sm" href="#inbox" style="align-self:flex-start">' + I('left', 'ico-16') + 'All intents</a>' +
       '<div class="dt__who">' + A.avatar(u, 56) + '<div class="grow"><div class="b t16">To ' + esc(u.name) + '’s agent</div><div class="small muted">' + esc(u.headline) + '</div></div><div class="stack-4" style="align-items:center">' + A.ui.gauge(s.score, s.lane) + A.ui.lane(s.lane) + '</div></div>' +
       '<div class="brief"><div class="brief__h">' + I('spark', 'ico-20') + 'What happened</div><p>' + esc(s.why) + '</p></div>' +
@@ -134,12 +151,33 @@
       '<div><a class="btn btn--secondary btn--sm" href="#send.' + s.to + '">Send another intent</a></div></div>';
   }
 
+  /** Live mode: the sender's view of an intent you sent (messages and open questions). */
+  function loadSentThread(box, id) {
+    A.Live.call('GET', 'v1/intents/' + encodeURIComponent(id)).then(function (v) {
+      const s = A.S.sent.filter(function (x) { return x.id === id; })[0];
+      const u = A.P(s ? s.to : ''), me = A.P(A.me);
+      let h = (v.messages || []).map(function (m) {
+        const mine = m.from === 'sender';
+        const who = mine ? 'You' : m.from === 'recipient' ? esc(u.name) : esc(u.name) + '’s agent';
+        const av = mine ? A.avatar(me, 32) : m.from === 'recipient' ? A.avatar(u, 32) : '<span class="agent-av agent-av--ext">' + I('spark') + '</span>';
+        return '<div class="msg' + (mine ? ' msg--agent' : '') + '">' + av + '<div class="msg__b"><div class="msg__h"><b>' + who + '</b></div><div class="msg__t">' + esc(m.text) + '</div></div></div>';
+      }).join('') || '<p class="small muted">No messages yet. The recipient’s agent will write here if it needs anything.</p>';
+      if ((v.open_questions || []).length) {
+        h += '<form class="form" data-sub="sent-answers" data-id="' + esc(id) + '">' + v.open_questions.map(function (qq, i) {
+          return '<div class="field"><label class="label" for="sa-' + i + '">' + esc(qq.text) + '</label><input class="input" id="sa-' + i + '" data-t="' + esc(qq.type) + '" autocomplete="off"></div>';
+        }).join('') + '<div><button class="btn btn--primary btn--sm" type="submit">Send answers</button></div></form>';
+      }
+      box.innerHTML = h;
+    }, function (e) { box.innerHTML = '<p class="small muted">' + esc(e.message) + '</p>'; });
+  }
+
   A.view('inbox', {
     render: function (arg) {
       const rows = list();
       const c = E.counts(E.inbox());
       let sel = null, sent = null;
-      if (arg && arg.indexOf('s-') === 0) { sent = A.S.sent.filter(function (s) { return s.id === arg; })[0]; filter = 'sent'; }
+      const sentHit = arg ? A.S.sent.filter(function (s) { return s.id === arg; })[0] : null;
+      if (sentHit) { sent = sentHit; filter = 'sent'; }
       else if (arg) {
         sel = rows.filter(function (r) { return r.it.id === arg; })[0] || E.inbox().filter(function (r) { return r.it.id === arg; })[0];
         if (sel && filter !== 'all' && filter !== sel.lane) filter = 'all';
@@ -160,6 +198,8 @@
     mount: function (arg) {
       const s = document.querySelector('.ib-item.is-sel');
       if (s && s.scrollIntoView && arg) { try { s.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ } }
+      const box = document.getElementById('sent-thread');
+      if (box && A.live) loadSentThread(box, box.dataset.id);
     },
   });
 
@@ -167,6 +207,15 @@
   function rer() { A.refresh(); A.updateBadges(); }
   function dec(id, patch) { A.S.decisions[id] = Object.assign({}, A.S.decisions[id] || {}, patch); A.save(); }
   function R(id) { return E.inbox().filter(function (r) { return r.it.id === id; })[0]; }
+  function myFirst() { return first(A.P(A.me)); }
+  /** Demo mode updates local state; live mode asks the API and applies the fresh bootstrap it returns. */
+  function commit(id, action, local, text) {
+    if (!A.live) { dec(id, local); rer(); return Promise.resolve(true); }
+    return A.Live.intent(id, 'action', { action: action, text: text || null, detail: local.detail || null })
+      .then(function () { rer(); return true; }, function (e) { A.toast(esc(e.message), 'warn'); return false; });
+  }
+  function done(ok, msg, kind) { if (ok) A.toast(msg, kind); }
+
   A.act['ib-filter'] = function (el) { filter = el.dataset.k; A.go('inbox'); };
   A.inp['ib-q'] = function (el) {
     q = el.value;
@@ -176,9 +225,25 @@
   A.act['ib-ask'] = function (el) {
     const id = el.dataset.id, r = R(id);
     const before = r.score, lane0 = r.lane;
-    dec(id, { asked: r.questions.map(function (x) { return { type: x.type, q: x.q }; }), typing: !!r.it.answers });
+    const asked = r.questions.map(function (x) { return { type: x.type, q: x.q }; });
+    const n = r.questions.length;
+    A.toast('Sent ' + n + ' question' + (n > 1 ? 's' : '') + ' to ' + esc(r.p.name) + '’s agent.', 'info');
+    if (A.live) {
+      dec(id, { asked: asked, typing: true });
+      rer();
+      const t0 = Date.now();
+      A.Live.intent(id, 'ask').then(function () {
+        setTimeout(function () {
+          if (A.route.name === 'inbox') rer();
+          const r2 = R(id);
+          if (r2 && A.S.answered[id]) A.toast(esc(r.p.name) + '’s agent answered. Re-scored ' + before + ' → ' + r2.score + (r2.lane !== lane0 ? ', moved to <b>' + E.LABEL[r2.lane] + '</b>.' : ', still ' + E.LABEL[r2.lane] + '.'));
+          else A.toast(esc(first(r.p)) + ' can answer through their agent. Your agent re-scores the intent when they do.', 'info');
+        }, Math.max(0, 1200 - (Date.now() - t0)));
+      }, function (e) { dec(id, { typing: false }); rer(); A.toast(esc(e.message), 'warn'); });
+      return;
+    }
+    dec(id, { asked: asked, typing: !!r.it.answers });
     rer();
-    A.toast('Sent ' + r.questions.length + ' question' + (r.questions.length > 1 ? 's' : '') + ' to ' + esc(r.p.name) + '’s agent.', 'info');
     if (!r.it.answers) return;
     setTimeout(function () {
       A.S.answered[id] = true;
@@ -188,34 +253,50 @@
       A.toast(esc(r.p.name) + '’s agent answered. Re-scored ' + before + ' → ' + r2.score + (r2.lane !== lane0 ? ', moved to <b>' + E.LABEL[r2.lane] + '</b>.' : ', still ' + E.LABEL[r2.lane] + '.'));
     }, 1400);
   };
-  A.act['ib-escalate'] = function (el) { dec(el.dataset.id, { lane: 'high', status: null }); rer(); A.toast('Moved to HIGH. Your agent will weigh intents like this higher next time.'); };
-  A.act['ib-hold'] = function (el) { dec(el.dataset.id, { status: 'held', detail: 'It will appear in tomorrow’s ' + (A.S.policy.autonomy.digestTime || '08:30') + ' digest.' }); rer(); A.toast('Held for your next digest.'); };
-  A.act['ib-archive'] = function (el) { dec(el.dataset.id, { status: 'archived', detail: 'No reply sent. The sender sees “not now”.' }); rer(); A.toast('Archived.'); };
-  A.act['ib-report'] = function (el) { dec(el.dataset.id, { status: 'reported', detail: 'Reputation lowered and a network-wide rate limit applied.' }); rer(); A.toast('Reported. The sender’s reputation dropped and their rate limit tightened across the network.'); };
-  A.act['ib-review'] = function (el) { dec(el.dataset.id, { lane: 'medium', status: null }); rer(); A.toast('Moved to MEDIUM for your review.', 'info'); };
-  A.act['ib-undo'] = function (el) { const id = el.dataset.id; const d = A.S.decisions[id] || {}; A.S.decisions[id] = { asked: d.asked }; A.save(); rer(); A.toast('Undone.', 'info'); };
+  A.act['ib-escalate'] = function (el) { commit(el.dataset.id, 'escalate', { lane: 'high', status: null }).then(function (ok) { done(ok, 'Moved to HIGH. Your agent will weigh intents like this higher next time.'); }); };
+  A.act['ib-hold'] = function (el) { commit(el.dataset.id, 'hold', { status: 'held', detail: 'It will appear in tomorrow’s ' + (A.S.policy.autonomy.digestTime || '08:30') + ' digest.' }).then(function (ok) { done(ok, 'Held for your next digest.'); }); };
+  A.act['ib-archive'] = function (el) { commit(el.dataset.id, 'archive', { status: 'archived', detail: 'No reply sent. The sender sees “not now”.' }).then(function (ok) { done(ok, 'Archived.'); }); };
+  A.act['ib-report'] = function (el) { commit(el.dataset.id, 'report', { status: 'reported', detail: 'Reputation lowered and a network-wide rate limit applied.' }).then(function (ok) { done(ok, 'Reported. The sender’s reputation dropped and their rate limit tightened across the network.'); }); };
+  A.act['ib-review'] = function (el) { commit(el.dataset.id, 'review', { lane: 'medium', status: null }).then(function (ok) { done(ok, 'Moved to MEDIUM for your review.', 'info'); }); };
+  A.act['ib-undo'] = function (el) {
+    const id = el.dataset.id;
+    if (A.live) { commit(id, 'undo', {}).then(function (ok) { done(ok, 'Undone.', 'info'); }); return; }
+    const d = A.S.decisions[id] || {};
+    A.S.decisions[id] = { asked: d.asked };
+    A.save(); rer(); A.toast('Undone.', 'info');
+  };
   A.act.fb = function (el) {
     const id = el.dataset.id, v = el.dataset.v, r = R(id);
     if (v === 'ok') { A.toast('Thanks. Your agent will keep routing intents like this the same way.'); return; }
     const order = ['blocked', 'declined', 'low', 'medium', 'high'];
     let i = order.indexOf(r.lane) + (v === 'up' ? 1 : -1);
     i = Math.max(0, Math.min(order.length - 1, i));
+    const topic = (r.it.tags || [])[0] || (A.CATS[r.it.category] || A.CATS.other).label;
+    const msg = 'Moved to ' + E.LABEL[order[i]] + '. Your agent will weigh “' + esc(topic) + '” ' + (v === 'up' ? 'higher' : 'lower') + ' next time.';
+    if (A.live) {
+      A.Live.intent(id, 'lane', { lane: order[i] }).then(function () { rer(); A.toast(msg); }, function (e) { A.toast(esc(e.message), 'warn'); });
+      return;
+    }
     dec(id, { lane: order[i], status: null });
     rer();
-    const topic = (r.it.tags || [])[0] || (A.CATS[r.it.category] || A.CATS.other).label;
-    A.toast('Moved to ' + E.LABEL[order[i]] + '. Your agent will weigh “' + esc(topic) + '” ' + (v === 'up' ? 'higher' : 'lower') + ' next time.');
+    A.toast(msg);
   };
 
   A.act['ib-reply'] = function (el) {
     const id = el.dataset.id, r = R(id), n = first(r.p);
-    const draft = 'Hi ' + n + ',\n\nThanks for the clear intent. ' + (r.it.action === 'meet' ? 'I’d like to take the meeting. My agent will propose times that fit my calendar.' : 'Happy to help here.') + (r.it.id === 'bi-101' ? ' Could you send the benchmark methodology ahead of the call?' : '') + '\n\nMaya';
+    const draft = 'Hi ' + n + ',\n\nThanks for the clear intent. ' + (r.it.action === 'meet' ? 'I’d like to take the meeting. My agent will propose times that fit my calendar.' : 'Happy to help here.') + (r.it.id === 'bi-101' ? ' Could you send the benchmark methodology ahead of the call?' : '') + '\n\n' + myFirst();
     A.modal({
       title: 'Reply to ' + esc(r.p.name),
       body: '<div class="note">' + I('spark') + '<div class="small">Your agent drafted this from the brief. Edit anything before sending.</div></div><label class="sr" for="reply-text">Reply</label><textarea class="textarea" id="reply-text" rows="8">' + esc(draft) + '</textarea>',
       foot: '<button class="btn btn--tertiary" data-act="modal-close">Cancel</button><button class="btn btn--primary" data-act="ib-reply-send" data-id="' + id + '">Send reply</button>',
     });
   };
-  A.act['ib-reply-send'] = function (el) { const r = R(el.dataset.id); dec(el.dataset.id, { status: 'replied', detail: 'Delivered to ' + r.p.name + '’s agent (simulated).' }); A.closeModal(); rer(); A.toast('Reply delivered to ' + esc(first(r.p)) + '’s agent. In this prototype nothing leaves your browser.'); };
+  A.act['ib-reply-send'] = function (el) {
+    const id = el.dataset.id, r = R(id), text = (document.getElementById('reply-text') || {}).value;
+    A.closeModal();
+    commit(id, 'reply', { status: 'replied', detail: 'Delivered to ' + r.p.name + '’s agent' + (A.live ? '.' : ' (simulated).') }, text)
+      .then(function (ok) { done(ok, A.live ? 'Reply delivered to ' + esc(first(r.p)) + '’s agent.' : 'Reply delivered to ' + esc(first(r.p)) + '’s agent. In this prototype nothing leaves your browser.'); });
+  };
 
   A.act['ib-schedule'] = function (el) {
     const id = el.dataset.id, r = R(id), slots = E.slots();
@@ -229,10 +310,10 @@
   };
   A.act.slot = function (el) { el.parentNode.querySelectorAll('.slot').forEach(function (s) { const on = s === el; s.classList.toggle('is-on', on); s.setAttribute('aria-checked', String(on)); }); };
   A.act['ib-schedule-send'] = function (el) {
-    const on = document.querySelector('.slot.is-on'), r = R(el.dataset.id), when = on ? on.dataset.v : '';
-    dec(el.dataset.id, { status: 'scheduled', detail: 'Proposed ' + when + '. Waiting for ' + first(r.p) + '’s agent to confirm.' });
-    A.closeModal(); rer();
-    A.toast('Proposed ' + esc(when) + '. ' + esc(first(r.p)) + '’s agent will confirm.');
+    const id = el.dataset.id, on = document.querySelector('.slot.is-on'), r = R(id), when = on ? on.dataset.v : '';
+    A.closeModal();
+    commit(id, 'schedule', { status: 'scheduled', detail: 'Proposed ' + when + '. Waiting for ' + first(r.p) + '’s agent to confirm.' }, 'Proposed a 20-minute call: ' + when + '.')
+      .then(function (ok) { done(ok, 'Proposed ' + esc(when) + '. ' + esc(first(r.p)) + '’s agent will confirm.'); });
   };
 
   A.act['ib-delegate'] = function (el) {
@@ -243,7 +324,11 @@
       foot: '<button class="btn btn--tertiary" data-act="modal-close">Cancel</button><button class="btn btn--primary" data-act="ib-delegate-send" data-id="' + id + '">Delegate to Jonas</button>',
     });
   };
-  A.act['ib-delegate-send'] = function (el) { dec(el.dataset.id, { status: 'delegated', detail: 'Jonas Lindqvist owns the next step.' }); A.closeModal(); rer(); A.toast('Delegated to Jonas Lindqvist with the brief and thread.'); };
+  A.act['ib-delegate-send'] = function (el) {
+    const id = el.dataset.id;
+    A.closeModal();
+    commit(id, 'delegate', { status: 'delegated', detail: 'Jonas Lindqvist owns the next step.' }).then(function (ok) { done(ok, 'Delegated to Jonas Lindqvist with the brief and thread.'); });
+  };
 
   A.act['ib-intro'] = function (el) {
     const id = el.dataset.id;
@@ -254,14 +339,18 @@
       foot: '<button class="btn btn--tertiary" data-act="modal-close">Cancel</button><button class="btn btn--primary" data-act="ib-intro-send" data-id="' + id + '">Send opt-in requests</button>',
     });
   };
-  A.act['ib-intro-send'] = function (el) { dec(el.dataset.id, { status: 'intro', detail: 'Opt-in requests sent to Daniel Kovač and Tomás Herrera.' }); A.closeModal(); rer(); A.toast('Opt-in requests sent. Grace gets the intros as soon as both agree.'); };
+  A.act['ib-intro-send'] = function (el) {
+    const id = el.dataset.id;
+    A.closeModal();
+    commit(id, 'intro', { status: 'intro', detail: 'Opt-in requests sent to Daniel Kovač and Tomás Herrera.' }).then(function (ok) { done(ok, 'Opt-in requests sent. Grace gets the intros as soon as both agree.'); });
+  };
 
   A.act['ib-decline'] = function (el) {
-    const id = el.dataset.id, r = R(id), n = first(r.p);
+    const id = el.dataset.id, r = R(id), n = first(r.p), mine = myFirst();
     const reasons = [['thesis', 'Outside my thesis'], ['timing', 'Not the right time'], ['info', 'Missing information'], ['size', 'Check size or scope doesn’t fit'], ['no', 'Not interested']];
     const pre = r.overlap.length ? 'timing' : 'thesis';
     const text = function (k) {
-      const why = { thesis: (r.it.tags || []).join(', ') + ' is outside Maya’s current thesis', timing: 'Maya can’t take this on right now', info: 'the request is missing details Maya needs to decide', size: 'the size or scope doesn’t fit Maya’s policy', no: 'this isn’t a fit for Maya' }[k];
+      const why = { thesis: (r.it.tags || []).join(', ') + ' is outside ' + mine + '’s current thesis', timing: mine + ' can’t take this on right now', info: 'the request is missing details ' + mine + ' needs to decide', size: 'the size or scope doesn’t fit ' + mine + '’s policy', no: 'this isn’t a fit for ' + mine }[k];
       return 'Thanks for reaching out, ' + n + '. This isn’t a match right now: ' + why + '.' + (r.it.alt ? ' ' + r.it.alt.replace(/\.$/, '') + '.' : '') + ' You can reply to this thread if anything changes.';
     };
     A.modal({
@@ -277,5 +366,18 @@
     el.parentNode.querySelectorAll('.pill').forEach(function (p) { const on = p === el; p.classList.toggle('is-on', on); p.setAttribute('aria-checked', String(on)); });
     if (s && s._text) document.getElementById('decline-text').value = s._text(el.dataset.k);
   };
-  A.act['ib-decline-send'] = function (el) { const r = R(el.dataset.id); dec(el.dataset.id, { status: 'declined', detail: 'Reason delivered to ' + r.p.name + '’s agent.' }); A.closeModal(); rer(); A.toast('Declined politely. ' + esc(first(r.p)) + '’s agent received the reason.'); };
+  A.act['ib-decline-send'] = function (el) {
+    const id = el.dataset.id, r = R(id), text = (document.getElementById('decline-text') || {}).value;
+    A.closeModal();
+    commit(id, 'decline', { status: 'declined', detail: 'Reason delivered to ' + r.p.name + '’s agent.' }, text)
+      .then(function (ok) { done(ok, 'Declined politely. ' + esc(first(r.p)) + '’s agent received the reason.'); });
+  };
+
+  // Live mode: answer your agent-side questions on an intent you sent.
+  A.sub['sent-answers'] = function (f) {
+    const id = f.dataset.id;
+    const answers = Array.prototype.map.call(f.querySelectorAll('input'), function (i) { return { type: i.dataset.t, value: i.value.trim() }; }).filter(function (a) { return a.value; });
+    if (!answers.length) { A.toast('Answer at least one question.', 'warn'); return; }
+    A.Live.answer(id, null, answers).then(function () { return A.Live.bootstrap(); }).then(function () { rer(); A.toast('Answers sent. The recipient’s agent re-scored your intent.'); }, function (e) { A.toast(esc(e.message), 'warn'); });
+  };
 })(window.ABN);

@@ -20,8 +20,8 @@
   };
   A.money = E.money;
 
-  const NOW = new Date(2026, 8, 29, 9, 40);
-  E.now = NOW;
+  // Demo data is anchored to a fixed moment; live mode (js/api.js) switches this to the real clock.
+  E.now = new Date(2026, 8, 29, 9, 40);
   E.ago = function (min) {
     if (min < 1) return 'now';
     if (min < 60) return Math.round(min) + 'm';
@@ -30,15 +30,15 @@
     return Math.floor(min / 10080) + 'w';
   };
   E.stamp = function (min) {
-    const d = new Date(NOW.getTime() - min * 60000);
-    if (d.toDateString() === NOW.toDateString()) return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const d = new Date(E.now.getTime() - min * 60000);
+    if (d.toDateString() === E.now.toDateString()) return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     if (min < 7 * 1440) return d.toLocaleDateString('en-US', { weekday: 'short' });
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
   // Next three slots inside the recipient's availability window (weekdays, with buffers)
   E.slots = function () {
     const out = [], times = [[10, 30], [14, 0], [16, 30]];
-    const d = new Date(NOW.getTime());
+    const d = new Date(E.now.getTime());
     let i = 0;
     while (out.length < 3 && i < 14) {
       d.setDate(d.getDate() + 1); i++;
@@ -53,6 +53,7 @@
 
   E.policyFor = function (id) {
     if (id === A.me) return A.S.policy;
+    if (A.live && A.Live.cards[id]) return A.Live.policyFromCard(A.Live.cards[id]);
     const p = A.people[id] || {};
     const t = A.templates[p.tpl || 'founder'] || A.templates.founder;
     return Object.assign({}, JSON.parse(JSON.stringify(A.defaultPolicy)), JSON.parse(JSON.stringify(t.policy)), {

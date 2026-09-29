@@ -193,22 +193,48 @@
   };
   A.act['join-with'] = function (el) { joinTpl = el.dataset.k; A.go('join'); };
 
-  A.signIn = function (tpl) {
-    A.S.signedIn = true;
-    if (tpl && tpl !== A.S.policy.template) A.applyTemplate(tpl);
-    A.save();
+  function afterSignIn() {
     const to = A.afterSignin && A.afterSignin !== 'signin' && A.afterSignin !== 'join' ? A.afterSignin : 'feed';
     A.afterSignin = null;
     A.go(to);
+  }
+  A.signIn = function (tpl, memberId) {
+    if (A.live) {
+      return A.Live.signIn(memberId || 'maya-okafor').then(function () {
+        if (tpl && tpl !== A.S.policy.template) A.applyTemplate(tpl);
+        A.save();
+        afterSignIn();
+        return true;
+      }, function (e) { A.toast(esc(e.message), 'warn'); return false; });
+    }
+    A.S.signedIn = true;
+    if (tpl && tpl !== A.S.policy.template) A.applyTemplate(tpl);
+    A.save();
+    afterSignIn();
+    return Promise.resolve(true);
   };
   A.act['signin-demo'] = function () {
-    A.signIn();
-    A.toast('Signed in as Maya Okafor. Your agent screened 15 new intents overnight.', 'info');
+    A.signIn().then(function (ok) {
+      if (ok) A.toast(A.live ? 'Signed in as ' + esc(A.P(A.me).name) + '.' : 'Signed in as Maya Okafor. Your agent screened 15 new intents overnight.', 'info');
+    });
+  };
+  A.act['signin-as'] = function (el) {
+    A.signIn(null, el.dataset.id).then(function (ok) { if (ok) A.toast('Signed in as ' + esc(A.P(A.me).name) + '.', 'info'); });
   };
 
   A.view('signin', {
     lo: true,
     render: function () {
+      if (A.live) {
+        const list = A.Live.members || [];
+        return '<div class="auth"><div class="card auth__card">' +
+          '<h1>Sign in</h1><p class="muted">Development sign-in: pick a member of the seeded network. Email sign-in replaces this in the next increment.</p>' +
+          '<div class="stack" style="max-height:420px;overflow:auto">' + (list.length ? list.map(function (m) {
+            return '<button class="acct" data-act="signin-as" data-id="' + esc(m.id) + '">' + A.avatar({ name: m.name, c: m.c }, 40) + '<span class="grow stack-4"><b>' + esc(m.name) + '</b><span class="small muted clamp1">' + esc(m.headline) + '</span></span>' + I('right') + '</button>';
+          }).join('') : '<p class="muted">Development sign-in is turned off on this server.</p>') + '</div>' +
+          '<a class="btn btn--tertiary btn--block" href="#a.maya-okafor">Send an intent without an account</a>' +
+          '</div></div>';
+      }
       const me = A.P(A.me);
       const c = A.Engine.counts(A.Engine.inbox());
       return '<div class="auth"><div class="card auth__card">' +
@@ -241,6 +267,7 @@
   A.act['pick-tpl'] = function (el) { joinTpl = el.dataset.k; document.getElementById('tpl-grid').innerHTML = tplButtons(); };
   A.act['create-agent'] = function () {
     const t = A.templates[joinTpl];
+    if (A.live) { A.go('signin'); A.toast('Creating accounts arrives with email sign-in in the next increment. Pick a development account for now.', 'info'); return; }
     A.signIn(joinTpl);
     A.toast('Agent created with the <b>' + esc(t.name) + '</b> template. Review it any time under Policy.');
   };

@@ -38,6 +38,7 @@
     editT = setTimeout(function () { A._editing = false; }, 1500);
     A.save();
     A.updateBadges();
+    if (A.live) A.Live.savePolicy();
   };
   A.applyTemplate = function (key) {
     const t = A.templates[key];
@@ -139,7 +140,7 @@
         '<div class="menu__sec"><div class="menu__h">Your agent</div>' + link('a.' + A.me, 'eye', 'Public agent page') + link('policy', 'sliders', 'Attention policy') + link('developers', 'code', 'API keys and webhooks') + '</div>' +
         '<div class="menu__sec"><div class="menu__h">Explore</div>' + link('company.tidewell', 'building', 'Tidewell Ventures') + link('pricing', 'star', 'Plans') + link('about.trust', 'shieldo', 'Trust center') + link('about.brief', 'trend', 'Investor brief') + '</div>' +
         '<div class="menu__sec"><div class="menu__h">Theme</div>' + [['', 'System'], ['light', 'Light'], ['dark', 'Dark']].map(function (o) { return '<button class="menu__a' + (th === o[0] ? ' is-on' : '') + '" data-act="theme" data-v="' + o[0] + '">' + A.icon(th === o[0] ? 'check' : o[0] === 'dark' ? 'moon' : 'sun') + o[1] + '</button>'; }).join('') + '</div>' +
-        '<div class="menu__sec"><button class="menu__a" data-act="reset-demo">' + A.icon('repost') + 'Reset demo data</button><button class="menu__a" data-act="signout">' + A.icon('left') + 'Sign out</button></div>' +
+        '<div class="menu__sec">' + (A.live ? '' : '<button class="menu__a" data-act="reset-demo">' + A.icon('repost') + 'Reset demo data</button>') + '<button class="menu__a" data-act="signout">' + A.icon('left') + 'Sign out</button></div>' +
       '</div></div>' +
       '</div></header>';
   };
@@ -205,7 +206,10 @@
     el.setAttribute('aria-expanded', String(open));
   };
   A.act.theme = function (el) { A.S.theme = el.dataset.v; A.save(); A.applyTheme(); A.refresh(); };
-  A.act.signout = function () { A.S.signedIn = false; A.save(); A.go('welcome'); A.toast('You signed out of the demo.', 'info'); };
+  A.act.signout = function () {
+    const done = function () { A.S.signedIn = false; A.save(); A.go('welcome'); A.toast(A.live ? 'You signed out.' : 'You signed out of the demo.', 'info'); };
+    if (A.live) A.Live.signOut().then(done); else done();
+  };
   A.act['reset-demo'] = function () { A.resetDemo(); A.S.signedIn = true; A.save(); A.applyTheme(); A.go('feed'); A.toast('Demo data reset. Inbox, policy and posts are back to their starting state.'); };
   A.act.go = function (el) { A.go(el.dataset.to); };
   A.act.copy = function (el) { A.copy(el.dataset.text, el.dataset.msg); };

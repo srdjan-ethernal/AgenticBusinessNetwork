@@ -1,6 +1,8 @@
-/* Agentic Business Network — boot */
+/* Agentic Business Network — boot. Live mode when served by the API, demo mode everywhere else. */
 (function (A) {
   A.load();
   A.applyTheme();
-  A.render();
+  const start = function () { A.render(); };
+  if (A.Live) A.Live.init().then(start, start);
+  else start();
 })(window.ABN);

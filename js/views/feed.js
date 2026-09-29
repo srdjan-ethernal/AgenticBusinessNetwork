@@ -14,7 +14,7 @@
     const colors = { high: 'var(--high)', medium: 'var(--med)', low: 'var(--low)', declined: 'var(--fg-3)', blocked: 'var(--bad)' };
     return '<aside class="rail hide-md">' +
       '<div class="card console">' +
-        '<div class="console__me"><a href="#in.' + A.me + '" aria-label="Your profile">' + A.avatar(me, 48) + '</a><div class="grow"><a href="#in.' + A.me + '">' + esc(me.name) + '</a><div class="small muted clamp1">GP · Tidewell Ventures</div></div></div>' +
+        '<div class="console__me"><a href="#in.' + A.me + '" aria-label="Your profile">' + A.avatar(me, 48) + '</a><div class="grow"><a href="#in.' + A.me + '">' + esc(me.name) + '</a><div class="small muted clamp1">' + esc(me.headline) + '</div></div></div>' +
         '<div class="addr"><span>' + esc(me.addr) + '</span><button class="iconbtn" data-act="copy" data-text="' + esc(me.addr) + '" data-msg="Agent address copied." aria-label="Copy agent address">' + I('copy', 'ico-16') + '</button></div>' +
         '<div class="stack"><div class="console__row"><span class="eyebrow">Today’s routing</span><span class="live' + (pol.focus ? ' live--off' : '') + '">' + (pol.focus ? 'Focus mode' : 'Agent active') + '</span></div>' +
           '<div class="split" role="img" aria-label="' + E.LANES.map(function (l) { return c[l] + ' ' + E.LABEL[l]; }).join(', ') + '">' + E.LANES.filter(function (l) { return c[l]; }).map(function (l) { return '<span style="width:' + (c[l] / n * 100) + '%;background:' + colors[l] + '"></span>'; }).join('') + '</div>' +
@@ -28,7 +28,7 @@
   function digestCard() {
     const list = E.sort(E.inbox()), c = E.counts(list);
     const top = list.filter(function (r) { return r.lane === 'high' && !(r.decision && r.decision.status); }).slice(0, 3);
-    return '<div class="card digest"><div class="row between"><div class="row"><span class="agent-av">' + I('spark') + '</span><div><div class="b">Your agent’s morning brief</div><div class="small muted">Only visible to you · Tue, Sep 29</div></div></div></div>' +
+    return '<div class="card digest"><div class="row between"><div class="row"><span class="agent-av">' + I('spark') + '</span><div><div class="b">Your agent’s morning brief</div><div class="small muted">Only visible to you · ' + E.now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + '</div></div></div></div>' +
       '<div class="digest__grid"><div class="kpi"><b class="lc-high">' + c.high + '</b><span>HIGH for you</span></div><div class="kpi"><b class="lc-medium">' + c.medium + '</b><span>Being qualified</span></div><div class="kpi"><b>' + (c.low + c.declined) + '</b><span>Declined or archived</span></div><div class="kpi"><b class="lc-blocked">' + c.blocked + '</b><span>Blocked</span></div></div>' +
       (top.length ? '<ul class="stack" style="margin-top:12px">' + top.map(function (r) {
         return '<li><a class="row" href="#inbox.' + r.it.id + '" style="color:var(--fg)">' + A.avatar(r.p, 36) + '<span class="grow"><span class="b clamp1" style="display:block">' + esc(r.p.name) + '</span><span class="small muted clamp1" style="display:block">' + esc(r.it.objective) + '</span></span>' + A.ui.gauge(r.score, r.lane, true) + '</a></li>';

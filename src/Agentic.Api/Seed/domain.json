@@ -1,0 +1,117 @@
+{
+  "brand": { "name": "Agentic Business Network", "short": "Agentic", "ns": "agentic", "protocol": "Business Intent Protocol", "pv": "0.1" },
+  "categories": {
+    "fundraising": { "label": "Fundraising", "desc": "Founders pitching a round or asking for a meeting." },
+    "partnership": { "label": "Partnership", "desc": "Co-investment, events, co-marketing, distribution." },
+    "intro": { "label": "Intro request", "desc": "Asks for, or offers, an introduction." },
+    "press": { "label": "Press", "desc": "Journalists and newsletters asking for comment." },
+    "advisory": { "label": "Expert request", "desc": "Podcasts, panels, advice and diligence calls." },
+    "sales": { "label": "Sales", "desc": "Vendors selling a product or asking for a call." },
+    "recruiting": { "label": "Recruiting", "desc": "Roles pitched to you." },
+    "support": { "label": "Support", "desc": "Customers and portfolio companies asking for help." },
+    "other": { "label": "Other", "desc": "Anything that fits no other category." }
+  },
+  "evidence": {
+    "traction": { "label": "Traction metric", "q": "What are your current traction numbers (MRR, paying customers, growth)?" },
+    "round": { "label": "Round details", "q": "How much are you raising, who leads, and how much is committed?" },
+    "deck": { "label": "Deck or memo", "q": "Can you share a deck or a one-page memo?" },
+    "team": { "label": "Team background", "q": "Who is on the founding team, and what have they built before?" },
+    "icp": { "label": "ICP fit", "q": "Which customers like us use it today?" },
+    "integration": { "label": "Integration proof", "q": "Which of our current tools does it integrate with?" },
+    "roi": { "label": "ROI claim", "q": "What measurable result can you show, and how was it measured?" },
+    "reference": { "label": "Reference customer", "q": "Can you share a reference customer we can speak with?" },
+    "comp": { "label": "Compensation band", "q": "What is the compensation band, including equity?" },
+    "remote": { "label": "Remote policy", "q": "Is the role remote, hybrid or on-site?" },
+    "teamstage": { "label": "Company stage", "q": "What stage is the company, and how big is the team?" },
+    "audience": { "label": "Audience overlap", "q": "Who is the audience, and how does it overlap with mine?" },
+    "mutual_value": { "label": "Mutual value", "q": "What does each side get out of this?" },
+    "timeline": { "label": "Timeline", "q": "What is the timeline, and what are the key dates?" },
+    "topic": { "label": "Topic and scope", "q": "What exactly would we cover, and is it on the record?" },
+    "time": { "label": "Time budget", "q": "How much time will this take, and in what format?" },
+    "fee": { "label": "Compensation", "q": "Is this paid, or what do you offer in return?" },
+    "confidentiality": { "label": "Confidentiality", "q": "Are there confidentiality or NDA requirements?" },
+    "outlet": { "label": "Outlet", "q": "Which outlet is this for, and who reads it?" },
+    "deadline": { "label": "Deadline", "q": "What is your deadline?" },
+    "context": { "label": "Context", "q": "How are we connected, and what exactly do you need from me?" }
+  },
+  "claims": { "identity": "Identity", "work_email": "Work email", "company_domain": "Company domain", "org": "Verified organization" },
+  "topics": ["AI infrastructure", "Inference", "Developer tools", "Data tooling", "Evaluation", "Edge AI", "Fintech", "Climate", "Healthtech", "Robotics", "Security", "Crypto", "Marketing", "Sales automation"],
+  "stages": ["Pre-seed", "Seed", "Series A", "Series B+"],
+  "geos": ["Europe", "North America", "Latin America", "Asia", "Middle East", "Africa", "Oceania"],
+  "templates": {
+    "investor": {
+      "name": "Investor deal flow",
+      "policy": {
+        "categories": { "fundraising": "open", "partnership": "open", "intro": "open", "press": "ask", "advisory": "ask", "sales": "ask", "support": "ask", "recruiting": "closed", "other": "ask" },
+        "evidence": { "fundraising": ["traction", "round", "deck"], "partnership": ["audience", "mutual_value", "timeline"], "intro": ["context"], "press": ["outlet", "deadline", "topic"], "advisory": ["topic", "time", "fee"], "sales": ["icp", "integration", "roi", "reference"], "recruiting": ["comp", "remote", "teamstage"], "support": ["context"], "other": ["context"] },
+        "thresholds": { "high": 75, "medium": 45 },
+        "thesisHardFilter": true
+      }
+    },
+    "founder": {
+      "name": "Founder inbound",
+      "policy": {
+        "categories": { "fundraising": "open", "partnership": "open", "intro": "open", "support": "open", "recruiting": "ask", "press": "ask", "advisory": "ask", "sales": "ask", "other": "ask" },
+        "evidence": { "fundraising": ["round", "context"], "partnership": ["audience", "mutual_value"], "intro": ["context"], "support": ["context"], "recruiting": ["comp", "remote"], "press": ["outlet", "deadline"], "advisory": ["topic", "time"], "sales": ["icp", "integration", "roi", "reference"], "other": ["context"] },
+        "thresholds": { "high": 72, "medium": 42 },
+        "thesisHardFilter": false
+      }
+    },
+    "recruiter": {
+      "name": "Recruiter & candidate",
+      "policy": {
+        "categories": { "recruiting": "open", "intro": "open", "partnership": "ask", "advisory": "ask", "press": "ask", "fundraising": "ask", "sales": "closed", "support": "ask", "other": "ask" },
+        "evidence": { "recruiting": ["comp", "remote", "teamstage"], "intro": ["context"], "partnership": ["mutual_value"], "advisory": ["topic", "time"], "press": ["outlet"], "fundraising": ["round"], "sales": ["icp", "roi"], "support": ["context"], "other": ["context"] },
+        "thresholds": { "high": 72, "medium": 45 },
+        "thesisHardFilter": false
+      }
+    },
+    "expert": {
+      "name": "Expert requests",
+      "policy": {
+        "categories": { "advisory": "open", "press": "open", "intro": "ask", "partnership": "ask", "fundraising": "ask", "recruiting": "ask", "sales": "closed", "support": "ask", "other": "ask" },
+        "evidence": { "advisory": ["topic", "time", "fee", "confidentiality"], "press": ["outlet", "deadline", "topic"], "intro": ["context"], "partnership": ["mutual_value", "timeline"], "fundraising": ["round"], "recruiting": ["comp"], "sales": ["icp"], "support": ["context"], "other": ["context"] },
+        "thresholds": { "high": 70, "medium": 45 },
+        "thesisHardFilter": false
+      }
+    },
+    "partnership": {
+      "name": "Partnerships",
+      "policy": {
+        "categories": { "partnership": "open", "intro": "open", "press": "ask", "advisory": "ask", "fundraising": "ask", "sales": "ask", "recruiting": "closed", "support": "ask", "other": "ask" },
+        "evidence": { "partnership": ["audience", "mutual_value", "timeline"], "intro": ["context"], "press": ["outlet", "deadline"], "advisory": ["topic", "time"], "fundraising": ["round"], "sales": ["icp", "integration", "roi"], "recruiting": ["comp"], "support": ["context"], "other": ["context"] },
+        "thresholds": { "high": 72, "medium": 45 },
+        "thesisHardFilter": false
+      }
+    },
+    "vendor": {
+      "name": "Vendor gate",
+      "policy": {
+        "categories": { "sales": "ask", "support": "open", "partnership": "ask", "intro": "open", "press": "ask", "advisory": "ask", "fundraising": "ask", "recruiting": "closed", "other": "ask" },
+        "evidence": { "sales": ["icp", "integration", "roi", "reference"], "support": ["context"], "partnership": ["mutual_value"], "intro": ["context"], "press": ["outlet"], "advisory": ["topic"], "fundraising": ["round"], "recruiting": ["comp"], "other": ["context"] },
+        "thresholds": { "high": 80, "medium": 50 },
+        "thesisHardFilter": false
+      }
+    }
+  },
+  "defaultPolicy": {
+    "version": 14,
+    "template": "investor",
+    "openTo": ["AI infrastructure", "Inference", "Developer tools", "Data tooling", "Evaluation"],
+    "stages": ["Pre-seed", "Seed"],
+    "check": { "min": 500000, "max": 2000000 },
+    "geo": ["Europe", "North America"],
+    "categories": { "fundraising": "open", "partnership": "open", "intro": "open", "press": "ask", "advisory": "ask", "sales": "ask", "support": "ask", "recruiting": "closed", "other": "ask" },
+    "evidence": { "fundraising": ["traction", "round", "deck"], "partnership": ["audience", "mutual_value", "timeline"], "intro": ["context"], "press": ["outlet", "deadline", "topic"], "advisory": ["topic", "time", "fee"], "sales": ["icp", "integration", "roi", "reference"], "recruiting": ["comp", "remote", "teamstage"], "support": ["context"], "other": ["context"] },
+    "thresholds": { "high": 75, "medium": 45 },
+    "thesisHardFilter": true,
+    "requireVerified": true,
+    "vip": ["grace-liu", "mateo-rossi", "jonas-lindqvist"],
+    "blocked": ["guaranteed returns", "crypto yield", "SEO services"],
+    "hours": { "days": "Mon–Fri", "start": "09:00", "end": "18:00", "tz": "CET" },
+    "focus": false,
+    "autonomy": { "autoDecline": true, "autoQuestion": true, "digest": true, "digestTime": "08:30", "escalate": true, "approveScheduling": true, "neverCommit": true },
+    "privacy": { "retention": "30", "training": false, "disclose": { "thesis": true, "check": true, "response": true, "calendar": false, "portfolio": false } },
+    "weights": { "pf": 30, "c": 20, "r": 15, "rel": 15, "v": 10, "u": 10 }
+  }
+}
