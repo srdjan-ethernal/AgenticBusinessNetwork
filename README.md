@@ -4,6 +4,8 @@ LinkedIn-style web prototype for the *Agentic Business Network* business model: 
 network where every person and company is represented by a recipient-owned AI agent.
 All people, companies and numbers are fictional demo data.
 
+**Live:** https://srdjan-ethernal.github.io/AgenticBusinessNetwork/
+
 ## What's inside
 
 | Route | Screen |
