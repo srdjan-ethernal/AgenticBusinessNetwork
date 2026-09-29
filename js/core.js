@@ -116,39 +116,36 @@
     const inv = A.invitations.filter(function (x) { return !A.S.inv[x.who]; }).length;
     return { feed: 0, network: inv, inbox: high, policy: 0, notifications: notif };
   }
-  const NAV = [['feed', 'home', 'Home'], ['network', 'network', 'My Network'], ['inbox', 'inbox', 'Agent Inbox'], ['policy', 'policy', 'Policy'], ['notifications', 'bell', 'Notifications']];
+  const NAV = [['feed', 'home', 'Home'], ['network', 'network', 'Network'], ['inbox', 'inbox', 'Inbox'], ['policy', 'policy', 'Policy'], ['notifications', 'bell', 'Activity']];
   function badge(n, key) { return '<span class="nbadge" data-badge="' + key + '"' + (n ? '' : ' hidden') + '>' + n + '</span>'; }
 
   A.appNav = function (active) {
     const me = A.P(A.me);
     const c = navCounts();
     const items = NAV.map(function (x) {
-      return '<a class="gnav__item gnav__item--hide-sm' + (active === x[0] ? ' is-active' : '') + '" href="#' + x[0] + '"' + (active === x[0] ? ' aria-current="page"' : '') + '>' + A.icon(x[1]) + badge(c[x[0]], x[0]) + '<span class="gnav__label">' + x[2] + '</span></a>';
+      const on = active === x[0];
+      return '<a class="gnav__item gnav__item--hide-sm' + (on ? ' is-active' : '') + '" href="#' + x[0] + '" aria-label="' + x[2] + '"' + (on ? ' aria-current="page"' : '') + '>' + A.icon(x[1]) + '<span class="gnav__label">' + x[2] + '</span>' + badge(c[x[0]], x[0]) + '</a>';
     }).join('');
     const th = A.S.theme || '';
+    const link = function (h, ic, l) { return '<a class="menu__a" href="#' + h + '">' + A.icon(ic) + l + '</a>'; };
     return '<header class="gnav"><div class="gnav__in">' +
-      '<a class="gnav__logo" href="#feed" aria-label="' + esc(B.name) + ' home">' + A.logo(34) + '</a>' +
-      '<div class="gsearch" id="gsearch">' + A.icon('search') + '<input id="q" type="search" placeholder="Search" autocomplete="off" aria-label="Search people, companies and intents" data-in="gsearch"><div class="gsearch__res" id="gsearch-res" hidden></div></div>' +
-      '<nav class="gnav__items" aria-label="Primary">' + items +
-      '<div class="menu-wrap"><button class="gnav__item' + (active === 'profile' ? ' is-active' : '') + '" data-act="menu" data-menu="me" aria-haspopup="true" aria-expanded="false">' + A.avatar(me, 24) + '<span class="gnav__label">Me ' + A.icon('down', 'ico-16') + '</span></button>' +
+      '<a class="gnav__logo" href="#feed" aria-label="' + esc(B.name) + ' home">' + A.logo(32) + '<span class="wm-text">' + esc(B.short) + '</span></a>' +
+      '<nav class="gnav__items" aria-label="Primary">' + items + '</nav>' +
+      '<div class="gsearch" id="gsearch">' + A.icon('search') + '<input id="q" type="search" placeholder="Search people, companies, intents" autocomplete="off" aria-label="Search people, companies and intents" data-in="gsearch"><div class="gsearch__res" id="gsearch-res" hidden></div></div>' +
+      '<a class="gnav__upgrade gnav__item--hide-sm" href="#pricing">' + A.icon('spark') + 'Upgrade</a>' +
+      '<div class="menu-wrap"><button class="gnav__me" data-act="menu" data-menu="me" aria-haspopup="true" aria-expanded="false" aria-label="Your account">' + A.avatar(me, 30) + '<span class="gnav__label">' + esc(me.name.split(' ')[0]) + '</span>' + A.icon('down') + '</button>' +
       '<div class="menu" id="menu-me" hidden>' +
-        '<div class="menu__sec"><div class="row-top">' + A.avatar(me, 56) + '<div class="grow"><div class="b t16">' + esc(me.name) + '</div><div class="small">' + esc(me.headline) + '</div></div></div><a class="btn btn--secondary btn--sm btn--block" style="margin-top:10px" href="#in.' + A.me + '">View profile</a></div>' +
-        '<div class="menu__sec"><div class="menu__h">Account</div><a class="menu__a row" href="#pricing"><span class="gold-sq">' + A.icon('spark') + '</span>Try Pro for $0</a><a class="menu__a" href="#policy">Settings &amp; privacy</a><a class="menu__a" href="#a.' + A.me + '">Your public agent page</a></div>' +
-        '<div class="menu__sec"><div class="menu__h">Manage</div><a class="menu__a" href="#in.' + A.me + '">Posts &amp; activity</a><a class="menu__a" href="#company.tidewell">Company: Tidewell Ventures</a><a class="menu__a" href="#developers">API keys &amp; webhooks</a></div>' +
-        '<div class="menu__sec"><div class="menu__h">Display</div>' + [['', 'Use system setting'], ['light', 'Light'], ['dark', 'Dark']].map(function (o) { return '<button class="menu__a' + (th === o[0] ? ' is-on' : '') + '" data-act="theme" data-v="' + o[0] + '">' + (th === o[0] ? '✓ ' : '') + o[1] + '</button>'; }).join('') + '</div>' +
-        '<div class="menu__sec"><button class="menu__a" data-act="reset-demo">Reset demo data</button><button class="menu__a" data-act="signout">Sign out</button></div>' +
+        '<div class="menu__sec"><div class="row-top">' + A.avatar(me, 48) + '<div class="grow"><div class="b">' + esc(me.name) + '</div><div class="small muted">' + esc(me.headline) + '</div></div></div><a class="btn btn--secondary btn--sm btn--block" style="margin-top:10px" href="#in.' + A.me + '">View profile</a></div>' +
+        '<div class="menu__sec"><div class="menu__h">Your agent</div>' + link('a.' + A.me, 'eye', 'Public agent page') + link('policy', 'sliders', 'Attention policy') + link('developers', 'code', 'API keys and webhooks') + '</div>' +
+        '<div class="menu__sec"><div class="menu__h">Explore</div>' + link('company.tidewell', 'building', 'Tidewell Ventures') + link('pricing', 'star', 'Plans') + link('about.trust', 'shieldo', 'Trust center') + link('about.brief', 'trend', 'Investor brief') + '</div>' +
+        '<div class="menu__sec"><div class="menu__h">Theme</div>' + [['', 'System'], ['light', 'Light'], ['dark', 'Dark']].map(function (o) { return '<button class="menu__a' + (th === o[0] ? ' is-on' : '') + '" data-act="theme" data-v="' + o[0] + '">' + A.icon(th === o[0] ? 'check' : o[0] === 'dark' ? 'moon' : 'sun') + o[1] + '</button>'; }).join('') + '</div>' +
+        '<div class="menu__sec"><button class="menu__a" data-act="reset-demo">' + A.icon('repost') + 'Reset demo data</button><button class="menu__a" data-act="signout">' + A.icon('left') + 'Sign out</button></div>' +
       '</div></div>' +
-      '<div class="gnav__div"></div>' +
-      '<div class="menu-wrap gnav__item--hide-sm"><button class="gnav__item" data-act="menu" data-menu="biz" aria-haspopup="true" aria-expanded="false">' + A.icon('grid') + '<span class="gnav__label">For Business ' + A.icon('down', 'ico-16') + '</span></button>' +
-      '<div class="menu" id="menu-biz" hidden><div class="menu__sec"><div class="menu__h">Explore more for business</div></div><div class="bizgrid">' +
-        [['pricing', 'people', 'Team inboxes'], ['company.tidewell', 'building', 'Verified orgs'], ['developers', 'code', 'Developers'], ['about.trust', 'shield', 'Trust center'], ['about.roadmap', 'route', 'Roadmap'], ['about.brief', 'briefcase', 'Investor brief']].map(function (x) { return '<a href="#' + x[0] + '"><span class="bz">' + A.icon(x[1]) + '</span>' + x[2] + '</a>'; }).join('') +
-      '</div><div class="menu__sec"><a class="menu__a" href="#pricing">Compare plans</a><a class="menu__a" href="#a.' + A.me + '">Preview your public agent page</a></div></div></div>' +
-      '<a class="gnav__pro" href="#pricing">Try Pro for $0</a>' +
-      '</nav></div></header>';
+      '</div></header>';
   };
   A.mobileNav = function (active) {
     const c = navCounts();
-    return '<nav class="mnav" aria-label="Primary">' + [['feed', 'home', 'Home'], ['network', 'network', 'Network'], ['inbox', 'inbox', 'Inbox'], ['notifications', 'bell', 'Alerts'], ['policy', 'policy', 'Policy']].map(function (x) {
+    return '<nav class="mnav" aria-label="Primary">' + NAV.map(function (x) {
       return '<a href="#' + x[0] + '" class="' + (active === x[0] ? 'is-active' : '') + '">' + A.icon(x[1]) + badge(c[x[0]] || 0, x[0]) + x[2] + '</a>';
     }).join('') + '</nav>';
   };
@@ -161,10 +158,10 @@
     });
   };
   A.publicNav = function (active) {
-    const it = function (h, ic, l) { return '<a class="gnav__item' + (active === h.split('.')[0] ? ' is-active' : '') + '" href="#' + h + '">' + A.icon(ic) + '<span class="gnav__label">' + l + '</span></a>'; };
-    return '<header class="lo-hd"><a class="wordmark" href="#welcome" aria-label="' + esc(B.name) + ' home">' + A.logo(34) + '<span class="wm-text">' + esc(B.name) + '</span></a>' +
-      '<nav class="lo-hd__nav" aria-label="Main">' + it('welcome', 'spark', 'Product') + it('developers', 'code', 'Protocol') + it('pricing', 'star', 'Pricing') + it('about', 'article', 'About') + it('about.brief', 'trend', 'Investors') +
-      '<span class="lo-hd__div" aria-hidden="true"></span><a class="lo-join" href="#join">Join now</a><a class="btn btn--secondary btn--lg" href="#signin">Sign in</a></nav></header>';
+    const l = function (h, t) { return '<a class="lo-link' + (active === h.split('.')[0] && h.indexOf('.') < 0 ? ' is-active' : '') + '" href="#' + h + '">' + t + '</a>'; };
+    return '<header class="lo-hd"><a class="wordmark" href="#welcome" aria-label="' + esc(B.name) + ' home">' + A.logo(32) + '<span class="wm-text">' + esc(B.name) + '</span></a>' +
+      '<nav class="lo-hd__nav" aria-label="Main">' + l('welcome', 'Product') + l('developers', 'Protocol') + l('pricing', 'Pricing') + l('about', 'About') + l('about.brief', 'Investors') + '</nav>' +
+      '<div class="lo-hd__cta"><a class="btn btn--tertiary" href="#signin">Sign in</a><a class="btn btn--primary" href="#join">Join</a></div></header>';
   };
 
   // ---------- global events ----------
@@ -326,9 +323,12 @@
   };
   A.ui.pname = function (id) { return '<a href="#in.' + id + '" class="b" style="color:var(--fg)">' + esc(A.P(id).name) + '</a>'; };
   A.ui.appFooter = function () {
-    const links = [['about', 'About'], ['about.trust', 'Accessibility'], ['about', 'Help Center'], ['about.trust', 'Privacy & Terms'], ['developers', 'Developers'], ['pricing', 'Business Services'], ['about.brief', 'Investors']];
-    return '<footer class="appfoot">' + links.map(function (l) { return '<a href="#' + l[0] + '">' + esc(l[1]) + '</a>'; }).join('') +
-      '<div class="brand">' + A.logo(16) + '<span><b>' + esc(B.name) + '</b> © ' + B.year + '</span></div><div class="brand"><span class="demo-flag">Prototype · all people and data are fictional</span></div></footer>';
+    const links = [['about', 'About'], ['about.trust', 'Trust & privacy'], ['developers', 'Protocol'], ['pricing', 'Plans'], ['about.brief', 'Investors']];
+    return '<footer class="appfoot"><div class="brand">' + A.logo(18) + '<b>' + esc(B.name) + '</b></div>' + links.map(function (l) { return '<a href="#' + l[0] + '">' + esc(l[1]) + '</a>'; }).join('') +
+      '<div class="brand"><span class="demo-flag">Prototype · fictional data · ' + B.year + '</span></div></footer>';
+  };
+  A.ui.trust = function (p) {
+    return '<span class="trust" title="Reputation score">' + A.icon('shieldo') + (p && p.rep != null ? p.rep : '—') + '</span>';
   };
   A.ui.verifiedLine = function (p) {
     if (!p.verified || !p.verified.length) return '<span class="small lc-blocked b">Not verified</span>';

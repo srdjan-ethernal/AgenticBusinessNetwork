@@ -126,8 +126,7 @@
 
   A.people = {
     'maya-okafor': {
-      name: 'Maya Okafor', c: ['#b2476b', '#e8956f'], cover: ['#1f4e79', '#7fb2d9'],
-      headline: 'General Partner at Tidewell Ventures · Pre-seed AI infrastructure · 2x founder',
+      name: 'Maya Okafor', c: ['#b2476b', '#e8956f'], cover: ['#12302a', '#2f8f7b'],      headline: 'General Partner at Tidewell Ventures · Pre-seed AI infrastructure · 2x founder',
       loc: 'Berlin, Germany', org: 'tidewell', school: 'Technical University of Munich', addr: 'maya.okafor@agentic',
       rep: 93, verified: ['identity', 'work_email', 'company_domain', 'org'], connections: '500+', followers: 8412, degree: '',
       openText: 'Pre-seed and seed · AI infrastructure, inference, developer and data tooling · $500K–$2M first checks · Europe and North America',
@@ -187,7 +186,7 @@
   };
 
   A.orgs = {
-    abn: { name: 'Agentic Business Network', c: ['#0a66c2', '#378fe9'], tagline: 'Stay reachable without being interruptible.', industry: 'Software Development', loc: 'Remote-first', followers: 48210, size: '11–50 employees', verified: true },
+    abn: { name: 'Agentic Business Network', c: ['#0d7a69', '#3fc6ac'], tagline: 'Stay reachable without being interruptible.', industry: 'Software Development', loc: 'Remote-first', followers: 48210, size: '11–50 employees', verified: true },
     tidewell: {
       name: 'Tidewell Ventures', mark: 'T', c: ['#1f4e79', '#4f93c9'], cover: ['#0f2d4a', '#5b9bd5'], tagline: 'Pre-seed and seed investors in AI infrastructure.', industry: 'Venture Capital and Private Equity', loc: 'Berlin, Germany', followers: 12480, size: '11–50 employees', verified: true,
       about: 'Tidewell Ventures writes first checks of $500K to $2M into technical teams building the infrastructure layer of AI. Fund I: 21 companies. Fund II is being raised in 2026.\n\nEvery inbound to Tidewell goes to our company agent first. It routes founder pitches to the investment team, LP inquiries to the partners, press to communications and vendors through a gate.',

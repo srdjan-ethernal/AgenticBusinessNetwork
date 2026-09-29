@@ -163,7 +163,7 @@
       const tab = TABS.some(function (t) { return t[0] === arg; }) ? arg : 'mission';
       const body = { mission: mission, how: how, trust: trust, roadmap: roadmap, brief: brief }[tab]();
       return '<div class="page"><div class="stack" style="max-width:960px;margin-inline:auto">' +
-        '<div class="card card--clip"><div class="cover" style="height:96px;' + A.coverStyle(['#0a3d73', '#378fe9']) + '"></div><div class="pad-24 row wrap" style="padding-bottom:0"><span style="margin-top:-52px;display:inline-block;border-radius:8px;box-shadow:0 0 0 4px var(--card)">' + A.orgLogo(Object.assign({ id: 'abn' }, A.orgs.abn), 88) + '</span><div class="grow"><h1 class="t20">' + esc(B.name) + '</h1><div class="small muted">Recipient-owned business agent network · Prototype</div></div></div>' +
+        '<div class="card card--clip"><div class="cover" style="height:96px;' + A.coverStyle(['#0b3b33', '#0d7a69']) + '"></div><div class="pad-24 row wrap" style="padding-bottom:0"><span style="margin-top:-52px;display:inline-block;border-radius:8px;box-shadow:0 0 0 4px var(--card)">' + A.orgLogo(Object.assign({ id: 'abn' }, A.orgs.abn), 88) + '</span><div class="grow"><h1 class="t20">' + esc(B.name) + '</h1><div class="small muted">Recipient-owned business agent network · Prototype</div></div></div>' +
         '<div class="tabs" role="tablist" style="margin-top:12px">' + TABS.map(function (t) { return '<a class="tab' + (t[0] === tab ? ' is-on' : '') + '" role="tab" aria-selected="' + (t[0] === tab) + '" href="#about.' + t[0] + '">' + t[1] + '</a>'; }).join('') + '</div></div>' +
         body + A.ui.appFooter() + '</div></div>';
     },

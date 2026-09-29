@@ -76,6 +76,8 @@ window.ABN = window.ABN || {};
     moon: '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
     hand: '<path d="M7 11V6a1.5 1.5 0 0 1 3 0v4m0-5.5a1.5 1.5 0 0 1 3 0V10m0-4a1.5 1.5 0 0 1 3 0v5m0-2.5a1.5 1.5 0 0 1 3 0V15a7 7 0 0 1-7 7h-1a7 7 0 0 1-5.6-2.8L3.3 15a1.6 1.6 0 0 1 2.5-2L7 14.5"/>',
     api: '<path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2"/>',
+    heart: '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.1a4.3 4.3 0 0 1 7.5 2.7C19.5 15.4 12 20 12 20z"/>',
+    save: '<path d="M6.5 3.5h11v17l-5.5-3.8-5.5 3.8z"/>',
   };
 
   A.icon = function (name, cls, title) {
@@ -95,19 +97,6 @@ window.ABN = window.ABN || {};
 
   A.verifiedBadge = function (title) {
     return '<span class="verified" title="' + (title || 'Verified') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2 4 5v6.1c0 5 3.4 9.4 8 10.9 4.6-1.5 8-5.9 8-10.9V5z"/><path d="m8.6 12 2.4 2.4 4.4-4.5" fill="none" style="stroke:var(--card)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
-  };
-
-  // Reaction bubbles (colored disks with white glyphs read on both themes)
-  const RX = {
-    like: ['#378fe9', '<path fill="#fff" d="M5.2 7.4v4.8H3.8a.6.6 0 0 1-.6-.6V8a.6.6 0 0 1 .6-.6zm0 0 2-3.6a1 1 0 0 1 1.8.7l-.3 1.8h2.6a1 1 0 0 1 1 1.2l-.7 3.6a1 1 0 0 1-1 .8H5.2z"/>'],
-    celebrate: ['#6dae4f', '<path fill="#fff" d="m8 3 1.3 3.4L12.7 8l-3.4 1.3L8 12.7 6.7 9.3 3.3 8l3.4-1.3z"/>'],
-    love: ['#df704d', '<path fill="#fff" d="M8 12.3 3.9 8.5A2.4 2.4 0 0 1 8 5.2a2.4 2.4 0 0 1 4.1 3.3z"/>'],
-    insightful: ['#f5bb5c', '<path fill="#fff" d="M8 3a3.2 3.2 0 0 0-1.9 5.8c.4.3.6.7.6 1.1v.5h2.6v-.5c0-.4.2-.8.6-1.1A3.2 3.2 0 0 0 8 3zm-1.3 8.2h2.6v.8a.6.6 0 0 1-.6.6H7.3a.6.6 0 0 1-.6-.6z"/>'],
-    support: ['#a872e8', '<path fill="#fff" d="M4 9.2 6.8 12h3.4L12.6 9a1 1 0 0 0-1.4-1.4L9.5 9.3V5a.8.8 0 0 0-1.6 0v3.6h-.4V4.3a.8.8 0 0 0-1.6 0V9L5.2 8a.9.9 0 0 0-1.2 1.2z"/>'],
-  };
-  A.rx = function (name) {
-    const r = RX[name] || RX.like;
-    return '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="' + r[0] + '"/>' + r[1] + '</svg>';
   };
 
   A.initials = function (name) {

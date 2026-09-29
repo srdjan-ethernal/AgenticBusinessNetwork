@@ -6,7 +6,7 @@
 
   function manageRail() {
     const items = [['users', 'Connections', '612', 'network'], ['people', 'Following & followers', '1,204', 'network'], ['star', 'VIP list', String(A.S.policy.vip.length), 'policy.vip'], ['block', 'Blocked senders', '2', 'inbox'], ['users', 'Groups', '5', 'network'], ['calendar', 'Events', '2', 'feed'], ['building', 'Pages', '14', 'company.tidewell'], ['article', 'Newsletters', '3', 'feed']];
-    return '<aside class="rail hide-md"><div class="card"><div class="pad" style="padding-bottom:4px"><h2 class="card__h">Manage my network</h2></div><div class="railnav" style="padding-bottom:8px">' +
+    return '<aside class="rail hide-md"><div class="card"><div class="pad" style="padding-bottom:4px"><h2 class="card__h">Your network</h2></div><div class="railnav" style="padding-bottom:8px">' +
       items.map(function (x) { return '<a href="#' + x[3] + '">' + I(x[0]) + '<span>' + x[1] + '</span><span class="muted" style="margin-left:auto;font-weight:400">' + x[2] + '</span></a>'; }).join('') + '</div></div>' +
       '<div class="card pad stack-12 sticky"><div class="b">Connection requests go through your agent too</div><p class="small muted">It holds unverified or templated requests and tells you why the rest are worth a look.</p><a class="link small" href="#policy.categories">Adjust in your policy</a></div></aside>';
   }
@@ -30,10 +30,10 @@
         '<section class="card"><div class="pad row between" style="padding-bottom:12px"><div><h2 class="card__h">Invitations (' + pending + ')</h2><div class="small muted">Screened by your agent. Each one says why it’s worth a look.</div></div><a class="link-muted small" href="#policy.categories">Manage</a></div>' +
           A.invitations.map(function (x) { return invitation(x, false); }).join('') + '</section>' +
         '<section class="card"><div class="pad" style="padding-bottom:12px"><h2 class="card__h">Held by your agent (' + A.held.length + ')</h2><div class="small muted">Not shown as invitations until you review them.</div></div>' + A.held.map(function (x) { return invitation(x, true); }).join('') + '</section>' +
-        '<section class="card"><div class="pad row between"><h2 class="card__h">People you may know in AI infrastructure</h2><a class="link-muted small" href="#send">See all</a></div><div class="pymk">' +
+        '<section class="card"><div class="pad row between"><h2 class="card__h">Suggested connections in AI infrastructure</h2><a class="link-muted small" href="#send">See all</a></div><div class="pymk">' +
           A.pymk.map(function (id) {
             const u = A.P(id), c = A.S.conn[id];
-            return '<div class="pymk__c"><div class="pymk__cover cover" style="' + A.coverStyle(u.cover || u.c) + '"></div><div class="pymk__b">' + A.avatar(u, 104) + '<a class="nm" href="#in.' + id + '">' + esc(u.name) + '</a><span class="hl clamp2">' + esc(u.headline) + '</span><span class="small muted row" style="justify-content:center">' + I('users', 'ico-16') + (u.mutuals || 3) + ' mutual connections</span>' +
+            return '<div class="pymk__c"><div class="pymk__b">' + A.avatar(u, 64) + '<a class="nm" href="#in.' + id + '">' + esc(u.name) + '</a><span class="hl clamp2">' + esc(u.headline) + '</span><span class="small muted row" style="justify-content:center">' + I('users', 'ico-16') + (u.mutuals || 3) + ' mutual connections</span>' +
               '<button class="btn ' + (c ? 'btn--muted' : 'btn--secondary') + ' btn--sm" data-act="connect" data-id="' + id + '"' + (c ? ' disabled' : '') + '>' + (c ? I('clock', 'ico-16') + 'Pending' : I('plus', 'ico-16') + 'Connect') + '</button></div></div>';
           }).join('') + '</div></section>' +
         '</div></div></div>';

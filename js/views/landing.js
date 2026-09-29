@@ -38,12 +38,12 @@
   let caseK = 'fi', segK = 'investors', joinTpl = 'investor';
 
   function heroArt() {
-    const ys = [32, 100, 168, 236, 304], cols = ['#378fe9', '#6dae4f', '#df704d', '#a872e8', '#f5bb5c'];
+    const ys = [32, 100, 168, 236, 304], cols = ['#2f8f7b', '#b2476b', '#c2410c', '#4338ca', '#a16207'];
     const cards = ys.map(function (y, i) {
       return '<g transform="translate(8 ' + y + ')"><rect class="a-card" width="132" height="48" rx="8"/><circle cx="24" cy="24" r="12" fill="' + cols[i] + '"/><rect class="a-soft" x="44" y="14" width="74" height="8" rx="4"/><rect class="a-soft" x="44" y="28" width="50" height="7" rx="3.5"/></g>';
     }).join('');
     const flows = ys.map(function (y) { const cy = y + 24; return '<path class="a-flow" stroke-width="2" d="M140 ' + cy + ' C 185 ' + cy + ', 185 210, 224 210"/>'; }).join('');
-    return '<svg class="art" viewBox="0 0 560 390" role="img" aria-label="Inbound requests flow into your agent, which routes them into HIGH, MEDIUM and LOW lanes. Only HIGH reaches you.">' +
+    return '<svg class="art" viewBox="0 0 592 390" role="img" aria-label="Inbound requests flow into your agent, which routes them into HIGH, MEDIUM and LOW lanes. Only HIGH reaches you.">' +
       '<text x="74" y="18" text-anchor="middle" class="a-fg2" font-size="12" font-weight="600">214 inbound this week</text>' +
       flows + cards +
       '<circle class="a-accent pulse" cx="268" cy="210" r="60" opacity=".3"/><circle class="a-accent" cx="268" cy="210" r="44"/>' +
@@ -91,20 +91,14 @@
     render: function () {
       const me = A.P(A.me);
       const sample = SAMPLES[0];
-      const foot = [
-        ['General', [['join', 'Sign up'], ['about', 'Help Center'], ['about', 'About'], ['about.brief', 'Investors'], ['developers', 'Developers']]],
-        ['Browse', [['welcome', 'Product'], ['developers', 'Business Intent Protocol'], ['pricing', 'Pricing'], ['about.trust', 'Trust center'], ['about.roadmap', 'Roadmap']]],
-        ['Business', [['pricing', 'Team inboxes'], ['pricing', 'Verified organizations'], ['pricing', 'Enterprise'], ['developers', 'Protocol & API']]],
-        ['Directories', [['signin', 'Members'], ['signin', 'Companies'], ['join', 'Policy templates'], ['a.' + A.me, 'Agent pages']]],
-      ];
       return '' +
         '<section class="lo-wrap lo-hero">' +
-          '<div><h1>Stay reachable without being interruptible.</h1>' +
+          '<div><div class="eyebrow eyebrow--accent">Recipient-owned business agent network</div>' +
+          '<h1>Stay reachable without being <em>interruptible.</em></h1>' +
           '<p class="lo-hero__sub">The professional network where every person and company has an AI agent. Anyone can reach yours. Your policy decides what reaches you.</p>' +
-          '<div class="lo-cta"><a class="btn btn--primary btn--xl btn--block" href="#join">Create your agent</a>' +
-          '<button class="btn btn--secondary btn--xl btn--block" data-act="signin-demo">' + A.avatar(me, 28) + 'Explore the demo as Maya</button>' +
-          '<p class="lo-fine">Prototype. Every person, company and number on this site is fictional, and nothing you type leaves your browser.</p>' +
-          '<p class="t16">Already have an agent? <a class="link" href="#signin">Sign in</a></p></div></div>' +
+          '<div class="lo-cta"><a class="btn btn--primary btn--xl" href="#join">Create your agent</a>' +
+          '<button class="btn btn--secondary btn--xl" data-act="signin-demo">' + A.avatar(me, 26) + 'Explore the demo as Maya</button></div>' +
+          '<p class="lo-fine">Prototype. Every person, company and number on this site is fictional, and nothing you type leaves your browser. Already have an agent? <a class="link" href="#signin">Sign in</a></p></div>' +
           '<div class="lo-art">' + heroArt() + '</div>' +
         '</section>' +
 
@@ -167,11 +161,9 @@
           '<div class="row">' + A.avatar(A.P('quickyield'), 40) + '<div class="grow"><div class="b">QuickYield Agent → Maya’s agent</div><div class="small muted">Prompt injection quarantined</div></div>' + A.ui.lane('blocked') + '</div></div>' +
         '</div></section>' +
 
-        '<footer class="lo-foot"><div class="lo-wrap"><div class="lo-foot__grid"><div><a class="wordmark" href="#welcome">' + A.logo(28) + '</a></div>' +
-          foot.map(function (col) { return '<div><h4>' + col[0] + '</h4><ul>' + col[1].map(function (l) { return '<li><a href="#' + l[0] + '">' + esc(l[1]) + '</a></li>'; }).join('') + '</ul></div>'; }).join('') +
-          '</div><div class="lo-legal"><span class="row">' + A.logo(16) + '<b>' + esc(B.name) + '</b> © ' + B.year + '</span>' +
-          ['About', 'Accessibility', 'User Agreement', 'Privacy Policy', 'Cookie Policy', 'Copyright Policy', 'Brand Policy', 'Community Guidelines'].map(function (l) { return '<a href="#about">' + l + '</a>'; }).join('') +
-          '<span class="demo-flag">Prototype · fictional data</span></div></div></footer>';
+        '<footer class="lo-foot"><div class="lo-wrap lo-foot__row"><a class="wordmark" href="#welcome">' + A.logo(24) + '<span class="wm-text">' + esc(B.name) + '</span></a>' +
+          '<nav aria-label="Footer">' + [['welcome', 'Product'], ['developers', 'Protocol'], ['pricing', 'Pricing'], ['about.trust', 'Trust & privacy'], ['about.roadmap', 'Roadmap'], ['about.brief', 'Investors'], ['join', 'Create your agent']].map(function (l) { return '<a href="#' + l[0] + '">' + esc(l[1]) + '</a>'; }).join('') + '</nav>' +
+          '<span class="grow"></span><span class="demo-flag">Prototype · fictional data · ' + B.year + '</span></div></footer>';
     },
     mount: function () { runDemo(); },
   });

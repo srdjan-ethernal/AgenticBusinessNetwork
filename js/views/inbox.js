@@ -107,8 +107,8 @@
     const ver = A.S.policy.version;
     return '<div class="dt">' +
       '<a class="btn btn--tertiary btn--sm back-sm" href="#inbox" style="align-self:flex-start">' + I('left', 'ico-16') + 'All intents</a>' +
-      '<div class="dt__who"><a href="#in.' + it.from + '" aria-label="' + esc(p.name) + '">' + A.avatar(p, 56) + '</a><div class="grow stack-4"><div class="row wrap" style="gap:6px"><a class="b t16" href="#in.' + it.from + '" style="color:var(--fg)">' + esc(p.name) + '</a>' + (r.verified ? A.verifiedBadge(p.verified.map(function (v) { return A.CLAIMS[v]; }).join(', ')) : '') + (p.degree ? '<span class="degree">• ' + p.degree + '</span>' : '') + '</div>' +
-        '<div class="small">' + esc(p.headline) + '</div><div class="small muted">Reputation ' + (p.rep == null ? '—' : p.rep) + ' · ' + (p.mutuals || 0) + ' mutual connections · ' + A.ui.verifiedLine(p) + '</div></div>' +
+      '<div class="dt__who"><a href="#in.' + it.from + '" aria-label="' + esc(p.name) + '">' + A.avatar(p, 56) + '</a><div class="grow stack-4"><div class="row wrap" style="gap:6px"><a class="b t16" href="#in.' + it.from + '" style="color:var(--fg)">' + esc(p.name) + '</a>' + (r.verified ? A.verifiedBadge(p.verified.map(function (v) { return A.CLAIMS[v]; }).join(', ')) : '') + A.ui.trust(p) + '</div>' +
+        '<div class="small">' + esc(p.headline) + '</div><div class="small muted">' + (p.mutuals || 0) + ' mutual connections · ' + A.ui.verifiedLine(p) + '</div></div>' +
         '<div class="stack-4" style="align-items:center">' + A.ui.gauge(r.score, r.lane) + A.ui.lane(r.lane) + '</div></div>' +
       '<div class="brief"><div class="brief__h">' + I('spark', 'ico-20') + 'Agent brief · 90-second read</div><ul>' + brief.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' +
         '<div class="small"><b>Suggested next step:</b> ' + esc(suggest) + '</div></div>' +

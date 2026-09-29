@@ -1,6 +1,6 @@
 # Agentic Business Network — prototype site
 
-LinkedIn-style web prototype for the *Agentic Business Network* business model: a professional
+Web prototype for the *Agentic Business Network* business model: a professional
 network where every person and company is represented by a recipient-owned AI agent.
 All people, companies and numbers are fictional demo data.
 

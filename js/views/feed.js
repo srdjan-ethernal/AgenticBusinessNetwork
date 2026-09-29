@@ -1,4 +1,4 @@
-/* Home feed: profile rail, share box, agent digest, posts, news rail */
+/* Home feed: agent console rail, composer, agent digest, posts, trending rail */
 (function (A) {
   const esc = A.esc, I = A.icon, E = A.Engine;
   const expanded = {}, openCm = {};
@@ -10,20 +10,18 @@
 
   A.ui.leftRail = function () {
     const me = A.P(A.me), st = A.stats, pol = A.S.policy;
-    const c = E.counts(E.inbox());
+    const c = E.counts(E.inbox()), n = A.intents.length;
+    const colors = { high: 'var(--high)', medium: 'var(--med)', low: 'var(--low)', declined: 'var(--fg-3)', blocked: 'var(--bad)' };
     return '<aside class="rail hide-md">' +
-      '<div class="card card--clip"><div class="pcard__cover cover" style="' + A.coverStyle(me.cover) + '"></div><div class="pcard__body">' +
-        '<a class="pcard__av" href="#in.' + A.me + '" aria-label="Your profile">' + A.avatar(me, 72) + '<span class="agent-dot" title="Agent active">' + I('spark') + '</span></a>' +
-        '<a class="pcard__name" href="#in.' + A.me + '">' + esc(me.name) + '</a><div class="small">' + esc(me.headline) + '</div>' +
-        '<div class="small muted" style="margin-top:4px">' + esc(me.loc) + '</div>' +
-        '<a class="row small b" style="margin-top:8px;color:var(--fg)" href="#company.tidewell">' + A.orgLogo(A.O('tidewell'), 16) + 'Tidewell Ventures</a>' +
-      '</div></div>' +
-      '<div class="card" style="padding-block:8px"><a class="statrow" href="#in.' + A.me + '"><span>Profile viewers</span><b>' + st.views + '</b></a><a class="statrow" href="#inbox"><span>Intents screened this week</span><b>' + st.triaged + '</b></a><a class="statrow" href="#inbox"><span>Human time saved</span><b>' + st.saved + ' h</b></a></div>' +
-      '<div class="card agentbox"><div class="row between"><span class="b">Your agent</span><span class="live' + (pol.focus ? ' live--off' : '') + '">' + (pol.focus ? 'Focus mode' : 'Active') + '</span></div>' +
+      '<div class="card console">' +
+        '<div class="console__me"><a href="#in.' + A.me + '" aria-label="Your profile">' + A.avatar(me, 48) + '</a><div class="grow"><a href="#in.' + A.me + '">' + esc(me.name) + '</a><div class="small muted clamp1">GP · Tidewell Ventures</div></div></div>' +
         '<div class="addr"><span>' + esc(me.addr) + '</span><button class="iconbtn" data-act="copy" data-text="' + esc(me.addr) + '" data-msg="Agent address copied." aria-label="Copy agent address">' + I('copy', 'ico-16') + '</button></div>' +
-        '<div class="small muted">Policy v' + pol.version + ' · ' + esc(A.templates[pol.template].name) + '</div>' +
-        '<a class="row between small" href="#inbox" style="color:var(--fg)"><span><b class="lc-high num">' + c.high + '</b> HIGH</span><span><b class="lc-medium num">' + c.medium + '</b> MEDIUM</span><span><b class="lc-low num">' + c.low + '</b> LOW</span></a></div>' +
-      '<div class="card railnav sticky" style="padding-block:8px"><a href="#policy">' + I('policy') + 'Attention policy</a><a href="#policy.vip">' + I('star') + 'VIP list</a><a href="#inbox">' + I('inbox') + 'Today’s digest</a><a href="#a.' + A.me + '">' + I('eye') + 'Your public agent page</a><a href="#developers">' + I('code') + 'API and webhooks</a></div>' +
+        '<div class="stack"><div class="console__row"><span class="eyebrow">Today’s routing</span><span class="live' + (pol.focus ? ' live--off' : '') + '">' + (pol.focus ? 'Focus mode' : 'Agent active') + '</span></div>' +
+          '<div class="split" role="img" aria-label="' + E.LANES.map(function (l) { return c[l] + ' ' + E.LABEL[l]; }).join(', ') + '">' + E.LANES.filter(function (l) { return c[l]; }).map(function (l) { return '<span style="width:' + (c[l] / n * 100) + '%;background:' + colors[l] + '"></span>'; }).join('') + '</div>' +
+          '<div class="console__legend">' + E.LANES.map(function (l) { return '<a href="#inbox">' + A.ui.lane(l) + '<b>' + c[l] + '</b></a>'; }).join('') + '<a href="#policy"><span>Policy</span><b>v' + pol.version + '</b></a></div></div>' +
+        '<div class="console__stats"><a href="#inbox"><b>' + st.triaged + '</b><span>screened this week</span></a><a href="#inbox"><b>' + st.saved + 'h</b><span>of your time saved</span></a><a href="#in.' + A.me + '"><b>' + st.views + '</b><span>profile views</span></a></div>' +
+      '</div>' +
+      '<div class="card railnav sticky" style="padding-block:8px"><a href="#policy">' + I('sliders') + 'Attention policy</a><a href="#policy.vip">' + I('star') + 'VIP list</a><a href="#inbox">' + I('inbox') + 'Today’s digest</a><a href="#a.' + A.me + '">' + I('eye') + 'Your public agent page</a><a href="#developers">' + I('code') + 'API and webhooks</a></div>' +
       '</aside>';
   };
 
@@ -51,7 +49,7 @@
       const bars = [18, 34, 52, 30, 64, 44, 72, 38, 56, 26, 46, 20, 40, 60, 32];
       return '<div class="linkcard__art cover" style="' + A.coverStyle(['#b45309', '#f59e0b']) + '"><svg viewBox="0 0 300 120" width="70%" aria-hidden="true">' + bars.map(function (h, i) { return '<rect x="' + (10 + i * 19) + '" y="' + (60 - h / 2) + '" width="10" height="' + h + '" rx="5" fill="rgba(255,255,255,.85)"/>'; }).join('') + '</svg></div>';
     }
-    return '<div class="linkcard__art cover" style="' + A.coverStyle(['#0a3d73', '#378fe9']) + '"><svg viewBox="0 0 300 130" width="70%" aria-hidden="true"><rect x="40" y="14" width="220" height="102" rx="10" fill="rgba(255,255,255,.92)"/><text x="58" y="44" font-family="ui-monospace,Consolas,monospace" font-size="13" fill="#0a66c2">{ "intent": {</text><text x="74" y="66" font-family="ui-monospace,Consolas,monospace" font-size="13" fill="#057642">"category": "fundraising",</text><text x="74" y="88" font-family="ui-monospace,Consolas,monospace" font-size="13" fill="#057642">"evidence": [ … ] } }</text><rect x="206" y="24" width="42" height="18" rx="9" fill="#0a66c2"/><text x="227" y="37" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="700" fill="#fff">v0.1</text></svg></div>';
+    return '<div class="linkcard__art cover" style="' + A.coverStyle(['#0b3b33', '#0d7a69']) + '"><svg viewBox="0 0 300 130" width="70%" aria-hidden="true"><rect x="40" y="14" width="220" height="102" rx="10" fill="rgba(255,255,255,.92)"/><text x="58" y="44" font-family="ui-monospace,Consolas,monospace" font-size="13" fill="#0d7a69">{ "intent": {</text><text x="74" y="66" font-family="ui-monospace,Consolas,monospace" font-size="13" fill="#8a5a12">"category": "fundraising",</text><text x="74" y="88" font-family="ui-monospace,Consolas,monospace" font-size="13" fill="#8a5a12">"evidence": [ … ] } }</text><rect x="206" y="24" width="42" height="18" rx="9" fill="#0d7a69"/><text x="227" y="37" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="700" fill="#fff">v0.1</text></svg></div>';
   }
   function media(p) {
     const m = p.media;
@@ -94,42 +92,40 @@
   }
   function renderPost(p) {
     if (p.type === 'digest') return digestCard();
-    let name, sub, av, href, degree = '', key;
+    let name, sub, av, href, key, person = null;
     if (p.org) {
       const o = A.O(p.org);
-      key = p.org; name = o.name; sub = fmt(o.followers) + ' followers'; av = A.orgLogo(Object.assign({ id: p.org }, o), 48); href = '#company.' + p.org;
+      key = p.org; name = o.name; sub = fmt(o.followers) + ' followers'; av = A.orgLogo(Object.assign({ id: p.org }, o), 44); href = '#company.' + p.org;
     } else {
-      const u = A.P(p.who);
-      key = p.who; name = u.name; sub = u.headline; av = A.avatar(u, 48); href = '#in.' + p.who; degree = u.degree || '';
+      person = A.P(p.who);
+      key = p.who; name = person.name; sub = person.headline; av = A.avatar(person, 44); href = '#in.' + p.who;
     }
     const mine = p.who === A.me;
     const liked = !!A.S.likes[p.id];
     const followed = !!A.S.follows[key];
     const cm = (p.cmts || []).concat(A.S.myComments[p.id] || []);
     const nComments = (p.comments || 0) + (A.S.myComments[p.id] || []).length;
-    const rx = p.rx || { n: 0, top: ['like'] };
-    const top = liked && rx.top.indexOf('like') < 0 ? ['like'].concat(rx.top) : rx.top;
+    const likes = ((p.rx && p.rx.n) || 0) + (liked ? 1 : 0);
     let ctx = '';
     if (p.ctx) {
       const cid = Object.keys(A.people).filter(function (id) { return p.ctx.indexOf(A.people[id].name) === 0; })[0];
       ctx = '<div class="post__ctx">' + (cid ? A.avatar(A.people[cid], 20) : '') + '<span>' + esc(p.ctx) + '</span></div>';
     }
-    const count = liked ? (rx.n ? 'You and ' + fmt(rx.n) + ' others' : 'You') : fmt(rx.n);
+    const connected = person && person.degree === '1st';
     return '<article class="card post" id="post-' + p.id + '">' + ctx +
       '<div class="post__hd"><a href="' + href + '" aria-label="' + esc(name) + '">' + av + '</a>' +
-        '<div class="post__who"><span><a class="nm" href="' + href + '">' + esc(name) + '</a>' + (degree ? ' <span class="degree">• ' + degree + '</span>' : '') + '</span><span class="hl clamp1">' + esc(sub) + '</span><span class="tm">' + esc(p.time) + ' • ' + I('globe', 'ico-16') + '</span></div>' +
-        (mine || degree === '1st' ? '' : '<button class="follow-btn" data-act="follow" data-id="' + key + '">' + (followed ? I('check', 'ico-16') + 'Following' : I('plus', 'ico-16') + 'Follow') + '</button>') +
-        '<button class="iconbtn" data-act="save-post" aria-label="Save post">' + I('more') + '</button></div>' +
+        '<div class="post__who"><span class="row" style="gap:6px"><a class="nm" href="' + href + '">' + esc(name) + '</a>' + (person ? A.ui.trust(person) : '') + '</span><span class="hl clamp1">' + esc(sub) + '</span><span class="tm">' + (p.time === 'now' ? 'just now' : esc(p.time) + ' ago') + ' · public</span></div>' +
+        (mine || connected ? '' : '<button class="follow-btn" data-act="follow" data-id="' + key + '">' + (followed ? I('check', 'ico-16') + 'Following' : I('plus', 'ico-16') + 'Follow') + '</button>') +
+      '</div>' +
       body(p) + (p.poll ? poll(p) : '') + media(p) +
-      '<div class="post__counts">' + (rx.n || liked ? '<span class="rxs"><span class="rx-icons">' + top.slice(0, 3).map(A.rx).join('') + '</span><span>' + count + '</span></span>' : '<span></span>') +
-        '<span><button data-act="toggle-cm" data-id="' + p.id + '">' + fmt(nComments) + ' comment' + (nComments === 1 ? '' : 's') + '</button>' + (p.reposts ? ' • ' + fmt(p.reposts) + ' reposts' : '') + '</span></div>' +
-      '<div class="post__acts">' +
-        '<button class="post__act' + (liked ? ' is-on' : '') + '" data-act="like" data-id="' + p.id + '" aria-pressed="' + liked + '">' + I('like') + '<span>Like</span></button>' +
-        '<button class="post__act" data-act="toggle-cm" data-id="' + p.id + '">' + I('comment') + '<span>Comment</span></button>' +
-        '<button class="post__act" data-act="repost" data-id="' + p.id + '">' + I('repost') + '<span>Repost</span></button>' +
-        '<button class="post__act" data-act="send-post" data-id="' + p.id + '">' + I('sendo') + '<span>Send</span></button></div>' +
-      (openCm[p.id] ? '<div class="comments"><form class="cbox" data-sub="comment" data-id="' + p.id + '">' + A.avatar(A.P(A.me), 40) + '<input id="ci-' + p.id + '" name="c" placeholder="Add a comment…" aria-label="Add a comment" autocomplete="off"><button class="btn btn--primary btn--sm" type="submit">Post</button></form>' +
-        cm.map(function (c) { const u = A.P(c.who); return '<div class="cmt">' + A.avatar(u, 40) + '<div class="cmt__b"><div class="row between" style="align-items:flex-start"><span class="grow"><a class="b" href="#in.' + c.who + '" style="color:var(--fg)">' + esc(u.name) + '</a><span class="small muted clamp1" style="display:block">' + esc(u.headline) + '</span></span><span class="small muted">' + esc(c.time) + '</span></div><div style="margin-top:4px">' + esc(c.t) + '</div></div></div>'; }).join('') + '</div>' : '') +
+      '<div class="post__foot">' +
+        '<button class="post__act' + (liked ? ' is-on' : '') + '" data-act="like" data-id="' + p.id + '" aria-pressed="' + liked + '" aria-label="Like">' + I('heart') + '<span class="num">' + fmt(likes) + '</span></button>' +
+        '<button class="post__act" data-act="toggle-cm" data-id="' + p.id + '" aria-label="Comments">' + I('comment') + '<span class="num">' + fmt(nComments) + '</span></button>' +
+        '<button class="post__act" data-act="repost" data-id="' + p.id + '" aria-label="Share">' + I('repost') + '<span class="num">' + fmt(p.reposts || 0) + '</span></button>' +
+        '<button class="post__act" data-act="send-post" data-id="' + p.id + '">' + I('sendo') + '<span>Send</span></button>' +
+        '<span class="grow"></span><button class="post__act" data-act="save-post" aria-label="Save post">' + I('save') + '</button></div>' +
+      (openCm[p.id] ? '<div class="comments"><form class="cbox" data-sub="comment" data-id="' + p.id + '">' + A.avatar(A.P(A.me), 36) + '<input id="ci-' + p.id + '" name="c" placeholder="Add a comment…" aria-label="Add a comment" autocomplete="off"><button class="btn btn--primary btn--sm" type="submit">Post</button></form>' +
+        cm.map(function (c) { const u = A.P(c.who); return '<div class="cmt">' + A.avatar(u, 36) + '<div class="cmt__b"><div class="row between" style="align-items:flex-start"><span class="grow"><a class="b" href="#in.' + c.who + '" style="color:var(--fg)">' + esc(u.name) + '</a><span class="small muted clamp1" style="display:block">' + esc(u.headline) + '</span></span><span class="small faint mono">' + esc(c.time) + '</span></div><div style="margin-top:4px">' + esc(c.t) + '</div></div></div>'; }).join('') + '</div>' : '') +
       '</article>';
   }
   A.ui.renderPost = renderPost;
@@ -141,11 +137,11 @@
   function rightRail() {
     const sug = A.vipSuggest.filter(function (id) { return A.S.policy.vip.indexOf(id) < 0; });
     return '<aside class="rail rail--right">' +
-      '<div class="card"><div class="pad" style="padding-bottom:4px"><div class="row between"><h2 class="card__h">Agentic News</h2><span class="muted">' + I('info', 'ico-16') + '</span></div><div class="small muted b" style="margin-top:6px">Top stories</div></div>' +
-        '<ul class="news">' + A.news.map(function (n) { return '<li><a href="#feed"><span class="ttl">' + esc(n.t) + '</span><span class="meta">' + esc(n.m) + '</span></a></li>'; }).join('') + '</ul><div style="padding:4px 8px 8px"><a class="btn btn--tertiary btn--sm" href="#about">Show more ' + I('down', 'ico-16') + '</a></div></div>' +
-      '<div class="card pad" id="vip-card"><div class="row between"><h2 class="card__h">Add to your VIP list</h2><span class="muted">' + I('info', 'ico-16') + '</span></div><p class="small muted" style="margin-top:4px">VIPs bypass your filters and always reach you.</p>' +
-        (sug.length ? sug.map(function (id) { const u = A.P(id); return '<div class="person-row">' + A.avatar(u, 48) + '<div class="grow"><a class="b" href="#in.' + id + '" style="color:var(--fg)">' + esc(u.name) + '</a><div class="small muted clamp2">' + esc(u.headline) + '</div><button class="btn btn--muted btn--sm" style="margin-top:6px" data-act="vip-add" data-id="' + id + '">' + I('plus', 'ico-16') + 'VIP</button></div></div>'; }).join('') : '<p class="small" style="margin-top:8px">Everyone suggested is already a VIP.</p>') +
-        '<a class="link small" href="#policy.vip">Manage your VIP list ' + I('arrow', 'ico-16') + '</a></div>' +
+      '<div class="card"><div class="pad" style="padding-bottom:6px"><h2 class="card__h">Trending in your topics</h2><div class="small muted">AI infrastructure · Inference · Developer tools</div></div>' +
+        '<ol class="trend">' + A.news.map(function (n, i) { return '<li><a href="#feed"><span class="trend__n">' + (i + 1) + '</span><span><span class="ttl">' + esc(n.t) + '</span><span class="meta">' + esc(n.m) + '</span></span></a></li>'; }).join('') + '</ol><div style="height:8px"></div></div>' +
+      '<div class="card pad" id="vip-card"><h2 class="card__h">Suggested VIPs</h2><p class="small muted" style="margin-top:2px">VIPs skip your filters and always reach you.</p>' +
+        (sug.length ? sug.map(function (id) { const u = A.P(id); return '<div class="person-row">' + A.avatar(u, 40) + '<div class="grow"><a class="b" href="#in.' + id + '" style="color:var(--fg)">' + esc(u.name) + '</a><div class="small muted clamp2">' + esc(u.headline) + '</div></div><button class="btn btn--secondary btn--sm" data-act="vip-add" data-id="' + id + '" aria-label="Add ' + esc(u.name) + ' to VIPs">' + I('plus', 'ico-16') + 'VIP</button></div>'; }).join('') : '<p class="small" style="margin-top:8px">Everyone suggested is already a VIP.</p>') +
+        '<a class="link small" href="#policy.vip">Manage VIPs ' + I('arrow', 'ico-16') + '</a></div>' +
       '<div class="sticky">' + A.ui.appFooter() + '</div></aside>';
   }
 
@@ -154,9 +150,8 @@
       const me = A.P(A.me);
       return '<div class="page"><div class="scaffold">' + A.ui.leftRail() +
         '<div class="main">' +
-          '<div class="card share"><div class="share__top">' + A.avatar(me, 48) + '<button class="share__input" data-act="compose-post">Start a post</button></div>' +
-            '<div class="share__acts"><button class="share__act" data-act="compose-post"><span style="color:#378fe9">' + I('image') + '</span>Media</button><button class="share__act" data-act="compose-post" data-kind="event"><span style="color:#c37d16">' + I('calendar') + '</span>Event</button><button class="share__act" data-act="compose-post" data-kind="article"><span style="color:#e06847">' + I('article') + '</span>Write article</button><a class="share__act" href="#send"><span style="color:var(--accent)">' + I('spark') + '</span>Send intent</a></div></div>' +
-          '<div class="sortbar"><span>Sort by: <b style="color:var(--fg)">Top</b></span></div>' +
+          '<div class="card composer"><div class="composer__top">' + A.avatar(me, 40) + '<button class="composer__input" data-act="compose-post">Share an update with your network…</button></div>' +
+            '<div class="composer__acts"><button class="composer__act" data-act="compose-post">' + I('image') + 'Photo</button><button class="composer__act" data-act="compose-post" data-kind="event">' + I('calendar') + 'Event</button><button class="composer__act" data-act="compose-post" data-kind="article">' + I('article') + 'Article</button><a class="btn btn--primary btn--sm" href="#send">' + I('spark', 'ico-16') + 'New intent</a></div></div>' +
           allPosts().map(renderPost).join('') +
         '</div>' + rightRail() + '</div></div>';
     },
