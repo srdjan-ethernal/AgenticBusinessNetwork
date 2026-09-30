@@ -66,6 +66,9 @@ also lets you (with the same code) look around as a member of the fictional demo
 | `SEED_DEMO` | `true` | Seed the fictional demo network into an empty database |
 | `SUBMIT_PER_HOUR` | `30` | Protocol submissions per IP or member per hour |
 | `AUTH_ATTEMPTS_PER_10_MIN` | `20` | Sign-up and password attempts per IP per 10 minutes |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | — | "Continue with Google" for sign-up and sign-in (see below). Empty: the button is hidden |
+| `ANTHROPIC_API_KEY` | — | Claude writes briefs and reply drafts and reads free-text intents (see below). Empty: rule-based briefs |
+| `ANTHROPIC_MODEL`, `AI_DAILY_BUDGET_USD` | `claude-opus-5-5`, `5` | Model, and the daily spending cap after which model calls stop until midnight UTC |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` | — | Outgoing mail for invitations (see below). Empty: no email is sent |
 | `MAIL_FROM`, `MAIL_FROM_NAME` | — | Sender address; invitations go out as "Member Name via MAIL_FROM_NAME" with Reply-To the member |
 | `INVITES_PER_DAY` | `200` | Invitations one member may send per 24 hours |
@@ -73,10 +76,40 @@ also lets you (with the same code) look around as a member of the fictional demo
 Anyone can still reach the public agent pages and `POST /v1/intents` without the code; that is the
 point of the protocol, and it is rate-limited.
 
-### Email for invitations
+### Claude (briefs and free-text intents)
 
-Members can import their LinkedIn connections (**Network → Import connections**) and invite them by
-email. For that the server needs SMTP:
+With `ANTHROPIC_API_KEY` set (create one in the Claude Console, [platform.claude.com](https://platform.claude.com/)):
+
+- every intent that reaches an inbox gets a **model-written brief** (3 to 5 points, a next step and a reply
+  draft) a few seconds after it arrives, and again after the sender answers questions;
+- senders can paste free text on a public agent page and have the form **filled in for them**
+  (`POST /v1/intents/parse`, 20 per hour per IP or member).
+
+The policy engine alone decides lane and score; the model only explains. Declined and blocked
+(prompt-injection) intents never reach the model. Every call is logged with its cost in the `AiUsage`
+table, and `AI_DAILY_BUDGET_USD` stops calls for the rest of the day once reached. Intent content is
+sent to Anthropic's API, so mention it in your privacy notice.
+
+### Sign in with Google
+
+1. In [Google Cloud Console](https://console.cloud.google.com/) create a project, then **APIs & Services →
+   OAuth consent screen**: app name, support email, your domain under *Authorized domains*; scopes
+   `openid`, `email`, `profile` (no verification by Google is needed for these). Publish the app
+   (*In production*), otherwise only listed test users can sign in.
+2. **Credentials → Create credentials → OAuth client ID**, type **Web application**, authorized redirect
+   URI `https://agentic.yourdomain.com/signin-google`.
+3. Put the client ID and secret into `.env` (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) and
+   `docker compose up -d`.
+
+A new person who continues with Google only adds a headline and a template; the email comes from
+Google and no password is created. An existing account with the same, Google-verified address is
+linked on first use. Sign-up rules still apply: while `ACCESS_CODE` is set, new people need the code or
+a personal invitation.
+
+### Email (confirmations, password reset, digest, invitations)
+
+The server sends email for confirmation links, password resets, the daily digest and invitations to
+imported LinkedIn contacts (**Network → Import connections**). For that it needs SMTP:
 
 1. **Hetzner blocks outgoing ports 25 and 465** on new servers, so don't run your own mail server. Use a
    transactional email provider (Postmark, Brevo, Mailgun, Amazon SES and similar) on port **587**.
@@ -138,8 +171,8 @@ docker compose start app
 
 ## Current limits
 
-- **Email is used only for invitations so far:** addresses are not verified and there is no password reset. If someone forgets
-  their password, reset it for them on the server (or keep sign-up invite-only for now).
+- **Email needs SMTP:** confirmation links, password reset and the daily digest are only delivered once
+  `SMTP_HOST` is set. Until then people can't reset a forgotten password themselves.
 - **SQLite, one instance.** Fine for a demo and early pilots. Postgres arrives when it is needed (the
   same pattern as Foundrmind: `ConnectionStrings__Default=Host=...`).
 - Everything in the seeded network is fictional.

@@ -15,6 +15,8 @@ public sealed class AgenticDb(DbContextOptions<AgenticDb> options) : DbContext(o
     public DbSet<Contact> Contacts => Set<Contact>();
     public DbSet<OutboundEmail> Outbox => Set<OutboundEmail>();
     public DbSet<EmailOptOut> OptOuts => Set<EmailOptOut>();
+    public DbSet<AiUsage> AiUsage => Set<AiUsage>();
+    public DbSet<EmailToken> EmailTokens => Set<EmailToken>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -23,6 +25,7 @@ public sealed class AgenticDb(DbContextOptions<AgenticDb> options) : DbContext(o
             e.HasKey(x => x.Id);
             e.HasIndex(x => x.AgentAddress).IsUnique();
             e.HasIndex(x => x.Email).IsUnique();
+            e.HasIndex(x => x.GoogleSubject).IsUnique();
         });
         b.Entity<Organization>().HasKey(x => x.Id);
         b.Entity<Relationship>(e =>
@@ -51,5 +54,12 @@ public sealed class AgenticDb(DbContextOptions<AgenticDb> options) : DbContext(o
             e.HasIndex(x => new { x.OwnerId, x.CreatedAt });
         });
         b.Entity<EmailOptOut>().HasKey(x => x.EmailHash);
+        b.Entity<AiUsage>().HasIndex(x => x.CreatedAt);
+        b.Entity<EmailToken>(e =>
+        {
+            e.HasIndex(x => x.TokenHash).IsUnique();
+            e.HasIndex(x => new { x.MemberId, x.Purpose });
+        });
+        b.Entity<Intent>().HasIndex(x => x.BriefStatus);
     }
 }

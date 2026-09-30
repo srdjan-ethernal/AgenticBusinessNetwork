@@ -238,11 +238,13 @@
           : '';
         return '<div class="auth"><div class="card auth__card">' +
           '<h1>Sign in</h1>' +
+          (A.Live.google ? A.ui.googleBtn('Continue with Google') + '<div class="or">or</div>' : '') +
           '<form id="login-form" class="stack-12" novalidate>' +
             '<div class="field"><label class="label" for="login-email">Email</label><input class="input" id="login-email" type="email" autocomplete="email" required></div>' +
             '<div class="field"><label class="label" for="login-pass">Password</label><input class="input" id="login-pass" type="password" autocomplete="current-password" required></div>' +
             '<p class="small err" id="auth-err" role="alert" hidden></p>' +
             '<button class="btn btn--primary btn--lg btn--block" type="submit">Sign in</button>' +
+            '<a class="link small" href="#forgot" style="align-self:flex-start">Forgot your password?</a>' +
           '</form>' +
           (A.Live.signupOpen ? '<p class="small muted">New here? <a class="link" href="#join">Create your agent</a></p>' : '') +
           dev +
@@ -259,9 +261,10 @@
         '<a class="btn btn--tertiary btn--block" href="#a.' + A.me + '">Send an intent without an account</a>' +
         '</div></div>';
     },
-    mount: function () {
+    mount: function (arg) {
       const f = document.getElementById('login-form');
       if (!f) return;
+      if (A.ui.googleError(arg)) authErr(A.ui.googleError(arg));
       f.addEventListener('submit', function (e) {
         e.preventDefault();
         const email = document.getElementById('login-email').value.trim(), pass = document.getElementById('login-pass').value;
@@ -302,29 +305,52 @@
   A.ui.topicPills = topicPills;
   A.ui.pickedTopics = pickedTopics;
 
+  // ---------- Google ----------
+  const GOOGLE_G = '<svg class="gicon" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
+  function googleBtn(label, invite) {
+    return '<a class="btn btn--google btn--lg btn--block" href="api/auth/google' + (invite ? '?invite=' + encodeURIComponent(invite) : '') + '">' + GOOGLE_G + label + '</a>';
+  }
+  const GOOGLE_ERRORS = {
+    'google-cancelled': 'Google sign-in was cancelled. Try again, or use your email and password.',
+    'google-failed': 'Google sign-in didn’t finish. Please try again.',
+    'google-password': 'An account with this email already exists. Sign in with your password.',
+    'google-other': 'This email belongs to an account linked to a different Google account.',
+    'google-nosignup': 'There’s no account for this Google address, and sign-up is closed on this server.',
+  };
+  A.ui.googleBtn = googleBtn;
+  A.ui.googleError = function (code) { return GOOGLE_ERRORS[code] || null; };
+  let ext = null;   // the pending Google identity while finishing sign-up
+
   A.view('join', {
     lo: true,
-    render: function () {
+    render: function (arg) {
       if (A.live) {
         if (!A.Live.signupOpen) {
           return '<div class="auth"><div class="card auth__card"><h1>Create your agent</h1><p class="muted">Sign-up is closed on this server.</p><a class="btn btn--secondary btn--block" href="#signin">Sign in</a></div></div>';
         }
-        const inv = A.invite, pre = inv ? { name: ((inv.first || '') + ' ' + (inv.last || '')).trim(), email: inv.email || '', head: inv.headline || '' } : { name: '', email: '', head: '' };
+        const g = arg === 'google';
+        if (g && !ext) return '<div class="auth"><div class="card auth__card"><p class="muted">Finishing your Google sign-in…</p></div></div>';
+        const inv = g ? (ext.invitedBy ? { inviter: ext.invitedBy } : null) : A.invite;
+        const pre = g ? { name: ext.name || '', email: ext.email, head: ext.headline || '' }
+          : A.invite ? { name: ((A.invite.first || '') + ' ' + (A.invite.last || '')).trim(), email: A.invite.email || '', head: A.invite.headline || '' } : { name: '', email: '', head: '' };
+        const needCode = g ? ext.accessCodeRequired : A.Live.accessCodeRequired && !inv;
         const val = function (s) { return s ? ' value="' + esc(s) + '"' : ''; };
         return '<div class="auth"><div class="card auth__card" style="width:min(680px,100%)">' +
-          '<h1>Create your agent</h1><p class="muted t16">Your agent gets its own address and screens every Business Intent sent to it, by rules you control.</p>' +
+          '<h1>' + (g ? 'Almost there' : 'Create your agent') + '</h1><p class="muted t16">' + (g ? 'Google confirmed who you are. Tell your agent what you do and what you receive most.' : 'Your agent gets its own address and screens every Business Intent sent to it, by rules you control.') + '</p>' +
           (inv ? '<div class="inv-banner">' + A.avatar({ name: inv.inviter.name, c: inv.inviter.c }, 40) + '<div class="grow small"><b>' + esc(inv.inviter.name) + '</b> invited you. Once you join, your agents know each other, so requests between you two score higher.</div></div>' : '') +
+          (!g && A.Live.google ? googleBtn('Sign up with Google', A.invite && A.invite.code) + '<div class="or">or with your email</div>' : '') +
           '<form id="join-form" class="stack-16" novalidate>' +
             '<div class="grid2">' +
               '<div class="field"><label class="label" for="j-name">Full name</label><input class="input" id="j-name" autocomplete="name" maxlength="80" required' + val(pre.name) + '></div>' +
-              '<div class="field"><label class="label" for="j-email">Work email</label><input class="input" id="j-email" type="email" autocomplete="email" maxlength="200" required' + val(pre.email) + '></div>' +
-              '<div class="field"><label class="label" for="j-pass">Password</label><input class="input" id="j-pass" type="password" autocomplete="new-password" minlength="10" required><span class="small muted">At least 10 characters.</span></div>' +
+              (g ? '<div class="field"><span class="label">Email</span><div class="gmail">' + GOOGLE_G + '<span class="clamp1">' + esc(pre.email) + '</span></div><span class="small muted">Confirmed by Google. You sign in with Google, no password needed.</span></div>'
+                : '<div class="field"><label class="label" for="j-email">Work email</label><input class="input" id="j-email" type="email" autocomplete="email" maxlength="200" required' + val(pre.email) + '></div>' +
+                  '<div class="field"><label class="label" for="j-pass">Password</label><input class="input" id="j-pass" type="password" autocomplete="new-password" minlength="10" required><span class="small muted">At least 10 characters.</span></div>') +
               '<div class="field"><label class="label" for="j-loc">Location <span class="muted">(optional)</span></label><input class="input" id="j-loc" autocomplete="address-level2" maxlength="80"></div>' +
             '</div>' +
             '<div class="field"><label class="label" for="j-head">Headline</label><input class="input" id="j-head" maxlength="160" placeholder="Founder at Acme · Developer tools for data teams" required' + val(pre.head) + '></div>' +
             '<div class="stack"><span class="label" id="j-tpl-l">What do you receive most?</span><div class="tpl-grid" role="radiogroup" aria-labelledby="j-tpl-l" id="tpl-grid">' + tplButtons() + '</div></div>' +
             '<div class="stack"><span class="label">Topics you’re open to</span><div class="pills wrap" id="j-topics">' + topicPills([]) + '</div><span class="small muted">Intents on these topics score higher. You can change them any time under Policy.</span></div>' +
-            (A.Live.accessCodeRequired && !inv ? '<div class="field"><label class="label" for="access-code">Invite code</label><input class="input" id="access-code" type="password" autocomplete="off" placeholder="Sign-up is invite-only on this server"></div>' : '') +
+            (needCode ? '<div class="field"><label class="label" for="access-code">Invite code</label><input class="input" id="access-code" type="password" autocomplete="off" placeholder="Sign-up is invite-only on this server"></div>' : '') +
             '<p class="small err" id="auth-err" role="alert" hidden></p>' +
             '<button class="btn btn--primary btn--lg btn--block" type="submit">Create my agent</button>' +
           '</form>' +
@@ -338,23 +364,31 @@
         '<p class="lo-fine">In this prototype you continue as Maya Okafor, a fictional investor, with the template you picked applied to her policy.</p>' +
         '</div></div>';
     },
-    mount: function () {
+    mount: function (arg) {
+      const g = arg === 'google';
+      if (A.live && g && !ext) {
+        A.Live.external().then(function (e) { ext = e; A.render(); }, function () {
+          A.go('join');
+          A.toast('Your Google sign-in expired. Choose “Sign up with Google” again.', 'warn');
+        });
+        return;
+      }
       const f = document.getElementById('join-form');
       if (!f) return;
       f.addEventListener('submit', function (e) {
         e.preventDefault();
         const v = function (id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
         const body = {
-          name: v('j-name'), email: v('j-email'), password: document.getElementById('j-pass').value,
-          headline: v('j-head'), location: v('j-loc'), template: joinTpl, topics: pickedTopics('j-topics'),
-          accessCode: v('access-code') || null, inviteCode: A.invite ? A.invite.code : null,
+          name: v('j-name'), headline: v('j-head'), location: v('j-loc'), template: joinTpl, topics: pickedTopics('j-topics'),
+          accessCode: v('access-code') || null,
         };
-        if (!body.name || !body.email || !body.headline) { authErr('Fill in your name, email and headline.'); return; }
-        if (body.password.length < 10) { authErr('Use a password of at least 10 characters.'); return; }
+        if (!g) { body.email = v('j-email'); body.password = document.getElementById('j-pass').value; body.inviteCode = A.invite ? A.invite.code : null; }
+        if (!body.name || !body.headline || (!g && !body.email)) { authErr(g ? 'Fill in your name and headline.' : 'Fill in your name, email and headline.'); return; }
+        if (!g && body.password.length < 10) { authErr('Use a password of at least 10 characters.'); return; }
         busy(f, true);
-        A.Live.signup(body).then(function (r) {
-          const inviter = A.invite && A.invite.inviter;
-          A.invite = null;
+        (g ? A.Live.signupExternal(body) : A.Live.signup(body)).then(function (r) {
+          const inviter = g ? ext.invitedBy : A.invite && A.invite.inviter;
+          A.invite = null; ext = null;
           A.save();
           A.afterSignin = 'in.' + A.me;
           afterSignIn();

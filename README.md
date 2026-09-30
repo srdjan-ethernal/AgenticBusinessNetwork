@@ -58,8 +58,18 @@ tests/Agentic.Tests/     xUnit tests (engine parity, app API, protocol)
   `sender_token` returned on submit), `GET /v1/agents/{address}/card`.
   Senders see a status, open questions and a decline reason; the recipient's lane and score stay private.
 - **Accounts:** sign-up creates a member, an agent address (`name.surname@agentic`) and a policy from the
-  chosen template; email + password sign-in (PBKDF2-SHA256, 600k iterations), profile editing,
+  chosen template; email + password sign-in (PBKDF2-SHA256, 600k iterations) or **Continue with Google** (sign-up and
+  sign-in; a verified Google address links an existing account), profile editing,
   per-IP limits on sign-up and password attempts. With an access code set, sign-up is invite-only.
+- **Email for accounts:** confirmation links (a confirmed company address adds the `work_email` claim that
+  scoring uses), password reset by link (other sessions end), password change and "sign out everywhere"
+  (a security stamp checked on every request), and a **daily digest** at the start of the owner's working
+  hours in their time zone, including intents held for it, with a one-click off link. Screen: `#settings`.
+- **Claude (optional, `ANTHROPIC_API_KEY`):** a background worker writes each inbox intent's brief, next step
+  and reply draft with `claude-opus-5-5` (structured JSON output, server-side refusal fallback, daily
+  budget, per-call cost log); `POST /v1/intents/parse` turns a sender's free text into intent fields. The
+  deterministic engine still decides every lane and score, and declined or quarantined intents never
+  reach the model. Without a key everything falls back to the rule-based brief.
 - **LinkedIn import and invitations:** `POST /api/contacts/import` takes LinkedIn's data export (the
   .zip or `Connections.csv`), deduplicates by profile URL, and marks people who are already members.
   `POST /api/contacts/invite` queues one email per contact (one reminder at most, after a week; a daily
@@ -75,7 +85,7 @@ tests/Agentic.Tests/     xUnit tests (engine parity, app API, protocol)
 
 ```
 dotnet run --project src/Agentic.Api     # http://localhost:5320, serves the web client in live mode
-dotnet test                              # 60 tests
+dotnet test                              # 88 tests
 ```
 
 The same `index.html` runs in two modes: **live** when served by the API (data from the server, real
@@ -91,11 +101,13 @@ CI (`.github/workflows/ci.yml`) runs the tests and a Docker smoke test on every 
 After a model change: `dotnet ef migrations add <Name> --project src/Agentic.Api` (the tool is pinned in
 `dotnet-tools.json`; run `dotnet tool restore` once).
 
+Google sign-in locally: create an OAuth client with the redirect URI `http://localhost:5320/signin-google`,
+then `dotnet user-secrets set Auth:Google:ClientId <id> --project src/Agentic.Api` (and `ClientSecret`).
+
 Without `Email:Smtp:Host`, development writes emails to the log and production refuses to send
 invitations (personal links still work).
 
-Next increments: Claude for briefs and free-text intents, email verification and password reset,
-daily digest, webhooks, Postgres.
+Next increments: webhooks, Postgres.
 
 ## Run the static prototype only
 

@@ -10,6 +10,8 @@ services:
       Auth__AccessCode: ${ACCESS_CODE:-}
       Auth__Signup: ${SIGNUP:-true}
       Auth__AttemptsPer10Min: ${AUTH_ATTEMPTS_PER_10_MIN:-20}
+      Auth__Google__ClientId: ${GOOGLE_CLIENT_ID:-}
+      Auth__Google__ClientSecret: ${GOOGLE_CLIENT_SECRET:-}
       Seed__Demo: ${SEED_DEMO:-true}
       Protocol__SubmitPerHour: ${SUBMIT_PER_HOUR:-30}
       App__PublicUrl: https://${DOMAIN}
@@ -20,6 +22,9 @@ services:
       Email__FromAddress: ${MAIL_FROM:-no-reply@localhost}
       Email__FromName: ${MAIL_FROM_NAME:-Agentic Business Network}
       Invites__PerDay: ${INVITES_PER_DAY:-200}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5-5}
+      AI_DAILY_BUDGET_USD: ${AI_DAILY_BUDGET_USD:-5}
     volumes:
       - data:/data
     healthcheck:

@@ -27,7 +27,7 @@
       if (!res.ok) return false;
       const h = await res.json();
       if (!h || h.mode !== 'live') return false;
-      L.on = true; L.devLogin = !!h.devLogin; L.signupOpen = h.signup !== false; L.accessCodeRequired = !!h.accessCodeRequired; A.live = true;
+      L.on = true; L.devLogin = !!h.devLogin; L.signupOpen = h.signup !== false; L.google = !!h.google; L.ai = !!h.ai; L.email = !!h.email; L.accessCodeRequired = !!h.accessCodeRequired; A.live = true;
       A.Engine.now = new Date();
       return true;
     } catch (e) { return false; }
@@ -43,6 +43,7 @@
     A.S.answered = b.answered || {};
     A.S.sent = b.sent || [];
     A.stats = b.stats || A.stats;
+    A.account = b.account || null;
     A.S.signedIn = true;
   };
   L.bootstrap = async function () { const b = await call('GET', 'api/bootstrap'); L.apply(b); return b; };
@@ -68,6 +69,13 @@
   };
   L.signup = async function (body) {
     const r = await call('POST', 'api/auth/signup', body);
+    await L.bootstrap();
+    return r;
+  };
+  /** Sign-up after "Continue with Google": the identity waits on the server in a short-lived cookie. */
+  L.external = function () { return call('GET', 'api/auth/external'); };
+  L.signupExternal = async function (body) {
+    const r = await call('POST', 'api/auth/signup/external', body);
     await L.bootstrap();
     return r;
   };

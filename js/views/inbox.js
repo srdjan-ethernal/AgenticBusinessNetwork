@@ -119,7 +119,8 @@
       '<div class="dt__who"><a href="#in.' + it.from + '" aria-label="' + esc(p.name) + '">' + A.avatar(p, 56) + '</a><div class="grow stack-4"><div class="row wrap" style="gap:6px"><a class="b t16" href="#in.' + it.from + '" style="color:var(--fg)">' + esc(p.name) + '</a>' + (r.verified ? A.verifiedBadge(p.verified.map(function (v) { return A.CLAIMS[v]; }).join(', ')) : '') + A.ui.trust(p) + '</div>' +
         '<div class="small">' + esc(p.headline) + '</div><div class="small muted">' + (p.mutuals || 0) + ' mutual connections · ' + A.ui.verifiedLine(p) + '</div></div>' +
         '<div class="stack-4" style="align-items:center">' + A.ui.gauge(r.score, r.lane) + A.ui.lane(r.lane) + '</div></div>' +
-      '<div class="brief"><div class="brief__h">' + I('spark', 'ico-20') + 'Agent brief · 90-second read</div><ul>' + brief.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' +
+      '<div class="brief"><div class="brief__h">' + I('spark', 'ico-20') + 'Agent brief · 90-second read' + (it.briefBy ? '<span class="aitag" title="Written by ' + esc(it.briefBy) + ' from the intent and your policy. The lane and score come from your rules.">AI</span>' : '') + '</div><ul>' + brief.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' +
+        (it.briefPending ? '<div class="small muted row" style="gap:6px">' + I('spark', 'ico-16') + 'Your agent is writing a fuller brief…</div>' : '') +
         '<div class="small"><b>Suggested next step:</b> ' + esc(suggest) + '</div></div>' +
       actions(r) +
       '<div class="dt__sec"><h3>Why ' + E.LABEL[r.lane] + '</h3><p class="small muted">' + esc(r.why) + (r.overridden ? ' You moved this from ' + E.LABEL[r.origLane] + '.' : '') + '</p>' + A.ui.reasons(r) + '</div>' +
@@ -131,7 +132,7 @@
       '<div class="dt__sec"><h3>Score breakdown</h3>' + A.ui.bars(r) + '</div>' +
       '<div class="dt__sec"><h3>Original message</h3>' + (r.inj ? '<div class="small b lc-blocked">Quarantined. Treated as data, never as instructions.</div><div class="quarantine">' + A.ui.injText(it.text, r.inj) + '</div>' : '<div class="rawmsg">' + esc(it.text) + '</div>') + '</div>' +
       '<div class="feedback"><span class="b">Was this routed correctly?</span><button class="btn btn--muted btn--sm" data-act="fb" data-v="ok" data-id="' + it.id + '">Yes</button><button class="btn btn--muted btn--sm" data-act="fb" data-v="up" data-id="' + it.id + '">' + I('up', 'ico-16') + 'Should be higher</button><button class="btn btn--muted btn--sm" data-act="fb" data-v="down" data-id="' + it.id + '">' + I('down', 'ico-16') + 'Should be lower</button></div>' +
-      '<div class="small faint mono">policy v' + ver + ' · model triage-small-2 · audit ' + hash(it.id + ver + r.score) + '</div>' +
+      '<div class="small faint mono">policy v' + ver + ' · ' + (A.live ? (it.briefBy ? 'brief ' + esc(it.briefBy) : 'rules-based brief') : 'model triage-small-2') + ' · audit ' + hash(it.id + ver + r.score) + '</div>' +
       '</div>';
   }
   function sentDetail(s) {
@@ -200,8 +201,23 @@
       if (s && s.scrollIntoView && arg) { try { s.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ } }
       const box = document.getElementById('sent-thread');
       if (box && A.live) loadSentThread(box, box.dataset.id);
+      if (A.live) pollBriefs();
     },
   });
+
+  // Model-written briefs arrive a few seconds after the intent: refresh while any is still being written.
+  let briefT = null, briefTries = 0;
+  function pollBriefs() {
+    clearTimeout(briefT);
+    const pending = (A.intents || []).some(function (it) { return it.briefPending; });
+    if (!pending) { briefTries = 0; return; }
+    if (++briefTries > 20) return;
+    briefT = setTimeout(function () {
+      A.Live.bootstrap().then(function () {
+        if (A.route && A.route.name === 'inbox' && !document.getElementById('scrim')) { A._keep = true; A.refresh(); }
+      }, function () { /* try again on the next visit */ });
+    }, 4000);
+  }
 
   // ---------- actions ----------
   function rer() { A.refresh(); A.updateBadges(); }
@@ -284,7 +300,7 @@
 
   A.act['ib-reply'] = function (el) {
     const id = el.dataset.id, r = R(id), n = first(r.p);
-    const draft = 'Hi ' + n + ',\n\nThanks for the clear intent. ' + (r.it.action === 'meet' ? 'I’d like to take the meeting. My agent will propose times that fit my calendar.' : 'Happy to help here.') + (r.it.id === 'bi-101' ? ' Could you send the benchmark methodology ahead of the call?' : '') + '\n\n' + myFirst();
+    const draft = r.it.replyDraft || 'Hi ' + n + ',\n\nThanks for the clear intent. ' + (r.it.action === 'meet' ? 'I’d like to take the meeting. My agent will propose times that fit my calendar.' : 'Happy to help here.') + (r.it.id === 'bi-101' ? ' Could you send the benchmark methodology ahead of the call?' : '') + '\n\n' + myFirst();
     A.modal({
       title: 'Reply to ' + esc(r.p.name),
       body: '<div class="note">' + I('spark') + '<div class="small">Your agent drafted this from the brief. Edit anything before sending.</div></div><label class="sr" for="reply-text">Reply</label><textarea class="textarea" id="reply-text" rows="8">' + esc(draft) + '</textarea>',

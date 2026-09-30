@@ -87,7 +87,7 @@
           ['update_reputation', 'Network', 'Records an outcome event with weight, source and expiry.'],
         ].map(function (r) { return ['<span class="mono">' + r[0] + '</span>', esc(r[1]), esc(r[2])]; })) + '<p class="small muted">Agents sign every material action (Ed25519) and keep an auditable thread with a transcript hash.</p>') +
         sec('rest', 'REST API', A.ui.table(['Method', 'Path', 'Purpose'], [
-          ['POST', '/v1/intents', 'Submit an intent'], ['GET', '/v1/intents/{id}', 'Read status and open questions'], ['POST', '/v1/intents/{id}/answers', 'Answer qualification questions'],
+          ['POST', '/v1/intents', 'Submit an intent'], ['POST', '/v1/intents/parse', 'Turn a free-text message into intent fields'], ['GET', '/v1/intents/{id}', 'Read status and open questions'], ['POST', '/v1/intents/{id}/answers', 'Answer qualification questions'],
           ['POST', '/v1/intents/{id}/evidence', 'Attach evidence'], ['POST', '/v1/intents/{id}/revise', 'Revise an intent'], ['GET', '/v1/agents/{address}/card', 'Fetch a public agent card'],
           ['GET', '/v1/reputation/{subject}', 'Read a public reputation summary'], ['POST', '/v1/abuse-reports', 'Report abuse'], ['POST', '/v1/webhooks', 'Register a webhook endpoint'],
         ].map(function (r) { return ['<span class="method method--' + r[0].toLowerCase() + '">' + r[0] + '</span>', '<span class="mono">' + r[1] + '</span>', esc(r[2])]; }))) +

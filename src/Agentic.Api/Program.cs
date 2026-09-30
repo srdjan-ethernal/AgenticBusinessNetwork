@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Agentic.Api.Data;
@@ -32,6 +33,17 @@ builder.Services.AddScoped<Protocol>();
 builder.Services.AddScoped<Inbox>();
 builder.Services.AddScoped<Accounts>();
 builder.Services.AddScoped<Contacts>();
+builder.Services.AddScoped<AccountEmails>();
+builder.Services.AddScoped<Digests>();
+builder.Services.AddSingleton<DigestWorker>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<DigestWorker>());
+
+// Claude writes briefs and reads free-text intents when ANTHROPIC_API_KEY is set; without it the deterministic
+// brief and the browser's heuristic parser are used. Routing never depends on the model.
+if (builder.Configuration["ANTHROPIC_API_KEY"] is { Length: > 0 }) builder.Services.AddSingleton<IAgentModel, ClaudeAgentModel>();
+else builder.Services.AddSingleton<IAgentModel, NoAgentModel>();
+builder.Services.AddSingleton<BriefWorker>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<BriefWorker>());
 
 // Email: SMTP when Email:Smtp:Host is set, otherwise mails are only written to the log.
 var emailOptions = builder.Configuration.GetSection("Email").Get<EmailOptions>() ?? new EmailOptions();
@@ -53,7 +65,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(o =>
     o.KnownProxies.Clear();
 });
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+var authBuilder = builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(o =>
     {
         o.Cookie.Name = "abn_auth";
@@ -64,18 +76,51 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         // JSON API: answer 401/403 instead of redirecting to a login page.
         o.Events.OnRedirectToLogin = ctx => { ctx.Response.StatusCode = StatusCodes.Status401Unauthorized; return Task.CompletedTask; };
         o.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = StatusCodes.Status403Forbidden; return Task.CompletedTask; };
+        o.Events.OnValidatePrincipal = AccountApi.ValidateStamp;
+    });
+
+// "Continue with Google" (when Auth:Google:ClientId and ClientSecret are set). Google's answer is kept for
+// 15 minutes in its own cookie until the member is signed in or finishes the sign-up form.
+authBuilder.AddCookie(GoogleAuthApi.ExternalScheme, o =>
+{
+    o.Cookie.Name = "abn_ext";
+    o.Cookie.HttpOnly = true;
+    o.Cookie.SameSite = SameSiteMode.Lax;
+    o.ExpireTimeSpan = TimeSpan.FromMinutes(15);
+    o.SlidingExpiration = false;
+});
+if (GoogleAuthApi.Configured(builder.Configuration))
+    authBuilder.AddGoogle(GoogleAuthApi.GoogleScheme, o =>
+    {
+        o.ClientId = builder.Configuration["Auth:Google:ClientId"]!;
+        o.ClientSecret = builder.Configuration["Auth:Google:ClientSecret"]!;
+        o.SignInScheme = GoogleAuthApi.ExternalScheme;
+        o.ClaimActions.MapJsonKey("email_verified", "verified_email");
+        o.ClaimActions.MapJsonKey("email_verified", "email_verified");
+        // Cancelled on Google's page, or anything else went wrong: back to the sign-in screen.
+        o.Events.OnRemoteFailure = ctx =>
+        {
+            ctx.Response.Redirect("/#signin.google-cancelled");
+            ctx.HandleResponse();
+            return Task.CompletedTask;
+        };
     });
 builder.Services.AddAuthorization();
 
 // Unverified senders are rate-limited per IP, members per account.
 var submitPerHour = builder.Configuration.GetValue("Protocol:SubmitPerHour", 30);
 var authPer10Min = builder.Configuration.GetValue("Auth:AttemptsPer10Min", 20);
+var parsePerHour = builder.Configuration.GetValue("Ai:ParsePerHour", 20);
 builder.Services.AddRateLimiter(o =>
 {
     o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     o.AddPolicy("submit", ctx => RateLimitPartition.GetFixedWindowLimiter(
         ctx.User.Identity?.IsAuthenticated == true ? "member:" + ctx.User.FindFirstValue(ClaimTypes.NameIdentifier) : "ip:" + ctx.Connection.RemoteIpAddress,
         _ => new FixedWindowRateLimiterOptions { PermitLimit = submitPerHour, Window = TimeSpan.FromHours(1) }));
+    // Free-text parsing costs a model call: per member, or per IP for senders without an account.
+    o.AddPolicy("parse", ctx => RateLimitPartition.GetFixedWindowLimiter(
+        ctx.User.Identity?.IsAuthenticated == true ? "member:" + ctx.User.FindFirstValue(ClaimTypes.NameIdentifier) : "ip:" + ctx.Connection.RemoteIpAddress,
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = parsePerHour, Window = TimeSpan.FromHours(1) }));
     // Invitation batches, per member.
     o.AddPolicy("invite", ctx => RateLimitPartition.GetFixedWindowLimiter("member:" + ctx.User.FindFirstValue(ClaimTypes.NameIdentifier),
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromHours(1) }));
@@ -119,6 +164,8 @@ app.MapGet("/", () => File.Exists(indexHtml) ? Results.File(indexHtml, "text/htm
 app.MapAppApi();
 app.MapProtocolApi();
 app.MapContactsApi();
+app.MapGoogleAuthApi();
+app.MapAccountApi();
 
 app.Run();
 return 0;

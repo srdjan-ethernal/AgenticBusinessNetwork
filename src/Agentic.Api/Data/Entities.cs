@@ -19,6 +19,17 @@ public sealed class Member
     /// <summary>Sign-in email for real accounts; null for seeded demo members (development sign-in only).</summary>
     public string? Email { get; set; }
     public string? PasswordHash { get; set; }
+    /// <summary>Google account id ("sub") for members who sign in with Google.</summary>
+    public string? GoogleSubject { get; set; }
+    /// <summary>The email address is confirmed (for now: Google said so).</summary>
+    public bool EmailVerified { get; set; }
+    /// <summary>Changes when the password is reset or the member signs out everywhere; older sessions stop working.</summary>
+    public string? SecurityStamp { get; set; }
+    /// <summary>Daily email digest of what the agent screened (sent at the start of the owner's working day).</summary>
+    public bool DigestEnabled { get; set; } = true;
+    public DateTime? LastDigestAt { get; set; }
+    /// <summary>Lets the one-click link in a digest turn digests off without signing in.</summary>
+    public string? DigestToken { get; set; }
     /// <summary>Profile fields the web client renders (colors, about, experience…), stored as a JSON document.</summary>
     public string ProfileJson { get; set; } = "{}";
     public DateTime CreatedAt { get; set; }
@@ -87,6 +98,12 @@ public sealed class Intent
     /// <summary>Seeded demo extras (brief, canned answers). Real intents get a generated brief.</summary>
     public string? DemoJson { get; set; }
 
+    /// <summary>Model-written brief for the recipient: pending · ready · failed; null when there is none
+    /// (demo intents, AI turned off, declined or blocked intents).</summary>
+    public string? BriefStatus { get; set; }
+    public string? BriefJson { get; set; }
+    public string? BriefModel { get; set; }
+    public DateTime? BriefAt { get; set; }
     public DateTime ReceivedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public string? SenderTokenHash { get; set; }
@@ -197,4 +214,31 @@ public sealed class EmailOptOut
 {
     public string EmailHash { get; set; } = "";
     public DateTime CreatedAt { get; set; }
+}
+
+/// <summary>One language-model call: what it was for, who it was for, and what it cost.</summary>
+public sealed class AiUsage
+{
+    public int Id { get; set; }
+    public string Source { get; set; } = "";
+    public string? MemberId { get; set; }
+    public string Model { get; set; } = "";
+    public int InputTokens { get; set; }
+    public int OutputTokens { get; set; }
+    public decimal CostUsd { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+/// <summary>Single-use link token sent by email (verify an address, reset a password). Only the hash is stored.</summary>
+public sealed class EmailToken
+{
+    public int Id { get; set; }
+    public string MemberId { get; set; } = "";
+    /// <summary>verify · reset</summary>
+    public string Purpose { get; set; } = "";
+    public string TokenHash { get; set; } = "";
+    public string Email { get; set; } = "";
+    public DateTime CreatedAt { get; set; }
+    public DateTime ExpiresAt { get; set; }
+    public DateTime? UsedAt { get; set; }
 }

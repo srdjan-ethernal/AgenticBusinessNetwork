@@ -28,13 +28,13 @@ public static class AppApi
         var signup = app.Configuration.GetValue("Auth:Signup", true);
         var api = app.MapGroup("/api");
 
-        api.MapGet("/health", () => Results.Ok(new { ok = true, mode = "live", devLogin, signup, accessCodeRequired = accessCode.Length > 0, version = "0.2" }));
+        api.MapGet("/health", (IAgentModel ai, IEmailSender mail) => Results.Ok(new { ok = true, mode = "live", devLogin, signup, google = GoogleAuthApi.Configured(app.Configuration),  ai = ai.Enabled, email = mail.Delivers, accessCodeRequired = accessCode.Length > 0, version = "0.3" }));
 
         // ---------- real accounts ----------
 
         var auth = api.MapGroup("/auth").RequireRateLimiting("auth");
 
-        auth.MapPost("/signup", async (SignupBody req, Accounts accounts, Contacts contacts, HttpContext ctx) =>
+        auth.MapPost("/signup", async (SignupBody req, Accounts accounts, Contacts contacts, AccountEmails emails, HttpContext ctx) =>
         {
             if (!signup) return Results.NotFound();
             // A personal invitation from a member counts as an invite code.
@@ -46,6 +46,7 @@ public static class AppApi
             var (m, status, error) = await accounts.SignUp(new SignupRequest(req.Name, req.Email, req.Password, req.Headline, req.Location, req.Template, req.Topics));
             if (m is null) return Results.Json(new { error }, statusCode: status);
             if (invite is { } inv) await contacts.Accept(inv.contact, m);
+            await emails.SendVerification(m, AccountApi.BaseUrl(ctx.Request, app.Configuration));
             await SignIn(ctx, m);
             return Results.Json(new { id = m.Id, agentAddress = m.AgentAddress, invitedBy = invite?.inviter.Id }, statusCode: StatusCodes.Status201Created);
         });
@@ -127,13 +128,16 @@ public static class AppApi
         });
     }
 
-    private static bool CodeMatches(string? given, string expected) =>
+    internal static bool CodeMatches(string? given, string expected) =>
         CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(given ?? ""), Encoding.UTF8.GetBytes(expected));
 
-    private static Task SignIn(HttpContext ctx, Member m)
+    internal const string StampClaim = "abn:stamp";
+
+    internal static Task SignIn(HttpContext ctx, Member m)
     {
         var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, m.Id), new(ClaimTypes.Name, m.Name) };
         if (m.Email is not null) claims.Add(new Claim(ClaimTypes.Email, m.Email));
+        if (m.SecurityStamp is not null) claims.Add(new Claim(StampClaim, m.SecurityStamp));
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         return ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), new AuthenticationProperties { IsPersistent = true });
     }

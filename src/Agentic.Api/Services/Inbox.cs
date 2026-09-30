@@ -84,6 +84,7 @@ public sealed class Inbox(AgentCore core, Protocol protocol)
             ["answered"] = answered,
             ["sent"] = sent,
             ["stats"] = stats,
+            ["account"] = new JsonObject { ["email"] = me.Email, ["emailVerified"] = me.EmailVerified },
         };
     }
 
@@ -159,10 +160,18 @@ public sealed class Inbox(AgentCore core, Protocol protocol)
             foreach (var key in new[] { "brief", "briefAfter", "suggest", "suggestAfter", "alt" })
                 if (demo[key] is not null) o[key] = demo[key]!.DeepClone();
         }
+        else if (Briefs.Read(it) is { } ai)
+        {
+            o["brief"] = new JsonArray(ai.Bullets.Select(b => (JsonNode)b).ToArray());
+            o["suggest"] = ai.NextStep;
+            o["replyDraft"] = ai.ReplyDraft;
+            o["briefBy"] = it.BriefModel;
+        }
         else
         {
             o["brief"] = new JsonArray(GeneratedBrief(it, ev).Select(b => (JsonNode)b).ToArray());
             o["suggest"] = ev.Action;
+            if (it.BriefStatus == "pending") o["briefPending"] = true;
         }
         return o;
     }

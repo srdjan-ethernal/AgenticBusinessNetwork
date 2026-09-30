@@ -3,6 +3,7 @@ using System;
 using Agentic.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Agentic.Api.Migrations
 {
     [DbContext(typeof(AgenticDb))]
-    partial class AgenticDbModelSnapshot : ModelSnapshot
+    [Migration("20260929152049_GoogleSignIn")]
+    partial class GoogleSignIn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
@@ -44,42 +47,6 @@ namespace Agentic.Api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AbuseReports");
-                });
-
-            modelBuilder.Entity("Agentic.Api.Data.AiUsage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("CostUsd")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("InputTokens")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("MemberId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Model")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("OutputTokens")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.ToTable("AiUsage");
                 });
 
             modelBuilder.Entity("Agentic.Api.Data.Contact", b =>
@@ -207,47 +174,6 @@ namespace Agentic.Api.Migrations
                     b.ToTable("OptOuts");
                 });
 
-            modelBuilder.Entity("Agentic.Api.Data.EmailToken", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("MemberId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Purpose")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TokenHash")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("UsedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TokenHash")
-                        .IsUnique();
-
-                    b.HasIndex("MemberId", "Purpose");
-
-                    b.ToTable("EmailTokens");
-                });
-
             modelBuilder.Entity("Agentic.Api.Data.Intent", b =>
                 {
                     b.Property<string>("Id")
@@ -260,18 +186,6 @@ namespace Agentic.Api.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("AskedJson")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("BriefAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("BriefJson")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("BriefModel")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("BriefStatus")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Category")
@@ -374,8 +288,6 @@ namespace Agentic.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BriefStatus");
-
                     b.HasIndex("RecipientId");
 
                     b.HasIndex("SenderId");
@@ -433,12 +345,6 @@ namespace Agentic.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("DigestEnabled")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("DigestToken")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Email")
                         .HasColumnType("TEXT");
 
@@ -454,9 +360,6 @@ namespace Agentic.Api.Migrations
 
                     b.Property<string>("Kind")
                         .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("LastDigestAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -475,9 +378,6 @@ namespace Agentic.Api.Migrations
 
                     b.Property<int>("Reputation")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("Template")
                         .IsRequired()

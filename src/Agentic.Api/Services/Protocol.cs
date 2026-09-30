@@ -43,7 +43,7 @@ public sealed record SenderView(
 public sealed record ProtocolError(string Error, string Message);
 
 /// <summary>The sender's side of the Business Intent Protocol.</summary>
-public sealed class Protocol(AgentCore core)
+public sealed class Protocol(AgentCore core, IAgentModel ai)
 {
     private AgenticDb Db => core.Db;
 
@@ -119,6 +119,7 @@ public sealed class Protocol(AgentCore core)
             it.StatusDetail = "Declined automatically: " + ev.Why;
             core.Say(it, "agent", "decline", "Thanks for reaching out. " + SenderReason(ev, it.Category));
         }
+        Briefs.Queue(it, ev, ai);
         await Db.SaveChangesAsync();
         return (201, await View(it, token));
     }
@@ -158,6 +159,7 @@ public sealed class Protocol(AgentCore core)
             it.StatusDetail = "Declined automatically: " + ev.Why;
             core.Say(it, "agent", "decline", "Thanks for the answers. This still isn’t a match. " + SenderReason(ev, it.Category));
         }
+        Briefs.Queue(it, ev, ai);
         await Db.SaveChangesAsync();
         return (200, await View(it, null));
     }
@@ -284,3 +286,4 @@ public sealed class Protocol(AgentCore core)
         return unit == "m" ? n * 1e6 : unit == "k" ? n * 1e3 : n < 100 ? n * 1e6 : n * 1e3;
     }
 }
+public sealed class ParseRequest { public string? Text { get; set; } }

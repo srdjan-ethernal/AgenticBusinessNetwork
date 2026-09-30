@@ -29,8 +29,10 @@
     const me = A.P(A.me);
     return '<form class="card pad-24 form" data-sub="intent" id="intent-form" novalidate>' +
       '<div class="stack-4"><h2 class="t20">Send a Business Intent</h2><p class="small muted">Structured intents get faster, fairer answers than free text. ' + esc(f) + '’s agent may ask follow-up questions, and every decline comes with a reason.</p></div>' +
+      (A.live && A.Live.ai ? '<div class="aibox"><label class="label" for="f-free">Write it your way</label><textarea class="textarea" id="f-free" rows="4" maxlength="8000" placeholder="Paste the email or LinkedIn message you would have sent…">' + esc(ex.free || '') + '</textarea>' +
+        '<div class="row wrap" style="gap:10px"><button type="button" class="btn btn--secondary btn--sm" data-act="f-parse">' + I('spark', 'ico-16') + 'Fill the form from my text</button><span class="small muted">Your agent reads it and fills in the fields below. Check them before you send.</span></div></div>' : '') +
       (mode === 'public'
-        ? '<div class="grid2"><div class="field"><label class="label" for="f-name">Your name</label><input class="input" id="f-name" autocomplete="off" placeholder="e.g. Lucas Moreau"></div><div class="field"><label class="label" for="f-org">Company</label><input class="input" id="f-org" autocomplete="off" placeholder="e.g. Driftline"></div></div>' + (A.live ? '<p class="small muted">You are sending without an account, so your intent counts as unverified.</p>' : '<label class="check" for="f-ver"><input type="checkbox" id="f-ver" data-ch="f-upd"> I can verify a work email and company domain <span class="small muted">(simulated here)</span></label>')
+        ? '<div class="grid2"><div class="field"><label class="label" for="f-name">Your name</label><input class="input" id="f-name" autocomplete="off" placeholder="e.g. Lucas Moreau" value="' + esc(ex.name || '') + '"></div><div class="field"><label class="label" for="f-org">Company</label><input class="input" id="f-org" autocomplete="off" placeholder="e.g. Driftline" value="' + esc(ex.org || '') + '"></div></div>' + (A.live ? '<p class="small muted">You are sending without an account, so your intent counts as unverified.</p>' : '<label class="check" for="f-ver"><input type="checkbox" id="f-ver" data-ch="f-upd"> I can verify a work email and company domain <span class="small muted">(simulated here)</span></label>')
         : '<div class="row">' + A.avatar(me, 40) + '<div><div class="b">Sending as ' + esc(me.name) + '</div><div class="small muted">Reputation ' + me.rep + ' · ' + me.verified.map(function (v) { return A.CLAIMS[v]; }).join(', ') + '</div></div></div>') +
       '<div class="grid2"><div class="field"><label class="label" for="f-cat">Category</label><select class="select" id="f-cat" data-ch="f-cat">' + Object.keys(A.CATS).map(function (k) { return '<option value="' + k + '"' + (k === ex.cat ? ' selected' : '') + '>' + esc(A.CATS[k].label) + '</option>'; }).join('') + '</select></div>' +
       '<div class="field"><label class="label" for="f-action">Requested action</label><select class="select" id="f-action" data-ch="f-upd">' + ACTIONS.map(function (a) { return '<option value="' + a[0] + '"' + (a[0] === ex.action ? ' selected' : '') + '>' + a[1] + '</option>'; }).join('') + '</select></div></div>' +
@@ -40,7 +42,7 @@
       '<div class="grid2" id="f-fund"' + (ex.cat === 'fundraising' ? '' : ' hidden') + '><div class="field"><label class="label" for="f-stage">Stage</label><select class="select" id="f-stage" data-ch="f-upd">' + A.STAGES.map(function (s) { return '<option' + (s === ex.stage ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></div><div class="field"><label class="label" for="f-amt">Round size ($K)</label><input class="input" id="f-amt" type="number" min="0" step="50" value="' + esc(ex.amt) + '" data-in="f-upd" placeholder="e.g. 1500"></div></div>' +
       '<div class="grid2"><div class="field"><label class="label" for="f-geo">Geography</label><select class="select" id="f-geo" data-ch="f-upd"><option value="">Not specified</option>' + A.GEOS.map(function (g) { return '<option' + (g === ex.geo ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></div><div class="field"><label class="label" for="f-urg">Urgency</label><select class="select" id="f-urg" data-ch="f-upd"><option value="normal"' + (ex.urg === 'normal' ? ' selected' : '') + '>Normal</option><option value="time_sensitive"' + (ex.urg === 'time_sensitive' ? ' selected' : '') + '>Time-sensitive</option><option value="low"' + (ex.urg === 'low' ? ' selected' : '') + '>Low</option></select></div></div>' +
       '<div class="field"><span class="label">Evidence</span><div class="stack" id="f-ev">' + ex.ev.map(function (e) { return evRow(e[0], e[1]); }).join('') + '</div><div class="row wrap" id="f-ev-sug" style="gap:6px"></div><button type="button" class="btn btn--tertiary btn--sm" data-act="f-ev-add" style="align-self:flex-start">' + I('plus', 'ico-16') + 'Add evidence</button></div>' +
-      '<div class="field"><label class="label" for="f-msg">Message (optional)</label><textarea class="textarea" id="f-msg" rows="3" data-in="f-upd"></textarea><span class="hint">Free text is read as data. It can’t give the agent instructions.</span></div>' +
+      '<div class="field"><label class="label" for="f-msg">Message (optional)</label><textarea class="textarea" id="f-msg" rows="3" data-in="f-upd">' + esc(ex.msg || '') + '</textarea><span class="hint">Free text is read as data. It can’t give the agent instructions.</span></div>' +
       '<div class="row wrap"><button class="btn btn--primary btn--lg" type="submit">' + I('sendo', 'ico-20') + 'Send to ' + esc(f) + '’s agent</button><button type="button" class="btn btn--tertiary" data-act="f-example">Fill with an example</button></div>' +
       '</form>';
   }
@@ -224,6 +226,28 @@
     forecast();
   };
   A.act['f-ev-rm'] = function (el) { el.closest('.evrow').remove(); forecast(); };
+  // Live: the recipient's agent turns free text into the structured fields (the sender still reviews them).
+  A.act['f-parse'] = async function (el) {
+    const g = function (id) { const e = document.getElementById(id); return e ? e.value.trim() : ''; };
+    const text = g('f-free');
+    if (text.length < 20) { A.toast('Write a sentence or two first.', 'warn'); document.getElementById('f-free').focus(); return; }
+    el.disabled = true;
+    const label = el.innerHTML;
+    el.innerHTML = I('spark', 'ico-16') + 'Reading…';
+    try {
+      const r = await A.Live.call('POST', 'v1/intents/parse', { text: text });
+      const it = r.intent || {};
+      st.ex = {
+        cat: it.category || 'other', action: it.requested_action || 'reply', obj: it.objective || '', val: it.value_proposition || '',
+        tags: it.topics || [], stage: it.stage || 'Pre-seed', amt: it.round_size_usd ? String(Math.round(it.round_size_usd / 1000)) : '',
+        geo: it.geo || '', urg: it.urgency || 'normal', ev: (r.fit_evidence || []).map(function (e) { return [e.type, e.value]; }),
+        name: g('f-name'), org: g('f-org'), msg: text, free: text,
+      };
+      st.phase = 'form';
+      A.refresh();
+      A.toast('Filled in from your text. Check each field, then send.', 'info');
+    } catch (e) { el.disabled = false; el.innerHTML = label; A.toast(esc(e.message), 'warn'); }
+  };
   A.act['f-example'] = function () { st.ex = example(st.to); st.phase = 'form'; A.refresh(); };
   A.sub.intent = function () {
     const data = readForm();

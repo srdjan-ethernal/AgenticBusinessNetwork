@@ -11,6 +11,9 @@ namespace Agentic.Api.Services;
 
 public sealed record SignupRequest(string? Name, string? Email, string? Password, string? Headline, string? Location, string? Template, List<string>? Topics);
 public sealed record LoginRequest(string? Email, string? Password);
+/// <summary>An identity confirmed by an external provider (Google), not yet or already tied to a member.</summary>
+public sealed record ExternalIdentity(string Provider, string Subject, string Email, bool EmailVerified, string Name);
+public sealed record ExternalSignupRequest(string? Name, string? Headline, string? Location, string? Template, List<string>? Topics);
 public sealed record ProfileUpdate(string? Name, string? Headline, string? Location, string? About, List<string>? Topics);
 
 /// <summary>Real accounts: email + password (PBKDF2), a member, an agent address and a policy from a template.</summary>
@@ -39,9 +42,45 @@ public sealed partial class Accounts(AgentCore core)
         if (!LooksLikeEmail(email)) return (null, 400, "Enter a valid email address.");
         if ((req.Password ?? "").Length < 10) return (null, 400, "Use a password of at least 10 characters.");
         if ((req.Password ?? "").Length > 200) return (null, 400, "That password is too long.");
+        return await Create(name, email, headline, req.Location, req.Template, req.Topics, m => m.PasswordHash = HashPassword(req.Password!));
+    }
+
+    /// <summary>Sign-up after Google confirmed who you are: no password, the email comes from Google.</summary>
+    public Task<(Member? member, int status, string? error)> SignUpExternal(ExternalIdentity ext, ExternalSignupRequest req)
+    {
+        var name = (req.Name ?? ext.Name).Trim();
+        if (name.Length is < 2 or > 80) return Task.FromResult<(Member?, int, string?)>((null, 400, "Enter your name (2 to 80 characters)."));
+        return Create(name, NormalizeEmail(ext.Email), (req.Headline ?? "").Trim(), req.Location, req.Template, req.Topics, m =>
+        {
+            m.GoogleSubject = ext.Subject;
+            if (ext.EmailVerified) MarkEmailVerified(m);
+        });
+    }
+
+    /// <summary>The member behind a Google sign-in: known by Google id, or an existing account with the same
+    /// verified address, which is then linked. Null when this person has no account yet.</summary>
+    public async Task<(Member? member, string? error)> FindExternal(ExternalIdentity ext)
+    {
+        var m = await Db.Members.FirstOrDefaultAsync(x => x.GoogleSubject == ext.Subject);
+        if (m is not null) return (m, null);
+        var email = NormalizeEmail(ext.Email);
+        m = await Db.Members.FirstOrDefaultAsync(x => x.Email == email);
+        if (m is null) return (null, null);
+        if (!ext.EmailVerified) return (null, "An account with this email already exists. Sign in with your password.");
+        if (m.GoogleSubject is not null) return (null, "This email belongs to an account linked to a different Google account.");
+        m.GoogleSubject = ext.Subject;
+        MarkEmailVerified(m);
+        await Db.SaveChangesAsync();
+        return (m, null);
+    }
+
+    private async Task<(Member? member, int status, string? error)> Create(string name, string email, string headline, string? location, string? templateKey, List<string>? topicList, Action<Member> credentials)
+    {
+        if (!LooksLikeEmail(email)) return (null, 400, "Enter a valid email address.");
         if (headline.Length is < 2 or > 160) return (null, 400, "Add a headline, for example “Founder at Acme · Developer tools”.");
-        var template = req.Template is not null && core.Catalog.Templates.ContainsKey(req.Template) ? req.Template : "founder";
-        var topics = (req.Topics ?? []).Where(t => core.Catalog.Topics.Contains(t)).Distinct().Take(12).ToList();
+        if ((location ?? "").Length > 80) return (null, 400, "The location is too long.");
+        var template = templateKey is not null && core.Catalog.Templates.ContainsKey(templateKey) ? templateKey : "founder";
+        var topics = (topicList ?? []).Where(t => core.Catalog.Topics.Contains(t)).Distinct().Take(12).ToList();
         if (await Db.Members.AnyAsync(m => m.Email == email)) return (null, 409, "An account with this email already exists. Sign in instead.");
 
         var id = await UniqueId(Slug(name));
@@ -51,7 +90,7 @@ public sealed partial class Accounts(AgentCore core)
         {
             ["name"] = name,
             ["headline"] = headline,
-            ["loc"] = NullIfEmpty((req.Location ?? "").Trim()),
+            ["loc"] = NullIfEmpty((location ?? "").Trim()),
             ["c"] = new JsonArray(colors[0], colors[1]),
             ["topics"] = new JsonArray(topics.Select(t => (JsonNode)t).ToArray()),
             ["connections"] = "0",
@@ -64,13 +103,15 @@ public sealed partial class Accounts(AgentCore core)
             Headline = headline,
             AgentAddress = address,
             Email = email,
-            PasswordHash = HashPassword(req.Password!),
             Template = template,
             Reputation = 50,
             Verified = [],
             ProfileJson = profile.ToJsonString(),
             CreatedAt = DateTime.UtcNow,
         };
+        RotateStamp(m);
+        m.DigestToken = AgentCore.NewToken();
+        credentials(m);
         Db.Members.Add(m);
         var policy = core.Catalog.PolicyFromTemplate(template, topics);
         // A new agent keeps its template's thesis cap (investors decline off-thesis intents by default).
@@ -113,6 +154,39 @@ public sealed partial class Accounts(AgentCore core)
         if (req.Topics is not null)
             p["topics"] = new JsonArray(req.Topics.Where(t => core.Catalog.Topics.Contains(t)).Distinct().Take(12).Select(t => (JsonNode)t).ToArray());
         m.ProfileJson = p.ToJsonString();
+        await Db.SaveChangesAsync();
+        return (true, null);
+    }
+
+    // ---------- verification and sessions ----------
+
+    /// <summary>Consumer mail providers: a confirmed address there proves the person, not an employer.</summary>
+    private static readonly HashSet<string> FreeMail = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "live.com", "msn.com", "yahoo.com", "ymail.com", "icloud.com", "me.com",
+        "mac.com", "aol.com", "proton.me", "protonmail.com", "pm.me", "gmx.com", "gmx.net", "gmx.de", "web.de", "mail.com", "yandex.com",
+        "yandex.ru", "zoho.com", "fastmail.com", "hey.com", "tutanota.com", "qq.com", "163.com",
+    };
+
+    public static bool IsFreeMail(string email) => FreeMail.Contains(email[(email.LastIndexOf('@') + 1)..]);
+
+    /// <summary>A confirmed address; a company address also earns the "work email" claim senders are scored on.</summary>
+    public static void MarkEmailVerified(Member m)
+    {
+        m.EmailVerified = true;
+        if (m.Email is not null && !IsFreeMail(m.Email) && !m.Verified.Contains("work_email"))
+            m.Verified = [.. m.Verified, "work_email"];
+    }
+
+    public static void RotateStamp(Member m) => m.SecurityStamp = AgentCore.NewToken();
+
+    public async Task<(bool ok, string? error)> ChangePassword(Member m, string? current, string? password)
+    {
+        if (m.PasswordHash is not null && !VerifyPassword(current ?? "", m.PasswordHash)) return (false, "Your current password isn't right.");
+        if ((password ?? "").Length < 10) return (false, "Use a password of at least 10 characters.");
+        if (password!.Length > 200) return (false, "That password is too long.");
+        m.PasswordHash = HashPassword(password);
+        RotateStamp(m);
         await Db.SaveChangesAsync();
         return (true, null);
     }
