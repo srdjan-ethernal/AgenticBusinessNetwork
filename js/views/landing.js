@@ -47,7 +47,7 @@
       '<text x="74" y="18" text-anchor="middle" class="a-fg2" font-size="12" font-weight="600">214 inbound this week</text>' +
       flows + cards +
       '<circle class="a-accent pulse" cx="268" cy="210" r="60" opacity=".3"/><circle class="a-accent" cx="268" cy="210" r="44"/>' +
-      '<g transform="translate(244 186) scale(2)" style="color:var(--on-accent)"><circle cx="5.6" cy="12" r="2.9" fill="currentColor"/><path d="M8.3 12H18M8 11.2c3.1-.6 3.9-5.2 9.2-5.2M8 12.8c3.1.6 3.9 5.2 9.2 5.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="19.2" cy="6" r="1.9" fill="currentColor"/><circle cx="19.6" cy="12" r="1.9" fill="currentColor"/><circle cx="19.2" cy="18" r="1.9" fill="currentColor"/></g>' +
+      '<g transform="translate(244 186) scale(2)" style="color:var(--on-accent)">' + A.glyph.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '') + '</g>' +
       '<text x="268" y="284" text-anchor="middle" class="a-fg" font-size="13" font-weight="600">Your agent</text><text x="268" y="301" text-anchor="middle" class="a-fg2" font-size="11">applies your policy</text>' +
       '<path class="a-flow" stroke-width="2" d="M306 190 C 340 150, 345 96, 380 96"/><path class="a-flow" stroke-width="2" d="M312 210 H 380"/><path class="a-flow" stroke-width="2" d="M306 230 C 340 270, 345 324, 380 324"/>' +
       '<rect class="a-high-bg" x="380" y="82" width="64" height="28" rx="14"/><text x="412" y="100.5" text-anchor="middle" class="a-high" font-size="12" font-weight="700">HIGH</text>' +
@@ -95,7 +95,7 @@
         '<section class="lo-wrap lo-hero">' +
           '<div><div class="eyebrow eyebrow--accent">Recipient-owned business agent network</div>' +
           '<h1>Stay reachable without being <em>interruptible.</em></h1>' +
-          '<p class="lo-hero__sub">The professional network where every person and company has an AI agent. Anyone can reach yours. Your policy decides what reaches you.</p>' +
+          '<p class="lo-hero__sub">The professional network where every person and company has an AI agent. Anyone can knock. Your agent decides who comes in.</p>' +
           '<div class="lo-cta"><a class="btn btn--primary btn--xl" href="#join">Create your agent</a>' +
           '<button class="btn btn--secondary btn--xl" data-act="signin-demo">' + A.avatar(me, 26) + 'Explore the demo as Maya</button></div>' +
           '<p class="lo-fine">Prototype. Every person, company and number on this site is fictional, and nothing you type leaves your browser. Already have an agent? <a class="link" href="#signin">Sign in</a></p></div>' +
@@ -248,7 +248,7 @@
           '</form>' +
           (A.Live.signupOpen ? '<p class="small muted">New here? <a class="link" href="#join">Create your agent</a></p>' : '') +
           dev +
-          '<a class="btn btn--tertiary btn--block" href="#a.maya-okafor">Send an intent without an account</a>' +
+          '<a class="btn btn--tertiary btn--block" href="#a.maya-okafor">Knock without an account</a>' +
           '</div></div>';
       }
       const me = A.P(A.me);
@@ -258,7 +258,7 @@
         '<button class="acct" data-act="signin-demo">' + A.avatar(me, 48) + '<span class="grow stack-4"><b>' + esc(me.name) + '</b><span class="small muted">General Partner at Tidewell Ventures</span><span class="small">' + c.high + ' HIGH · ' + c.medium + ' MEDIUM waiting in the Agent Inbox</span></span>' + I('right') + '</button>' +
         '<div class="or">or</div>' +
         '<a class="btn btn--secondary btn--lg btn--block" href="#join">Create your agent</a>' +
-        '<a class="btn btn--tertiary btn--block" href="#a.' + A.me + '">Send an intent without an account</a>' +
+        '<a class="btn btn--tertiary btn--block" href="#a.' + A.me + '">Knock without an account</a>' +
         '</div></div>';
     },
     mount: function (arg) {

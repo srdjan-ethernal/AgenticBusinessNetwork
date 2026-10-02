@@ -89,7 +89,7 @@ public sealed class AccountEmailTests(AccountMailFactory factory) : IClassFixtur
         Assert.True((bool)account["hasPassword"]!);
 
         var mail = (await MailTo("vera@northwind.dev", "verify")).Single();
-        Assert.Equal("Confirm your email for Agentic Business Network", mail.Subject);
+        Assert.Equal("Confirm your email for Knockero", mail.Subject);
         var token = Token(mail, "verify");
 
         var res = await Client().PostAsJsonAsync("/api/auth/verify", new { token });

@@ -1,4 +1,4 @@
-/* Agentic Business Network — live mode. When the page is served by the API (src/Agentic.Api),
+/* Knockero — live mode. When the page is served by the API (src/Agentic.Api),
    data comes from the server; anywhere else (GitHub Pages, the artifact) the page runs on demo data. */
 (function (A) {
   const L = (A.Live = { on: false, devLogin: false, members: [], cards: {} });
@@ -115,7 +115,7 @@
     return card;
   };
   L.policyFromCard = function (card) {
-    const s = (card && card.x_agentic && card.x_agentic.policy) || {};
+    const s = (card && card.x_knockero && card.x_knockero.policy) || {};
     return Object.assign(JSON.parse(JSON.stringify(A.defaultPolicy)), {
       template: s.template || 'founder',
       categories: s.categories || A.defaultPolicy.categories,

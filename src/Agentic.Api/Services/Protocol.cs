@@ -227,7 +227,7 @@ public sealed class Protocol(AgentCore core, IAgentModel ai)
                 new { id = "answer_question", name = "Qualification thread" },
             },
             authentication = new { schemes = new[] { "anonymous", "session" } },
-            x_agentic = new
+            x_knockero = new
             {
                 owner = "person:" + m.Id,
                 verified_claims = m.Verified,

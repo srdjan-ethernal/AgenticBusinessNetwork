@@ -1,4 +1,4 @@
-/* Agentic Business Network — boot. Live mode when served by the API, demo mode everywhere else. */
+/* Knockero — boot. Live mode when served by the API, demo mode everywhere else. */
 (function (A) {
   A.load();
   A.applyTheme();

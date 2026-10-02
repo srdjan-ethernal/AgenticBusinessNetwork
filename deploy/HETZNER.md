@@ -1,4 +1,4 @@
-# Deploying to Hetzner Cloud
+# Deploying Knockero to Hetzner Cloud
 
 One small VPS runs everything: the API (which also serves the web client) and Caddy for automatic
 HTTPS. Data lives in SQLite on a Docker volume, backed up with one command.
@@ -24,10 +24,11 @@ At your DNS provider create:
 
 | Type | Name | Value |
 |---|---|---|
-| A | `agentic` (or `@`) | server IPv4 |
-| AAAA | `agentic` (or `@`) | server IPv6 (optional) |
+| A | `@` | server IPv4 |
+| A | `www` | server IPv4 (Caddy redirects www to the main domain) |
+| AAAA | `@`, `www` | server IPv6 (optional) |
 
-Wait until `nslookup agentic.yourdomain.com` returns the server IP. Caddy needs this to get the
+Wait until `nslookup knockero.com` returns the server IP. Caddy needs this to get the
 Let's Encrypt certificate on first start.
 
 ## 3. Prepare the server (once)
@@ -45,13 +46,13 @@ random `ACCESS_CODE`.
 
 ```bash
 cd /opt/agentic
-nano .env            # set DOMAIN=agentic.yourdomain.com
+nano .env            # set DOMAIN=knockero.com
 docker compose up -d --build
 docker compose ps    # app should become "healthy" within ~30 s
 docker compose logs -f caddy   # watch the certificate being issued
 ```
 
-Open `https://agentic.yourdomain.com` and choose **Create your agent**. While `ACCESS_CODE` is set,
+Open `https://knockero.com` and choose **Create your agent**. While `ACCESS_CODE` is set,
 sign-up asks for it, so only people you give the code to can join. **Sign in → Development accounts**
 also lets you (with the same code) look around as a member of the fictional demo network.
 
@@ -97,7 +98,7 @@ sent to Anthropic's API, so mention it in your privacy notice.
    `openid`, `email`, `profile` (no verification by Google is needed for these). Publish the app
    (*In production*), otherwise only listed test users can sign in.
 2. **Credentials → Create credentials → OAuth client ID**, type **Web application**, authorized redirect
-   URI `https://agentic.yourdomain.com/signin-google`.
+   URI `https://knockero.com/signin-google`.
 3. Put the client ID and secret into `.env` (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) and
    `docker compose up -d`.
 

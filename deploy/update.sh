@@ -13,6 +13,10 @@ echo "==> Rebuild and restart"
 docker compose up -d --build
 docker image prune -f >/dev/null
 
+echo "==> Reload Caddy (picks up Caddyfile changes)"
+docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile \
+  || docker compose restart caddy
+
 echo "==> Health"
 sleep 5
 docker compose ps

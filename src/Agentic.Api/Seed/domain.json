@@ -1,5 +1,5 @@
 {
-  "brand": { "name": "Agentic Business Network", "short": "Agentic", "ns": "agentic", "protocol": "Business Intent Protocol", "pv": "0.1" },
+  "brand": { "name": "Knockero", "short": "Knockero", "ns": "knockero", "protocol": "Business Intent Protocol", "pv": "0.1" },
   "categories": {
     "fundraising": { "label": "Fundraising", "desc": "Founders pitching a round or asking for a meeting." },
     "partnership": { "label": "Partnership", "desc": "Co-investment, events, co-marketing, distribution." },

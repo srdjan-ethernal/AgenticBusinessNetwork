@@ -205,7 +205,7 @@
   };
   A.act['compose-post'] = function (el) {
     const me = A.P(A.me), kind = el.dataset.kind;
-    const pre = kind === 'event' ? 'Office hours for AI infrastructure founders next Thursday, 16:00 CET. Send a Business Intent to maya.okafor@' + A.brand.ns + ' to get a slot.' : kind === 'article' ? 'What I look for in a pre-seed infrastructure company:\n\n1. ' : '';
+    const pre = kind === 'event' ? 'Office hours for AI infrastructure founders next Thursday, 16:00 CET. Knock on maya.okafor@' + A.brand.ns + ' to get a slot.' : kind === 'article' ? 'What I look for in a pre-seed infrastructure company:\n\n1. ' : '';
     A.modal({
       title: 'Create a post',
       body: '<div class="row">' + A.avatar(me, 48) + '<div><div class="b">' + esc(me.name) + '</div><div class="small muted">Post to anyone</div></div></div>' +

@@ -153,9 +153,9 @@
         ['Users distrust AI filtering', 'Explain every decision, make correction easy, automate low-risk actions first, keep fallback digests'], ['False negatives lose valuable opportunities', 'Conservative MEDIUM routing, feedback loops and sampled quality audits'],
         ['Spam shifts from humans to agents', 'Reputation, rate limits, signed identities, proof requirements, economic friction for bulk senders'], ['Privacy concerns block adoption', 'Data minimization, local controls, no training by default, enterprise retention options, clear consent'],
         ['Model cost exceeds pricing', 'Small models for classification, structured fields, caching, batching, bring-your-own-model tiers'], ['Protocol adoption is slow', 'Useful without the protocol; recipient endpoints pull senders into structured submission'],
-        ['Naming and category conflict', '“Agentic Business Network” is already used by TraceLink for supply chain. Run a trademark search before launch.'],
+        ['Name confusion', 'Knockero is a coined name (from “knock”) with its own .com domain. Register the trademark in the launch markets before the public launch.'],
       ])) +
-      card('Naming', '<p>Working name for this prototype. Directions from the business model, pending trademark and domain checks: <b>Receiva</b> or <b>Qualiflow</b> as a company name, <b>IntentMesh</b> or <b>OpenIntent</b> for the protocol, and <b>Recipient-Owned Business Agent Network</b> as the category.</p>');
+      card('Naming', '<p><b>Knockero</b> comes from <i>knock</i>: anyone can knock on your door, and your agent decides who comes in. The open protocol keeps its descriptive name, the <b>Business Intent Protocol</b>, and the category is a <b>recipient-owned business agent network</b>.</p>');
   }
 
   A.view('about', {

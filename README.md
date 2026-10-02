@@ -1,10 +1,13 @@
-# Agentic Business Network — prototype site
+# Knockero
 
-Web prototype for the *Agentic Business Network* business model: a professional
-network where every person and company is represented by a recipient-owned AI agent.
-All people, companies and numbers are fictional demo data.
+*Anyone can knock. Your agent decides who comes in.*
 
-**Live:** https://srdjan-ethernal.github.io/AgenticBusinessNetwork/
+Knockero is a professional network where every person and company is represented by a
+recipient-owned AI agent. Senders "knock" with a structured Business Intent; the recipient's agent
+screens it against the recipient's own policy and routes it. The name comes from *knock*.
+
+- **Live service:** https://knockero.com
+- **Static demo** (fictional data, everything stays in the browser): https://srdjan-ethernal.github.io/AgenticBusinessNetwork/
 
 ## What's inside
 
@@ -57,7 +60,7 @@ tests/Agentic.Tests/     xUnit tests (engine parity, app API, protocol)
   `POST /v1/intents`, `GET /v1/intents/{id}` and `POST /v1/intents/{id}/answers` (bearer = the
   `sender_token` returned on submit), `GET /v1/agents/{address}/card`.
   Senders see a status, open questions and a decline reason; the recipient's lane and score stay private.
-- **Accounts:** sign-up creates a member, an agent address (`name.surname@agentic`) and a policy from the
+- **Accounts:** sign-up creates a member, an agent address (`name.surname@knockero`) and a policy from the
   chosen template; email + password sign-in (PBKDF2-SHA256, 600k iterations) or **Continue with Google** (sign-up and
   sign-in; a verified Google address links an existing account), profile editing,
   per-IP limits on sign-up and password attempts. With an access code set, sign-up is invite-only.
@@ -114,8 +117,9 @@ Next increments: webhooks, Postgres.
 Any static file server works, for example `npx serve .` in this folder. In Claude Code the `agentic`
 launch configuration serves it on http://localhost:5321/ and `agentic-api` runs the API on 5320.
 
-## Rename the brand
+## Brand
 
-Change `A.brand` at the top of `js/data.js` (name, short name, agent-address namespace, API URL).
-The business model recommends a distinct company name before launch (for example Receiva or
-Qualiflow), because "Agentic Business Network" is already used by TraceLink for supply chain.
+The name, short name, tagline, agent-address namespace (`@knockero`) and API URL live in `A.brand` at
+the top of `js/data.js`, and the server's copy in `src/Agentic.Api/Seed/domain.json`. The logo is the
+`A.glyph` door knocker in `js/icons.js`. The code, solution and repository keep their original
+internal names (`Agentic.Api`, `AgenticBusinessNetwork`).

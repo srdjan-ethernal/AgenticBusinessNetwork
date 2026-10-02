@@ -1,4 +1,4 @@
-/* Agentic Business Network — recipient policy + priority scoring engine.
+/* Knockero — recipient policy + priority scoring engine.
    Priority = 0.30 policy fit + 0.20 completeness + 0.15 reputation + 0.15 relationship + 0.10 value + 0.10 urgency − penalties.
    Hard rules (blocked, closed categories, VIP, thesis cap) are enforced outside the score. */
 (function (A) {

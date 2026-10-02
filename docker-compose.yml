@@ -20,7 +20,7 @@ services:
       Email__Smtp__User: ${SMTP_USER:-}
       Email__Smtp__Password: ${SMTP_PASSWORD:-}
       Email__FromAddress: ${MAIL_FROM:-no-reply@localhost}
-      Email__FromName: ${MAIL_FROM_NAME:-Agentic Business Network}
+      Email__FromName: ${MAIL_FROM_NAME:-Knockero}
       Invites__PerDay: ${INVITES_PER_DAY:-200}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5-5}

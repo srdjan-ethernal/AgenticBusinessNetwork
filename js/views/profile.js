@@ -24,7 +24,7 @@
       '<div class="stack-4"><div class="eyebrow">Closed</div><div class="pills">' + (closed.map(function (k) { return tag(k); }).join('') || '<span class="small muted">None</span>') + '</div></div></div>' +
       '<div class="stack-4"><div class="eyebrow">Evidence ' + f + ' agent asks for</div><ul class="stack-4">' + ev + '</ul></div>' +
       '<div class="stack-4"><div class="eyebrow">Response times</div><div>HIGH: same day · MEDIUM: daily digest · Every decline includes a reason</div></div>' +
-      (isMe ? '<div class="row wrap"><a class="btn btn--secondary btn--sm" href="#policy">Edit policy</a><a class="btn btn--tertiary btn--sm" href="#a.' + id + '">View as a sender</a></div>' : '<div><a class="btn btn--primary btn--sm" href="#send.' + id + '">' + I('spark', 'ico-16') + 'Send Business Intent</a></div>') +
+      (isMe ? '<div class="row wrap"><a class="btn btn--secondary btn--sm" href="#policy">Edit policy</a><a class="btn btn--tertiary btn--sm" href="#a.' + id + '">View as a sender</a></div>' : '<div><a class="btn btn--primary btn--sm" href="#send.' + id + '">' + I('spark', 'ico-16') + 'Knock</a></div>') +
       '</div></section>';
   }
   function activity(id) {
@@ -81,7 +81,7 @@
       const btns = isMe
         ? (A.live ? '<button class="btn btn--secondary" data-act="edit-profile">' + I('edit', 'ico-20') + 'Edit profile</button>' : '') + '<a class="btn btn--primary" href="#policy">Edit agent policy</a><button class="btn btn--secondary" data-act="copy" data-text="' + esc(addr) + '" data-msg="Agent address copied.">Share agent address</button><a class="btn btn--muted" href="#a.' + id + '">View as sender</a>'
         : (p.kind === 'agent' ? '<button class="btn btn--danger" data-act="soon" data-msg="This agent is already blocked by your policy.">' + I('block', 'ico-20') + 'Blocked by your agent</button>'
-          : '<a class="btn btn--primary" href="#send.' + id + '">' + I('spark', 'ico-20') + 'Send Business Intent</a><button class="btn btn--secondary" data-act="connect" data-id="' + id + '"' + (conn || p.degree === '1st' ? ' disabled' : '') + '>' + (p.degree === '1st' ? I('check', 'ico-20') + 'Connected' : conn ? I('clock', 'ico-20') + 'Pending' : I('plus', 'ico-20') + 'Connect') + '</button><button class="btn btn--muted" data-act="follow" data-id="' + id + '">' + (fol ? 'Following' : 'Follow') + '</button>');
+          : '<a class="btn btn--primary" href="#send.' + id + '">' + I('spark', 'ico-20') + 'Knock</a><button class="btn btn--secondary" data-act="connect" data-id="' + id + '"' + (conn || p.degree === '1st' ? ' disabled' : '') + '>' + (p.degree === '1st' ? I('check', 'ico-20') + 'Connected' : conn ? I('clock', 'ico-20') + 'Pending' : I('plus', 'ico-20') + 'Connect') + '</button><button class="btn btn--muted" data-act="follow" data-id="' + id + '">' + (fol ? 'Following' : 'Follow') + '</button>');
       return '<div class="page"><div class="scaffold scaffold--mr"><div class="main">' +
         '<div class="card phead"><div class="phead__main">' +
           '<div class="phead__av">' + A.avatar(p, 104) + (p.kind === 'agent' ? '' : '<span class="agent-dot" title="Agent active">' + I('spark') + '</span>') + '</div>' +

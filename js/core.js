@@ -1,4 +1,4 @@
-/* Agentic Business Network — state, router, shell, shared UI */
+/* Knockero — state, router, shell, shared UI */
 (function (A) {
   const esc = A.esc;
   const B = A.brand;

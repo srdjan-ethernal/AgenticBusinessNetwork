@@ -1,4 +1,4 @@
-/* Agentic Business Network — icon set, logo, avatars, reactions */
+/* Knockero — icon set, logo, avatars, reactions */
 window.ABN = window.ABN || {};
 (function (A) {
   A.esc = function (s) {
@@ -88,8 +88,8 @@ window.ABN = window.ABN || {};
     return '';
   };
 
-  // Brand glyph: an agent node that fans inbound out into three lanes
-  A.glyph = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.6" cy="12" r="2.9" fill="currentColor"/><path d="M8.3 12H18M8 11.2c3.1-.6 3.9-5.2 9.2-5.2M8 12.8c3.1.6 3.9 5.2 9.2 5.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="19.2" cy="6" r="1.9" fill="currentColor"/><circle cx="19.6" cy="12" r="1.9" fill="currentColor"/><circle cx="19.2" cy="18" r="1.9" fill="currentColor"/></svg>';
+  // Brand glyph: a door knocker (ring on its mount) and the sound of a knock
+  A.glyph = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9.4" cy="4.5" r="2" fill="currentColor"/><path d="M9.4 6.2v2.3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="9.4" cy="14.2" r="5.3" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M17.5 11.3a4.3 4.3 0 0 1 0 5.8M20.4 9.2a7.4 7.4 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
   A.logo = function (size) {
     const s = size || 34;
     return '<span class="logo" style="width:' + s + 'px;height:' + s + 'px">' + A.glyph.replace('<svg ', '<svg style="width:' + Math.round(s * 0.76) + 'px;height:' + Math.round(s * 0.76) + 'px" ') + '</span>';

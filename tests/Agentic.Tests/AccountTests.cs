@@ -29,7 +29,7 @@ public sealed class AccountTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Equal(HttpStatusCode.Created, res.StatusCode);
         var created = await res.Content.ReadFromJsonAsync<JsonObject>();
         Assert.Equal("ana-kovac", (string)created!["id"]!);
-        Assert.Equal("ana.kovac@agentic", (string)created["agentAddress"]!);
+        Assert.Equal("ana.kovac@knockero", (string)created["agentAddress"]!);
 
         // Signed in straight away.
         var boot = await c.GetFromJsonAsync<JsonObject>("/api/bootstrap");
@@ -70,7 +70,7 @@ public sealed class AccountTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var b = await (await Client().PostAsJsonAsync("/api/auth/signup", Signup("jo2@example.org", "Jo Park"))).Content.ReadFromJsonAsync<JsonObject>();
         Assert.Equal("jo-park", (string)a!["id"]!);
         Assert.Equal("jo-park-2", (string)b!["id"]!);
-        Assert.Equal("jo.park.2@agentic", (string)b["agentAddress"]!);
+        Assert.Equal("jo.park.2@knockero", (string)b["agentAddress"]!);
     }
 
     [Fact]
@@ -132,14 +132,14 @@ public sealed class AccountTests(ApiFactory factory) : IClassFixture<ApiFactory>
         await owner.PostAsJsonAsync("/api/auth/signup", Signup("inbox@example.org", "In Box", template: "investor"));
 
         var sender = Client();
-        var card = await sender.GetFromJsonAsync<JsonObject>("/v1/agents/in.box@agentic/card");
-        Assert.Equal("investor", (string)card!["x_agentic"]!["policy"]!["template"]!);
+        var card = await sender.GetFromJsonAsync<JsonObject>("/v1/agents/in.box@knockero/card");
+        Assert.Equal("investor", (string)card!["x_knockero"]!["policy"]!["template"]!);
 
         var body = new
         {
             business_intent_version = "0.1",
             sender = new { display_name = "Lena Hoff", organization = "Quiverline" },
-            recipient = new { agent_address = "in.box@agentic" },
+            recipient = new { agent_address = "in.box@knockero" },
             intent = new { category = "fundraising", objective = "Request a meeting about Quiverline's $900K pre-seed", value_proposition = "Data tooling for ML teams", requested_action = "meet", topics = new[] { "Data tooling" }, stage = "Pre-seed", round_size_usd = 900000, geo = "Europe" },
             fit_evidence = new[] { new { type = "round", value = "$900K pre-seed" }, new { type = "traction", value = "$40K MRR, 12 paying teams" }, new { type = "deck", value = "https://quiverline.example/deck" } },
         };

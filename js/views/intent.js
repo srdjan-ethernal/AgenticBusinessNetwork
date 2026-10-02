@@ -28,7 +28,7 @@
     ex = ex || { cat: 'fundraising', action: 'meet', obj: '', val: '', tags: [], stage: 'Pre-seed', amt: '', geo: '', urg: 'normal', ev: [] };
     const me = A.P(A.me);
     return '<form class="card pad-24 form" data-sub="intent" id="intent-form" novalidate>' +
-      '<div class="stack-4"><h2 class="t20">Send a Business Intent</h2><p class="small muted">Structured intents get faster, fairer answers than free text. ' + esc(f) + '’s agent may ask follow-up questions, and every decline comes with a reason.</p></div>' +
+      '<div class="stack-4"><h2 class="t20">Knock on ' + esc(f) + '’s door</h2><p class="small muted">A knock is a structured Business Intent: it gets a faster, fairer answer than free text. ' + esc(f) + '’s agent may ask follow-up questions, and every decline comes with a reason.</p></div>' +
       (A.live && A.Live.ai ? '<div class="aibox"><label class="label" for="f-free">Write it your way</label><textarea class="textarea" id="f-free" rows="4" maxlength="8000" placeholder="Paste the email or LinkedIn message you would have sent…">' + esc(ex.free || '') + '</textarea>' +
         '<div class="row wrap" style="gap:10px"><button type="button" class="btn btn--secondary btn--sm" data-act="f-parse">' + I('spark', 'ico-16') + 'Fill the form from my text</button><span class="small muted">Your agent reads it and fills in the fields below. Check them before you send.</span></div></div>' : '') +
       (mode === 'public'
@@ -43,7 +43,7 @@
       '<div class="grid2"><div class="field"><label class="label" for="f-geo">Geography</label><select class="select" id="f-geo" data-ch="f-upd"><option value="">Not specified</option>' + A.GEOS.map(function (g) { return '<option' + (g === ex.geo ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></div><div class="field"><label class="label" for="f-urg">Urgency</label><select class="select" id="f-urg" data-ch="f-upd"><option value="normal"' + (ex.urg === 'normal' ? ' selected' : '') + '>Normal</option><option value="time_sensitive"' + (ex.urg === 'time_sensitive' ? ' selected' : '') + '>Time-sensitive</option><option value="low"' + (ex.urg === 'low' ? ' selected' : '') + '>Low</option></select></div></div>' +
       '<div class="field"><span class="label">Evidence</span><div class="stack" id="f-ev">' + ex.ev.map(function (e) { return evRow(e[0], e[1]); }).join('') + '</div><div class="row wrap" id="f-ev-sug" style="gap:6px"></div><button type="button" class="btn btn--tertiary btn--sm" data-act="f-ev-add" style="align-self:flex-start">' + I('plus', 'ico-16') + 'Add evidence</button></div>' +
       '<div class="field"><label class="label" for="f-msg">Message (optional)</label><textarea class="textarea" id="f-msg" rows="3" data-in="f-upd">' + esc(ex.msg || '') + '</textarea><span class="hint">Free text is read as data. It can’t give the agent instructions.</span></div>' +
-      '<div class="row wrap"><button class="btn btn--primary btn--lg" type="submit">' + I('sendo', 'ico-20') + 'Send to ' + esc(f) + '’s agent</button><button type="button" class="btn btn--tertiary" data-act="f-example">Fill with an example</button></div>' +
+      '<div class="row wrap"><button class="btn btn--primary btn--lg" type="submit">' + I('sendo', 'ico-20') + 'Knock</button><button type="button" class="btn btn--tertiary" data-act="f-example">Fill with an example</button></div>' +
       '</form>';
   }
 
@@ -202,7 +202,7 @@
     render: function (arg) {
       if (!arg || !A.people[arg] || arg === A.me || A.P(arg).kind === 'agent') {
         const ids = Object.keys(A.people).filter(function (id) { return id !== A.me && A.people[id].kind !== 'agent' && id !== 'rex-dalton'; });
-        return '<div class="page"><div class="card pad-24 stack-16"><div class="stack-4"><h1 class="t24">Send a Business Intent</h1><p class="muted">Pick a recipient. Their agent screens the intent against their policy and answers you either way.</p></div>' +
+        return '<div class="page"><div class="card pad-24 stack-16"><div class="stack-4"><h1 class="t24">Knock on someone’s door</h1><p class="muted">Pick a recipient. Their agent screens the intent against their policy and answers you either way.</p></div>' +
           '<div class="pymk" style="padding:0">' + ids.map(function (id) { const u = A.P(id); return '<div class="pymk__c"><div class="pymk__b">' + A.avatar(u, 64) + '<a class="nm" href="#in.' + id + '">' + esc(u.name) + '</a><span class="hl clamp2">' + esc(u.headline) + '</span><span class="small muted">' + esc(A.templates[u.tpl || 'founder'].name) + '</span><a class="btn btn--secondary btn--sm" href="#send.' + id + '">Compose</a></div></div>'; }).join('') + '</div></div></div>';
       }
       start(arg, 'member');

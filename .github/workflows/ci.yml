@@ -28,7 +28,7 @@ jobs:
           curl -fs http://localhost:8080/ | grep -q "js/api.js"
           curl -fs http://localhost:8080/css/styles.css > /dev/null
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/README.md)" = "404"
-          curl -fs http://localhost:8080/v1/agents/maya.okafor@agentic/card | grep -q '"x_agentic"'
+          curl -fs http://localhost:8080/v1/agents/maya.okafor@knockero/card | grep -q '"x_knockero"'
           code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d '{"name":"CI Bot","email":"ci@example.org","password":"ci-password-123","headline":"CI at Example","accessCode":"ci"}' http://localhost:8080/api/auth/signup)
           test "$code" = "201"
           docker exec agentic dotnet Agentic.Api.dll --healthcheck

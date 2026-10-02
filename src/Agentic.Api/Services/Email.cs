@@ -17,7 +17,7 @@ public interface IEmailSender
 public sealed class EmailOptions
 {
     public string FromAddress { get; set; } = "no-reply@localhost";
-    public string FromName { get; set; } = "Agentic Business Network";
+    public string FromName { get; set; } = "Knockero";
     public SmtpOptions Smtp { get; set; } = new();
     /// <summary>How often the dispatcher looks for queued mail, and the pause between two sends.</summary>
     public int PollMs { get; set; } = 5000;

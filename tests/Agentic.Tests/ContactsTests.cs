@@ -166,7 +166,7 @@ public sealed class ContactsTests(MailFactory factory) : IClassFixture<MailFacto
         Assert.Equal(1, (int)r["onNetwork"]!);
 
         var mail = (await WaitForMail("ana.v@example.org")).Single();
-        Assert.Equal("Iva Inviter invited you to Agentic Business Network", mail.Subject);
+        Assert.Equal("Iva Inviter invited you to Knockero", mail.Subject);
         Assert.Equal("inviter@example.org", mail.ReplyTo);
         Assert.Contains("Hi Ana,", mail.Text);
         Assert.Contains("Would love to have you there, Ana.", mail.Text);

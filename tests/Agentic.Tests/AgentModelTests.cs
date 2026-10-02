@@ -78,7 +78,7 @@ public sealed class AgentModelTests(AiFactory factory) : IClassFixture<AiFactory
     {
         business_intent_version = "0.1",
         sender = new { display_name = sender, organization = "Quiverline" },
-        recipient = new { agent_address = "maya.okafor@agentic" },
+        recipient = new { agent_address = "maya.okafor@knockero" },
         intent = new { category, objective, value_proposition = "GPU inference cost tooling", requested_action = "meet", topics = new[] { "Inference" }, stage = "Pre-seed", round_size_usd = 900000, geo = "Europe" },
         fit_evidence = new[] { new { type = "round", value = "$900K pre-seed" } },
     };
