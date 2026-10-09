@@ -167,6 +167,7 @@ docker compose start app
 | Status | `docker compose ps` |
 | App logs | `docker compose logs -f app` |
 | Restart | `docker compose restart app` |
+| Remove the demo network, keep real accounts | `docker compose run --rm backup && docker compose exec app dotnet Agentic.Api.dll --remove-demo`, then `SEED_DEMO=false` in `.env` |
 | Reset to a fresh demo database | `docker compose down && docker volume rm agentic_data && docker compose up -d` |
 | Roll back | `git checkout <previous-commit> && docker compose up -d --build` |
 

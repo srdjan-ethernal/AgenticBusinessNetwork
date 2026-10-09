@@ -201,7 +201,7 @@
     nav: 'feed',
     render: function (arg) {
       if (!arg || !A.people[arg] || arg === A.me || A.P(arg).kind === 'agent') {
-        const ids = Object.keys(A.people).filter(function (id) { return id !== A.me && A.people[id].kind !== 'agent' && id !== 'rex-dalton'; });
+        const ids = Object.keys(A.people).filter(function (id) { return id !== A.me && A.people[id].kind !== 'agent' && id !== 'rex-dalton' && id.indexOf('anon-') !== 0; });
         return '<div class="page"><div class="card pad-24 stack-16"><div class="stack-4"><h1 class="t24">Knock on someone’s door</h1><p class="muted">Pick a recipient. Their agent screens the intent against their policy and answers you either way.</p></div>' +
           '<div class="pymk" style="padding:0">' + ids.map(function (id) { const u = A.P(id); return '<div class="pymk__c"><div class="pymk__b">' + A.avatar(u, 64) + '<a class="nm" href="#in.' + id + '">' + esc(u.name) + '</a><span class="hl clamp2">' + esc(u.headline) + '</span><span class="small muted">' + esc(A.templates[u.tpl || 'founder'].name) + '</span><a class="btn btn--secondary btn--sm" href="#send.' + id + '">Compose</a></div></div>'; }).join('') + '</div></div></div>';
       }

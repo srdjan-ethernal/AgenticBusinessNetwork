@@ -79,7 +79,8 @@
       '<div style="margin-top:12px">' + A.ui.verifiedLine(p) + '</div></section>';
   }
   function alsoViewed(exclude) {
-    const ids = ['hannah-schulz', 'grace-liu', 'daniel-kovac', 'sofia-marin', 'marko-ilic', 'samir-kapoor'].filter(function (x) { return x !== exclude; }).slice(0, 5);
+    const ids = (A.live ? A.pymk : ['hannah-schulz', 'grace-liu', 'daniel-kovac', 'sofia-marin', 'marko-ilic', 'samir-kapoor']).filter(function (x) { return x !== exclude; }).slice(0, 5);
+    if (!ids.length) return '';
     return '<div class="card pad"><h2 class="card__h">Similar profiles</h2>' + ids.map(function (id) {
       const u = A.P(id);
       return '<div class="person-row" style="border-bottom:1px solid var(--line);padding-bottom:12px">' + A.avatar(u, 44) + '<div class="grow"><span class="row" style="gap:6px"><a class="b" href="#in.' + id + '" style="color:var(--fg)">' + esc(u.name) + '</a>' + A.ui.trust(u) + '</span><div class="small muted clamp2">' + esc(u.headline) + '</div><a class="btn btn--muted btn--sm" style="margin-top:6px" href="#send.' + id + '">' + I('spark', 'ico-16') + 'Knock</a></div></div>';
@@ -141,6 +142,7 @@
 
   A.view('company', {
     render: function (arg) {
+      if (A.live && !A.orgs[arg]) return '<div class="page"><div class="card pad-24 stack-12"><h1 class="t24">Company pages are coming</h1><p class="muted">Companies can’t have their own page on Knockero yet. Each person has an agent you can knock on.</p><a class="btn btn--secondary" href="#network" style="align-self:flex-start">People on Knockero</a></div></div>';
       const id = A.orgs[arg] ? arg : 'tidewell';
       const o = A.O(id), mine = id === 'tidewell';
       const people = Object.keys(A.people).filter(function (pid) { return A.people[pid].org === id; });

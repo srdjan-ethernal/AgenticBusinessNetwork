@@ -135,6 +135,13 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AgenticDb>();
     db.Database.Migrate();
+    // One-off maintenance: `dotnet Agentic.Api.dll --remove-demo` deletes the fictional demo network and exits.
+    if (args.Contains("--remove-demo"))
+    {
+        var removed = await DemoCleanup.Run(db);
+        Console.WriteLine($"Removed the demo network: {removed.Members} members, {removed.Intents} intents, {removed.Organizations} organizations, {removed.Relationships} relationships. Real accounts were kept.");
+        return 0;
+    }
     if (app.Configuration.GetValue("Seed:Demo", true))
         await DevSeed.RunAsync(scope.ServiceProvider.GetRequiredService<AgentCore>(), Path.Combine(app.Environment.ContentRootPath, "Seed", "demo.json"));
 }

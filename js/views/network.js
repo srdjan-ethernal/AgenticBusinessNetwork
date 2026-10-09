@@ -23,8 +23,29 @@
       '<div class="row">' + acts + '</div></div>';
   }
 
+  // Live: real members only. Connection requests aren't a server feature yet, so there are no invitations here.
+  function liveNetwork() {
+    const ids = A.pymk, first = ids.filter(function (id) { return A.P(id).degree === '1st'; }).length;
+    const rail = '<aside class="rail hide-md"><div class="card"><div class="pad" style="padding-bottom:4px"><h2 class="card__h">Your network</h2></div><div class="railnav" style="padding-bottom:8px">' +
+      [['users', 'Connections', String(first), 'network'], ['people', 'Import LinkedIn connections', '', 'contacts'], ['star', 'VIP list', String(A.S.policy.vip.length), 'policy.vip'], ['block', 'Blocked senders', String(A.S.policy.blocked.length), 'policy.vip']]
+        .map(function (x) { return '<a href="#' + x[3] + '">' + I(x[0]) + '<span>' + x[1] + '</span><span class="muted" style="margin-left:auto;font-weight:400">' + x[2] + '</span></a>'; }).join('') + '</div></div></aside>';
+    const people = ids.length
+      ? '<div class="pymk">' + ids.map(function (id) {
+          const u = A.P(id);
+          return '<div class="pymk__c"><div class="pymk__b">' + A.avatar(u, 64) + '<a class="nm" href="#in.' + id + '">' + esc(u.name) + '</a><span class="hl clamp2">' + esc(u.headline) + '</span>' +
+            (u.degree === '1st' ? '<span class="small muted row" style="justify-content:center">' + I('check', 'ico-16') + 'Connected</span>' : '') +
+            '<a class="btn btn--secondary btn--sm" href="#send.' + id + '">' + I('spark', 'ico-16') + 'Knock</a></div></div>';
+        }).join('') + '</div>'
+      : '<p class="pad muted" style="padding-top:0">You’re one of the first members. Import your LinkedIn connections to invite the people you work with.</p>';
+    return '<div class="page"><div class="scaffold scaffold--lm">' + rail + '<div class="main">' +
+      '<section class="card pad row wrap ct-promo"><span class="ct-promo__ic">' + I('users') + '</span><div class="grow stack-4"><b>Bring your LinkedIn network</b><span class="small muted">Import your connections from LinkedIn’s data export and invite them. Your agent then knows who you already work with.</span></div><a class="btn btn--primary btn--sm" href="#contacts">Import connections</a></section>' +
+      '<section class="card"><div class="pad" style="padding-bottom:12px"><h2 class="card__h">People on Knockero (' + ids.length + ')</h2><div class="small muted">Anyone here can be reached through their agent.</div></div>' + people + '</section>' +
+      '</div></div></div>';
+  }
+
   A.view('network', {
     render: function () {
+      if (A.live) return liveNetwork();
       const pending = A.invitations.filter(function (x) { return !A.S.inv[x.who]; }).length;
       return '<div class="page"><div class="scaffold scaffold--lm">' + manageRail() + '<div class="main">' +
         '<section class="card pad row wrap ct-promo"><span class="ct-promo__ic">' + I('users') + '</span><div class="grow stack-4"><b>Bring your LinkedIn network</b><span class="small muted">Import your connections from LinkedIn’s data export and invite them. Your agent then knows who you already work with.</span></div><a class="btn btn--primary btn--sm" href="#contacts">Import connections</a></section>' +

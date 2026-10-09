@@ -36,8 +36,12 @@
   L.apply = function (b) {
     A.me = b.me;
     A.people = b.people;
-    A.orgs = Object.assign({}, A.orgs, b.orgs);
+    A.orgs = b.orgs || {};
     A.intents = b.intents;
+    // Live: only real data. The built-in demo content (posts, news, notifications, invitations,
+    // suggestions) belongs to the static demo, not to a real network.
+    A.posts = []; A.news = []; A.notifications = []; A.invitations = []; A.held = []; A.vipSuggest = [];
+    A.pymk = L.memberIds(b);
     A.S.policy = b.policy;
     A.S.decisions = b.decisions || {};
     A.S.answered = b.answered || {};
@@ -45,6 +49,13 @@
     A.stats = b.stats || A.stats;
     A.account = b.account || null;
     A.S.signedIn = true;
+  };
+  /** Other real members (not you, not anonymous senders), people you aren't connected with first. */
+  L.memberIds = function (b) {
+    return Object.keys(b.people).filter(function (id) {
+      const p = b.people[id];
+      return id !== b.me && id.indexOf('anon-') !== 0 && !p.kind;
+    }).sort(function (x, y) { return (b.people[x].degree === '1st') - (b.people[y].degree === '1st'); });
   };
   L.bootstrap = async function () { const b = await call('GET', 'api/bootstrap'); L.apply(b); return b; };
 

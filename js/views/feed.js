@@ -136,6 +136,12 @@
 
   function rightRail() {
     const sug = A.vipSuggest.filter(function (id) { return A.S.policy.vip.indexOf(id) < 0; });
+    if (A.live) {
+      // A real network has no editorial news feed yet; VIP suggestions only when there are real people to suggest.
+      return '<aside class="rail rail--right">' +
+        (A.pymk.length ? '<div class="card pad stack-12"><h2 class="card__h">On Knockero</h2>' + A.pymk.slice(0, 4).map(function (id) { const u = A.P(id); return '<div class="person-row">' + A.avatar(u, 40) + '<div class="grow"><a class="b" href="#in.' + id + '" style="color:var(--fg)">' + esc(u.name) + '</a><div class="small muted clamp2">' + esc(u.headline) + '</div></div></div>'; }).join('') + '<a class="link small" href="#network">See everyone ' + I('arrow', 'ico-16') + '</a></div>' : '') +
+        '<div class="sticky">' + A.ui.appFooter() + '</div></aside>';
+    }
     return '<aside class="rail rail--right">' +
       '<div class="card"><div class="pad" style="padding-bottom:6px"><h2 class="card__h">Trending in your topics</h2><div class="small muted">AI infrastructure · Inference · Developer tools</div></div>' +
         '<ol class="trend">' + A.news.map(function (n, i) { return '<li><a href="#feed"><span class="trend__n">' + (i + 1) + '</span><span><span class="ttl">' + esc(n.t) + '</span><span class="meta">' + esc(n.m) + '</span></span></a></li>'; }).join('') + '</ol><div style="height:8px"></div></div>' +
@@ -145,9 +151,35 @@
       '<div class="sticky">' + A.ui.appFooter() + '</div></aside>';
   }
 
+  // ---------- live home: getting started and what your agent did ----------
+  function liveHome() {
+    const me = A.P(A.me);
+    const steps = [
+      [!!me.photo, 'Add a profile photo', 'People recognise you before they knock.', '#in.' + A.me, 'Open profile'],
+      [!!(me.exp && me.exp.length), 'Fill in your experience', 'Add it by hand, or in one click from your LinkedIn export.', '#in.' + A.me, 'Open profile'],
+      [!!(A.account && A.account.emailVerified) || !(A.account && A.account.email), 'Confirm your email', 'Senders then see you as verified, and your agent can send its daily digest.', '#settings', 'Account and email'],
+      [false, 'Bring your LinkedIn network', 'Import your connections and invite the people you work with.', '#contacts', 'Import connections'],
+      [false, 'Share your agent address', 'Put ' + me.addr + ' in your bio, signature or deck. Anyone can knock.', null, 'Copy address'],
+    ];
+    const done = steps.filter(function (s) { return s[0]; }).length;
+    const recent = E.sort(E.inbox()).filter(function (r) { return r.lane === 'high' || r.lane === 'medium'; }).slice(0, 5);
+    return '<section class="card pad stack-12"><div class="row between wrap"><h2 class="card__h">Getting started</h2><span class="small muted">' + done + ' of ' + steps.length + ' done</span></div>' +
+        steps.map(function (s) {
+          const btn = s[3] ? '<a class="btn btn--tertiary btn--sm" href="' + s[3] + '">' + s[4] + '</a>' : '<button class="btn btn--tertiary btn--sm" data-act="copy" data-text="' + esc(me.addr) + '" data-msg="Agent address copied.">' + s[4] + '</button>';
+          return '<div class="gs-step' + (s[0] ? ' is-done' : '') + '"><span class="gs-step__ic">' + I(s[0] ? 'check' : 'right', 'ico-16') + '</span><div class="grow"><b>' + s[1] + '</b><div class="small muted">' + esc(s[2]) + '</div></div>' + (s[0] ? '' : btn) + '</div>';
+        }).join('') + '</section>' +
+      '<section class="card"><div class="pad row between"><h2 class="card__h">Waiting for you</h2><a class="link-muted small" href="#inbox">Agent Inbox</a></div>' +
+        (recent.length ? recent.map(function (r) {
+          const it = r.it, p = A.P(it.from);
+          return '<a class="gs-intent" href="#inbox.' + it.id + '">' + A.avatar(p, 40) + '<span class="grow"><b class="clamp1">' + esc(p.name) + '</b><span class="small muted clamp1">' + esc(it.objective) + '</span></span>' + A.ui.lane(r.lane) + '</a>';
+        }).join('') : '<p class="pad muted" style="padding-top:0">' + (A.intents.length ? 'Nothing needs you right now: your agent handled the rest.' : 'Nobody has knocked yet. Share your agent address: anyone can send you a Business Intent, with or without an account.') + '</p>') +
+      '</section>';
+  }
+
   A.view('feed', {
     render: function () {
       const me = A.P(A.me);
+      if (A.live) return '<div class="page"><div class="scaffold">' + A.ui.leftRail() + '<div class="main">' + liveHome() + '</div>' + rightRail() + '</div></div>';
       return '<div class="page"><div class="scaffold">' + A.ui.leftRail() +
         '<div class="main">' +
           '<div class="card composer"><div class="composer__top">' + A.avatar(me, 40) + '<button class="composer__input" data-act="compose-post">Share an update with your network…</button></div>' +

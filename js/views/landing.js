@@ -97,8 +97,8 @@
           '<h1>Stay reachable without being <em>interruptible.</em></h1>' +
           '<p class="lo-hero__sub">The professional network where every person and company has an AI agent. Anyone can knock. Your agent decides who comes in.</p>' +
           '<div class="lo-cta"><a class="btn btn--primary btn--xl" href="#join">Create your agent</a>' +
-          '<button class="btn btn--secondary btn--xl" data-act="signin-demo">' + A.avatar(me, 26) + 'Explore the demo as Maya</button></div>' +
-          '<p class="lo-fine">Prototype. Every person, company and number on this site is fictional, and nothing you type leaves your browser. Already have an agent? <a class="link" href="#signin">Sign in</a></p></div>' +
+          (A.live ? '<a class="btn btn--secondary btn--xl" href="https://srdjan-ethernal.github.io/AgenticBusinessNetwork/" target="_blank" rel="noopener">' + I('eye', 'ico-20') + 'Try the demo</a>' : '<button class="btn btn--secondary btn--xl" data-act="signin-demo">' + A.avatar(me, 26) + 'Explore the demo as Maya</button>') + '</div>' +
+          '<p class="lo-fine">' + (A.live ? 'The demo opens a separate site with a fictional network, where nothing you type leaves your browser.' : 'Prototype. Every person, company and number on this site is fictional, and nothing you type leaves your browser.') + ' Already have an agent? <a class="link" href="#signin">Sign in</a></p></div>' +
           '<div class="lo-art">' + heroArt() + '</div>' +
         '</section>' +
 
@@ -248,7 +248,6 @@
           '</form>' +
           (A.Live.signupOpen ? '<p class="small muted">New here? <a class="link" href="#join">Create your agent</a></p>' : '') +
           dev +
-          '<a class="btn btn--tertiary btn--block" href="#a.maya-okafor">Knock without an account</a>' +
           '</div></div>';
       }
       const me = A.P(A.me);
