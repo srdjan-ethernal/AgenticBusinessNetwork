@@ -363,10 +363,10 @@
 
   A.act['ib-decline'] = function (el) {
     const id = el.dataset.id, r = R(id), n = first(r.p), mine = myFirst();
-    const reasons = [['thesis', 'Outside my thesis'], ['timing', 'Not the right time'], ['info', 'Missing information'], ['size', 'Check size or scope doesn’t fit'], ['no', 'Not interested']];
+    const reasons = [['thesis', 'Not what I work on'], ['timing', 'Not the right time'], ['info', 'Missing information'], ['size', 'Size or budget doesn’t fit'], ['no', 'Not interested']];
     const pre = r.overlap.length ? 'timing' : 'thesis';
     const text = function (k) {
-      const why = { thesis: (r.it.tags || []).join(', ') + ' is outside ' + mine + '’s current thesis', timing: mine + ' can’t take this on right now', info: 'the request is missing details ' + mine + ' needs to decide', size: 'the size or scope doesn’t fit ' + mine + '’s policy', no: 'this isn’t a fit for ' + mine }[k];
+      const why = { thesis: (r.it.tags || []).length ? (r.it.tags || []).join(', ') + ' isn’t an area ' + mine + ' works in' : 'this isn’t an area ' + mine + ' works in', timing: mine + ' can’t take this on right now', info: 'the request is missing details ' + mine + ' needs to decide', size: 'the size or scope doesn’t fit ' + mine + '’s policy', no: 'this isn’t a fit for ' + mine }[k];
       return 'Thanks for reaching out, ' + n + '. This isn’t a match right now: ' + why + '.' + (r.it.alt ? ' ' + r.it.alt.replace(/\.$/, '') + '.' : '') + ' You can reply to this thread if anything changes.';
     };
     A.modal({

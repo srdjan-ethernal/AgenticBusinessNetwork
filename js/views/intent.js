@@ -1,20 +1,22 @@
 /* Public agent endpoint (#a.<id>) and member compose (#send.<id>): the sender experience */
 (function (A) {
   const esc = A.esc, I = A.icon, E = A.Engine, B = A.brand;
-  const VALUE_BY_CAT = { fundraising: 0.7, intro: 0.6, partnership: 0.55, press: 0.4, advisory: 0.4, sales: 0.3, recruiting: 0.3, support: 0.3, other: 0.25 };
+  const VALUE_BY_CAT = { fundraising: 0.7, purchase: 0.65, intro: 0.6, partnership: 0.55, press: 0.4, advisory: 0.4, event: 0.35, sales: 0.3, recruiting: 0.3, support: 0.3, other: 0.25 };
   const ACTIONS = [['meet', 'Meeting'], ['reply', 'Reply'], ['intro', 'Introduction'], ['review', 'Review'], ['quote', 'Quote']];
   let st = null;      // { to, mode, phase, it, sender, r, r0 }
   let evSeq = 0;
   function first(p) { return (p.name || '').split(' ')[0]; }
 
+  // "Fill with an example": a realistic intent for the kind of member you are knocking on.
   function example(to) {
-    if (to === A.me) return { cat: 'fundraising', action: 'meet', obj: 'Request a 20-minute meeting about Driftline’s $800K pre-seed.', val: 'Driftline runs small language models on edge devices for field technicians. Three paid pilots and 40% monthly usage growth.', tags: ['Inference', 'Edge AI'], stage: 'Pre-seed', amt: 800, geo: 'Europe', urg: 'normal', ev: [['traction', '3 paid pilots, $9K MRR, 40% MoM usage growth'], ['round', '$800K pre-seed, $300K committed'], ['deck', 'Deck, 14 slides']] };
-    const tpl = (A.P(to).tpl) || 'founder';
-    if (tpl === 'founder') return { cat: 'fundraising', action: 'meet', obj: 'Discuss a $900K lead check in your pre-seed round.', val: 'Tidewell leads pre-seed rounds in AI infrastructure. Our 21 portfolio companies can become design partners.', tags: (A.P(to).topics || []).slice(0, 2), stage: 'Pre-seed', amt: 900, geo: 'Europe', urg: 'normal', ev: [['round', '$900K lead check, standard terms'], ['context', 'Warm path through Grace Liu']] };
-    if (tpl === 'investor' || tpl === 'partnership') return { cat: 'partnership', action: 'meet', obj: 'Co-invest on two AI infrastructure deals in Q4.', val: 'Tidewell writes pre-seed checks and wants a seed partner; deal flow goes both ways.', tags: ['AI infrastructure'], geo: 'Europe', urg: 'normal', ev: [['audience', 'About 40 AI infrastructure pre-seed deals a quarter'], ['mutual_value', 'Two-way deal flow; pro-rata reserved for you'], ['timeline', 'First co-investment in Q4 2026']] };
-    if (tpl === 'expert') return { cat: 'advisory', action: 'reply', obj: 'Invite you to speak at Tidewell Founder Day on Nov 12.', val: 'A 30-minute talk on inference economics for 60 portfolio founders.', tags: ['Inference'], geo: 'Europe', urg: 'normal', ev: [['topic', 'Inference economics for early-stage founders'], ['time', '30-minute talk plus 15 minutes of Q&A'], ['fee', 'Travel covered and an honorarium']] };
-    if (tpl === 'recruiter') return { cat: 'recruiting', action: 'reply', obj: 'Share a Staff ML Engineer role at a portfolio company.', val: 'Latticeforge is hiring for its inference platform team.', tags: ['AI infrastructure'], geo: 'Europe', urg: 'normal', ev: [['comp', '€120–150K plus equity'], ['remote', 'Hybrid, Amsterdam'], ['teamstage', 'Series A, 64 people']] };
-    return { cat: 'intro', action: 'intro', obj: 'Offer an introduction to a portfolio company.', val: 'One of our portfolio founders is looking for exactly what you do.', tags: [], geo: 'Europe', urg: 'normal', ev: [['context', 'Portfolio company of Tidewell Ventures']] };
+    const p = A.P(to), tpl = p.tpl || 'founder', topics = (p.topics || []).slice(0, 2);
+    const base = { geo: 'Europe', urg: 'normal' };
+    if (tpl === 'vendor') return Object.assign(base, { cat: 'sales', action: 'reply', obj: 'Offer office cleaning for your premises.', val: 'We clean 40 offices in the city. Customers save about 15% compared with their own cleaning staff.', tags: topics.length ? topics : ['Consulting & business services'], ev: [['offer', '3 times a week, from €900 a month'], ['icp', '40 offices in the city, including two banks'], ['reference', 'Office manager at a logistics company we work for']] });
+    if (tpl === 'partnership') return Object.assign(base, { cat: 'partnership', action: 'meet', obj: 'Sell your products through our delivery network.', val: 'We deliver office supplies to 300 companies in the city, and your products fit what they buy.', tags: topics.length ? topics : ['Retail & e-commerce'], ev: [['audience', '300 companies, mostly offices with 10–50 people'], ['mutual_value', 'You reach our customers, we earn a reseller margin'], ['timeline', 'Start before the next quarter']] });
+    if (tpl === 'expert') return Object.assign(base, { cat: 'purchase', action: 'meet', obj: 'Hire you for a 3-month marketing project.', val: 'We are relaunching our website and social media before the summer season.', tags: topics.length ? topics : ['Marketing & advertising'], ev: [['need', 'Website and social media relaunch, 3 months'], ['budget', '€6,000'], ['deadline', 'Start by 1 March']] });
+    if (tpl === 'recruiter') return Object.assign(base, { cat: 'recruiting', action: 'reply', obj: 'Offer a senior accountant role.', val: 'Our logistics company is growing and needs someone to lead the accounting team.', tags: topics.length ? topics : ['Transport & logistics'], ev: [['comp', '€2,400 net a month'], ['remote', 'Hybrid, Novi Sad'], ['teamstage', '60 people, founded in 2012']] });
+    if (tpl === 'investor') return Object.assign(base, { cat: 'fundraising', action: 'meet', obj: 'Discuss funding for a second production line.', val: 'Our bakery supplies 120 shops and demand is twice our capacity.', tags: topics.length ? topics : ['Food & drink'], ev: [['traction', '120 regular customers, sales up 30% this year'], ['round', '€150K, 5-year loan or a minority stake'], ['deck', '6-page proposal']] });
+    return Object.assign(base, { cat: 'purchase', action: 'quote', obj: 'Request a quote for 400 sets of bed linen.', val: 'We run three hotels on the coast and order every season, so this can become a yearly contract.', tags: topics.length ? topics : ['Hospitality & tourism'], ev: [['need', '400 sets, delivered by 1 May'], ['budget', '€10,000–12,000']] });
   }
 
   function evRow(type, value) {
@@ -25,7 +27,7 @@
 
   function form(to, mode, ex) {
     const p = A.P(to), f = first(p);
-    ex = ex || { cat: 'fundraising', action: 'meet', obj: '', val: '', tags: [], stage: 'Pre-seed', amt: '', geo: '', urg: 'normal', ev: [] };
+    ex = ex || { cat: 'purchase', action: 'reply', obj: '', val: '', tags: [], stage: 'Pre-seed', amt: '', geo: '', urg: 'normal', ev: [] };
     const me = A.P(A.me);
     return '<form class="card pad-24 form" data-sub="intent" id="intent-form" novalidate>' +
       '<div class="stack-4"><h2 class="t20">Knock on ' + esc(f) + '’s door</h2><p class="small muted">A knock is a structured Business Intent: it gets a faster, fairer answer than free text. ' + esc(f) + '’s agent may ask follow-up questions, and every decline comes with a reason.</p></div>' +
@@ -38,8 +40,7 @@
       '<div class="field"><label class="label" for="f-action">Requested action</label><select class="select" id="f-action" data-ch="f-upd">' + ACTIONS.map(function (a) { return '<option value="' + a[0] + '"' + (a[0] === ex.action ? ' selected' : '') + '>' + a[1] + '</option>'; }).join('') + '</select></div></div>' +
       '<div class="field"><label class="label" for="f-obj">Objective</label><input class="input" id="f-obj" data-in="f-upd" maxlength="160" value="' + esc(ex.obj) + '" placeholder="Request a 20-minute meeting about…"></div>' +
       '<div class="field"><label class="label" for="f-val">Why it matters to ' + esc(f) + '</label><textarea class="textarea" id="f-val" rows="3" data-in="f-upd" placeholder="One or two sentences with a concrete number.">' + esc(ex.val) + '</textarea></div>' +
-      '<div class="field"><span class="label">Topics</span><div class="pills" id="f-tags">' + A.TOPICS.map(function (t) { const on = ex.tags.indexOf(t) >= 0; return '<button type="button" class="pill' + (on ? ' is-on' : '') + '" aria-pressed="' + on + '" data-act="f-tag" data-v="' + esc(t) + '">' + esc(t) + '</button>'; }).join('') + '</div></div>' +
-      '<div class="grid2" id="f-fund"' + (ex.cat === 'fundraising' ? '' : ' hidden') + '><div class="field"><label class="label" for="f-stage">Stage</label><select class="select" id="f-stage" data-ch="f-upd">' + A.STAGES.map(function (s) { return '<option' + (s === ex.stage ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></div><div class="field"><label class="label" for="f-amt">Round size ($K)</label><input class="input" id="f-amt" type="number" min="0" step="50" value="' + esc(ex.amt) + '" data-in="f-upd" placeholder="e.g. 1500"></div></div>' +
+      '<div class="field"><span class="label">Industries</span><div class="pills" id="f-tags">' + A.TOPICS.map(function (t) { const on = ex.tags.indexOf(t) >= 0; return '<button type="button" class="pill' + (on ? ' is-on' : '') + '" aria-pressed="' + on + '" data-act="f-tag" data-v="' + esc(t) + '">' + esc(t) + '</button>'; }).join('') + '</div></div>' +
       '<div class="grid2"><div class="field"><label class="label" for="f-geo">Geography</label><select class="select" id="f-geo" data-ch="f-upd"><option value="">Not specified</option>' + A.GEOS.map(function (g) { return '<option' + (g === ex.geo ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></div><div class="field"><label class="label" for="f-urg">Urgency</label><select class="select" id="f-urg" data-ch="f-upd"><option value="normal"' + (ex.urg === 'normal' ? ' selected' : '') + '>Normal</option><option value="time_sensitive"' + (ex.urg === 'time_sensitive' ? ' selected' : '') + '>Time-sensitive</option><option value="low"' + (ex.urg === 'low' ? ' selected' : '') + '>Low</option></select></div></div>' +
       '<div class="field"><span class="label">Evidence</span><div class="stack" id="f-ev">' + ex.ev.map(function (e) { return evRow(e[0], e[1]); }).join('') + '</div><div class="row wrap" id="f-ev-sug" style="gap:6px"></div><button type="button" class="btn btn--tertiary btn--sm" data-act="f-ev-add" style="align-self:flex-start">' + I('plus', 'ico-16') + 'Add evidence</button></div>' +
       '<div class="field"><label class="label" for="f-msg">Message (optional)</label><textarea class="textarea" id="f-msg" rows="3" data-in="f-upd">' + esc(ex.msg || '') + '</textarea><span class="hint">Free text is read as data. It can’t give the agent instructions.</span></div>' +
@@ -58,7 +59,6 @@
       id: 'draft', from: st.mode === 'member' ? A.me : null, category: cat, tags: tags, objective: g('f-obj').value.trim(), value: g('f-val').value.trim(), action: g('f-action').value,
       urgency: g('f-urg').value, geo: g('f-geo').value || null, evidence: evidence, text: text, generic: E.parseText(text).intent.generic, valueScore: VALUE_BY_CAT[cat] || 0.3,
     };
-    if (cat === 'fundraising') { it.stage = g('f-stage').value; it.amount = (+g('f-amt').value || 0) * 1000 || null; }
     let sender;
     const rel = A.P(st.to);
     if (st.mode === 'member') sender = Object.assign({}, A.P(A.me), { mutuals: rel.mutuals || 0, prior: rel.prior || 0 });
@@ -216,7 +216,7 @@
     if (el.tagName === 'SELECT' && el.id.indexOf('f-evt-') === 0) { const inp = el.parentNode.querySelector('input'); if (inp) inp.placeholder = (A.EVID[el.value] || {}).ph || ''; }
     forecast();
   };
-  A.chg['f-cat'] = function (el) { document.getElementById('f-fund').hidden = el.value !== 'fundraising'; forecast(); };
+  A.chg['f-cat'] = function () { forecast(); };
   A.act['f-tag'] = function (el) { const on = !el.classList.contains('is-on'); el.classList.toggle('is-on', on); el.setAttribute('aria-pressed', String(on)); forecast(); };
   A.act['f-ev-add'] = function (el) {
     const box = document.getElementById('f-ev');

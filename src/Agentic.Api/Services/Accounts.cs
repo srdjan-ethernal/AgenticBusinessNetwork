@@ -15,7 +15,10 @@ public sealed record LoginRequest(string? Email, string? Password);
 public sealed record ExternalIdentity(string Provider, string Subject, string Email, bool EmailVerified, string Name);
 public sealed record ExternalSignupRequest(string? Name, string? Headline, string? Location, string? Template, List<string>? Topics);
 public sealed record ProfileUpdate(string? Name, string? Headline, string? Location, string? About, List<string>? Topics,
-    List<ExperienceItem>? Experience = null, List<EducationItem>? Education = null, List<string>? Skills = null);
+    List<ExperienceItem>? Experience = null, List<EducationItem>? Education = null, List<string>? Skills = null,
+    List<OfferItem>? Offers = null, List<OfferItem>? Needs = null, string? Website = null);
+/// <summary>Something a member offers, or something they are looking for.</summary>
+public sealed record OfferItem(string? Title, string? Description);
 public sealed record ExperienceItem(string? Title, string? Company, string? Type, string? Start, string? End, string? Location, string? Description);
 public sealed record EducationItem(string? School, string? Degree, string? Start, string? End);
 
@@ -185,6 +188,20 @@ public sealed partial class Accounts(AgentCore core)
             }
             p["edu"] = list;
         }
+        if (req.Offers is not null) { var (list, err) = Items(req.Offers, "offer"); if (err is not null) return (false, err); p["offers"] = list; }
+        if (req.Needs is not null) { var (list, err) = Items(req.Needs, "need"); if (err is not null) return (false, err); p["needs"] = list; }
+        if (req.Website is not null)
+        {
+            var site = req.Website.Trim();
+            if (site.Length == 0) p.Remove("website");
+            else
+            {
+                if (!site.Contains("://")) site = "https://" + site;
+                if (site.Length > 200 || !Uri.TryCreate(site, UriKind.Absolute, out var u) || (u.Scheme != "https" && u.Scheme != "http") || !u.Host.Contains('.'))
+                    return (false, "Enter a website like example.com.");
+                p["website"] = u.ToString();
+            }
+        }
         if (req.Skills is not null)
         {
             var skills = req.Skills.Select(s => Clean(s, 60)).OfType<string>().DistinctBy(s => s.ToLowerInvariant()).ToList();
@@ -283,6 +300,20 @@ public sealed partial class Accounts(AgentCore core)
         var at = baseAddress.IndexOf('@');
         for (var n = 2; await Db.Members.AnyAsync(m => m.AgentAddress == address); n++) address = baseAddress[..at] + "." + n + baseAddress[at..];
         return address;
+    }
+
+    private static (JsonArray list, string? error) Items(List<OfferItem> items, string what)
+    {
+        if (items.Count > 15) return ([], "Keep it to 15 items.");
+        var list = new JsonArray();
+        foreach (var i in items)
+        {
+            var title = Clean(i.Title, 100); var desc = Clean(i.Description, 500);
+            if (title is null && desc is null) continue;
+            if (title is null) return ([], "Every " + what + " needs a short title.");
+            list.Add(new JsonObject { ["title"] = title, ["desc"] = desc });
+        }
+        return (list, null);
     }
 
     private static string? Clean(string? s, int max)

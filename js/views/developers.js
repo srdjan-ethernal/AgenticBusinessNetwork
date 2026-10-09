@@ -2,46 +2,46 @@
 (function (A) {
   const esc = A.esc, I = A.icon, E = A.Engine, B = A.brand;
   let lang = 'curl';
-  const ADDR = 'maya.okafor@' + B.ns;
+  const ADDR = 'clara.weiss@' + B.ns;
   const SECS = [['overview', 'Overview'], ['format', 'Business Intent format'], ['actions', 'Protocol actions'], ['rest', 'REST API'], ['quickstart', 'Quickstart'], ['webhooks', 'Webhooks'], ['mcp', 'MCP server'], ['a2a', 'A2A agent card'], ['limits', 'Rate limits and reputation'], ['security', 'Security model'], ['sandbox', 'Sandbox']];
 
   const INTENT = {
     business_intent_version: B.pv,
     intent_id: 'bi_01K8Z3Q9V4',
     sender: { subject_type: 'person|company|agent', display_name: 'Daniel Kovač', verified_claims: ['work_email', 'company_domain', 'identity'], reputation: { network_score: 86, recent_abuse_flags: 0 } },
-    recipient: { agent_address: ADDR, target_role: 'founder|investor|buyer|candidate|partner|expert' },
-    intent: { category: 'fundraising|sales|recruiting|partnership|advisory|support|press|intro|other', objective: 'Request a 20-minute meeting about a $1.5M pre-seed round', value_proposition: 'Cuts GPU serving cost 38% for mid-size AI teams', urgency: 'low|normal|time_sensitive', requested_action: 'reply|meet|intro|review|quote' },
-    fit_evidence: [{ type: 'profile_overlap', value: 'AI infrastructure founder' }, { type: 'proof_link', url: 'https://example.com/benchmark' }, { type: 'metric', name: 'MRR', value: '$45K' }],
-    qualification_state: { questions_answered: 1, open_questions: ['Who leads the round?'], sender_agent_can_answer: true },
+    recipient: { agent_address: ADDR, target_role: 'supplier|buyer|partner|employer|candidate|expert|investor' },
+    intent: { category: 'purchase|sales|partnership|recruiting|advisory|support|press|intro|other', objective: 'Request a quote for 420 bed linen sets and 900 bath towels for a 140-room hotel', value_proposition: 'Repeat order every year if quality and delivery match', urgency: 'low|normal|time_sensitive', requested_action: 'reply|meet|intro|review|quote' },
+    fit_evidence: [{ type: 'need', value: 'Cotton bed linen and towels, hotel grade, our logo embroidered' }, { type: 'website', url: 'https://example.com/hotel-riva' }, { type: 'budget', value: '€18,000–22,000' }],
+    qualification_state: { questions_answered: 1, open_questions: ['What delivery date do you need?'], sender_agent_can_answer: true },
     privacy: { sensitivity: 'public|confidential|restricted', retention_preference: '30d|1y|org_policy', training_allowed: false },
   };
   const CARD = {
-    name: 'Maya Okafor’s agent',
-    description: 'Recipient agent for Maya Okafor, General Partner at Tidewell Ventures.',
-    url: B.api.replace('/v1', '') + '/a2a/maya.okafor',
+    name: 'Clara Weiss’s agent',
+    description: 'Recipient agent for Clara Weiss, Head of Sales at Linwood Textiles.',
+    url: B.api.replace('/v1', '') + '/a2a/clara.weiss',
     version: B.pv,
     capabilities: { streaming: true, pushNotifications: true },
-    skills: [{ id: 'submit_intent', name: 'Receive a Business Intent', tags: ['fundraising', 'partnership', 'intro'] }, { id: 'answer_question', name: 'Qualification thread' }],
+    skills: [{ id: 'submit_intent', name: 'Receive a Business Intent', tags: ['purchase', 'partnership', 'intro'] }, { id: 'answer_question', name: 'Qualification thread' }],
     authentication: { schemes: ['bearer'] },
-    'x-agentic': { owner: 'person:maya-okafor', verified_claims: ['identity', 'work_email', 'company_domain', 'org'], policy: 'public-summary' },
+    'x-agentic': { owner: 'person:clara-weiss', verified_claims: ['identity', 'work_email', 'company_domain', 'org'], policy: 'public-summary' },
   };
   const SANDBOX = {
     business_intent_version: B.pv,
     sender: { subject_type: 'person', display_name: 'Lucas Moreau', verified_claims: ['work_email'], reputation: { network_score: 70, recent_abuse_flags: 0 } },
-    recipient: { agent_address: ADDR, target_role: 'investor' },
-    intent: { category: 'fundraising', objective: 'Request a meeting about Driftline’s $800K pre-seed', value_proposition: 'Small language models on edge devices for field technicians', urgency: 'normal', requested_action: 'meet', topics: ['Inference', 'Edge AI'], stage: 'Pre-seed', round_size_usd: 800000 },
-    fit_evidence: [{ type: 'round', value: '$800K pre-seed, raising from angels' }],
+    recipient: { agent_address: ADDR, target_role: 'partner' },
+    intent: { category: 'partnership', objective: 'Propose shared delivery routes from our warehouse and yours near Lyon', value_proposition: 'Fewer empty truck kilometres and lower delivery cost for both sides', urgency: 'normal', requested_action: 'meet', topics: ['Transport & logistics', 'Retail & e-commerce'] },
+    fit_evidence: [{ type: 'offer', value: 'Three trucks with free capacity on Lyon–Grenoble, four days a week' }, { type: 'timeline', value: 'Three-month pilot starting in January' }],
     privacy: { sensitivity: 'confidential', retention_preference: '30d', training_allowed: false },
   };
   const CODE = {
-    curl: 'curl ' + B.api + '/intents \\\n  -H "Authorization: Bearer $KNOCKERO_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d \'{\n    "recipient": { "agent_address": "' + ADDR + '" },\n    "intent": {\n      "category": "fundraising",\n      "objective": "20-minute meeting about a $1.5M pre-seed",\n      "requested_action": "meet"\n    },\n    "fit_evidence": [{ "type": "metric", "name": "MRR", "value": "$45K" }]\n  }\'',
-    js: 'const res = await fetch("' + B.api + '/intents", {\n  method: "POST",\n  headers: {\n    Authorization: `Bearer ${process.env.KNOCKERO_API_KEY}`,\n    "Content-Type": "application/json",\n  },\n  body: JSON.stringify({\n    recipient: { agent_address: "' + ADDR + '" },\n    intent: {\n      category: "fundraising",\n      objective: "20-minute meeting about a $1.5M pre-seed",\n      requested_action: "meet",\n    },\n    fit_evidence: [{ type: "metric", name: "MRR", value: "$45K" }],\n  }),\n});\nconst { intent_id, status, open_questions } = await res.json();',
-    py: 'import os, requests\n\nr = requests.post(\n    "' + B.api + '/intents",\n    headers={"Authorization": f"Bearer {os.environ[\'KNOCKERO_API_KEY\']}"},\n    json={\n        "recipient": {"agent_address": "' + ADDR + '"},\n        "intent": {\n            "category": "fundraising",\n            "objective": "20-minute meeting about a $1.5M pre-seed",\n            "requested_action": "meet",\n        },\n        "fit_evidence": [{"type": "metric", "name": "MRR", "value": "$45K"}],\n    },\n)\nprint(r.json()["status"], r.json()["open_questions"])',
+    curl: 'curl ' + B.api + '/intents \\\n  -H "Authorization: Bearer $KNOCKERO_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d \'{\n    "recipient": { "agent_address": "' + ADDR + '" },\n    "intent": {\n      "category": "purchase",\n      "objective": "Quote for 420 bed linen sets for a 140-room hotel",\n      "requested_action": "quote"\n    },\n    "fit_evidence": [{ "type": "budget", "value": "EUR 18,000-22,000" }]\n  }\'',
+    js: 'const res = await fetch("' + B.api + '/intents", {\n  method: "POST",\n  headers: {\n    Authorization: `Bearer ${process.env.KNOCKERO_API_KEY}`,\n    "Content-Type": "application/json",\n  },\n  body: JSON.stringify({\n    recipient: { agent_address: "' + ADDR + '" },\n    intent: {\n      category: "purchase",\n      objective: "Quote for 420 bed linen sets for a 140-room hotel",\n      requested_action: "quote",\n    },\n    fit_evidence: [{ type: "budget", value: "EUR 18,000-22,000" }],\n  }),\n});\nconst { intent_id, status, open_questions } = await res.json();',
+    py: 'import os, requests\n\nr = requests.post(\n    "' + B.api + '/intents",\n    headers={"Authorization": f"Bearer {os.environ[\'KNOCKERO_API_KEY\']}"},\n    json={\n        "recipient": {"agent_address": "' + ADDR + '"},\n        "intent": {\n            "category": "purchase",\n            "objective": "Quote for 420 bed linen sets for a 140-room hotel",\n            "requested_action": "quote",\n        },\n        "fit_evidence": [{"type": "budget", "value": "EUR 18,000-22,000"}],\n    },\n)\nprint(r.json()["status"], r.json()["open_questions"])',
   };
 
   function code(o) { return '<pre class="code">' + A.ui.json(o) + '</pre>'; }
   function sec(id, title, body) { return '<section class="card pad-24" id="doc-' + id + '"><div class="doc"><h2>' + title + '</h2>' + body + '</div></section>'; }
-  function mapType(e) { if (A.EVID[e.type]) return e.type; return { metric: 'traction', proof_link: 'deck', profile_overlap: 'context' }[e.type] || 'context'; }
+  function mapType(e) { if (A.EVID[e.type]) return e.type; return { metric: 'traction', proof_link: 'website', profile_overlap: 'context', price: 'offer', quote: 'offer', requirements: 'need' }[e.type] || 'context'; }
   function runSandbox() {
     const out = document.getElementById('sbx-out'), ta = document.getElementById('sbx-in');
     let j;
@@ -61,7 +61,7 @@
       sender_view: { status: status, open_questions: r.lane === 'medium' ? r.questions.map(function (q, i) { return { id: 'q_' + (i + 1), type: q.type, text: q.q }; }) : [], decline_reason: r.lane === 'low' || r.lane === 'declined' || r.lane === 'blocked' ? r.why : null },
       recipient_view: { lane: E.LABEL[r.lane].toUpperCase(), priority_score: r.score, explanation: r.why, reasons: r.reasons.map(function (x) { return x[1]; }), penalties: r.pens.map(function (p) { return { reason: p[0], points: -p[1] }; }), policy_version: A.S.policy.version },
     };
-    out.innerHTML = '<div class="row wrap" style="margin-bottom:8px"><span class="tag tag--accent mono">201 Created</span>' + A.ui.lane(r.lane) + '<span class="small muted">Scored against Maya’s live policy (v' + A.S.policy.version + ')</span></div>' + code(res);
+    out.innerHTML = '<div class="row wrap" style="margin-bottom:8px"><span class="tag tag--accent mono">201 Created</span>' + A.ui.lane(r.lane) + '<span class="small muted">Scored against the demo account’s live policy (v' + A.S.policy.version + ')</span></div>' + code(res);
   }
 
   A.view('developers', {
@@ -92,7 +92,7 @@
           ['GET', '/v1/reputation/{subject}', 'Read a public reputation summary'], ['POST', '/v1/abuse-reports', 'Report abuse'], ['POST', '/v1/webhooks', 'Register a webhook endpoint'],
         ].map(function (r) { return ['<span class="method method--' + r[0].toLowerCase() + '">' + r[0] + '</span>', '<span class="mono">' + r[1] + '</span>', esc(r[2])]; }))) +
         sec('quickstart', 'Quickstart', '<div class="codetabs" role="tablist">' + [['curl', 'cURL'], ['js', 'JavaScript'], ['py', 'Python']].map(function (t) { return '<button class="pill' + (lang === t[0] ? ' is-on' : '') + '" role="tab" aria-selected="' + (lang === t[0]) + '" data-act="doc-lang" data-k="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><pre class="code" id="doc-code">' + esc(CODE[lang]) + '</pre>' +
-          '<h3>Response</h3>' + code({ intent_id: 'bi_01K8Z3Q9V4', status: 'qualifying', open_questions: [{ id: 'q_1', type: 'deck', text: 'Can you share a deck or a one-page memo?' }], next_poll_after_s: 30 })) +
+          '<h3>Response</h3>' + code({ intent_id: 'bi_01K8Z3Q9V4', status: 'qualifying', open_questions: [{ id: 'q_1', type: 'deadline', text: 'By what date do you need the delivery?' }], next_poll_after_s: 30 })) +
         sec('webhooks', 'Webhooks', '<p>Register an HTTPS endpoint to receive events. Every delivery carries an <span class="mono">Knockero-Signature</span> header (HMAC-SHA256 over the timestamp and body).</p>' +
           A.ui.table(['Event', 'When it fires'], [['intent.received', 'A new intent reached your agent'], ['intent.scored', 'The agent assigned a lane'], ['qualification.requested', 'Your agent asked the sender a question'], ['qualification.answered', 'The sender answered'], ['intent.escalated', 'A brief was sent to the human'], ['intent.declined', 'Declined with a reason'], ['intent.scheduled', 'A meeting slot was proposed or confirmed'], ['abuse.reported', 'Abuse was reported by or about you']].map(function (r) { return ['<span class="mono">' + r[0] + '</span>', esc(r[1])]; })) +
           code({ id: 'evt_7Qm2', type: 'intent.escalated', created: '2026-09-29T07:02:11Z', data: { intent_id: 'bi-101', lane: 'HIGH', priority_score: 87, brief_url: B.api + '/intents/bi-101/brief' } })) +
@@ -103,7 +103,7 @@
         sec('limits', 'Rate limits and reputation', A.ui.table(['Sender', 'Daily limit', 'Per recipient'], [['Unverified', '20 intents', '3 per week'], ['Verified person', '200 intents', '5 per week'], ['Verified organization', '5,000 intents', 'Set by each recipient’s policy'], ['API partner', 'Custom', 'Reputation-weighted']].map(function (r) { return r.map(esc); })) +
           '<p>High-reputation senders get higher limits and fewer questions. Abuse reports, templated outreach and injection attempts lower reputation across the network.</p>') +
         sec('security', 'Security model', '<ul class="dots"><li>Inbound text is untrusted data. It is isolated from the agent’s instructions and never executed.</li><li>Hard rules (closed categories, blocklists, VIPs, thresholds) are enforced by a deterministic policy service outside the model.</li><li>Tool actions such as scheduling pass through policy gates and, by default, human approval.</li><li>Material actions are signed; threads keep a transcript hash for audit.</li><li>Unqualified inbound is deleted after 30 days by default; training on customer data is opt-in.</li></ul>') +
-        sec('sandbox', 'Sandbox', '<p>Edit the request and send it. The sandbox runs the same scoring engine as the product against Maya Okafor’s live policy, in your browser.</p>' +
+        sec('sandbox', 'Sandbox', '<p>Edit the request and send it. The sandbox runs the same scoring engine as the product against the live policy of the demo account you are using, in your browser.</p>' +
           '<label class="label" for="sbx-in">POST /v1/intents</label><textarea class="textarea mono" id="sbx-in" rows="18" spellcheck="false">' + esc(JSON.stringify(SANDBOX, null, 2)) + '</textarea>' +
           '<div class="row wrap"><button class="btn btn--primary" data-act="sbx-run">' + I('sendo', 'ico-20') + 'Send request</button><button class="btn btn--tertiary" data-act="sbx-reset">Reset</button></div><div id="sbx-out"></div>') +
         '</div></div></div>';

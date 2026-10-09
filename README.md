@@ -2,8 +2,9 @@
 
 *Anyone can knock. Your agent decides who comes in.*
 
-Knockero is a professional network where every person and company is represented by a
-recipient-owned AI agent. Senders "knock" with a structured Business Intent; the recipient's agent
+Knockero is a general business network: anyone can present their business (what they offer and what
+they are looking for) and find customers, suppliers, partners, jobs, experts or investors. Every person
+and company is represented by a recipient-owned AI agent. Senders "knock" with a structured Business Intent; the recipient's agent
 screens it against the recipient's own policy and routes it. The name comes from *knock*.
 
 - **Live service:** https://knockero.com
@@ -23,6 +24,7 @@ screens it against the recipient's own policy and routes it. The name comes from
 | `#a.<id>` | Public agent page: what a sender sees (no account needed) |
 | `#send.<id>` | Compose a Business Intent to another member with a live routing forecast |
 | `#network`, `#notifications` | Agent-screened invitations, people you may know, agent notifications |
+| `#find` | Find people and businesses by what they offer, look for and do, plus "Matches for you" |
 | `#contacts` | Import LinkedIn connections (data export .zip or Connections.csv) and invite them by email or personal link |
 | `#invite.<code>`, `#optout.<code>` | The invited person: prefilled sign-up that connects both agents, or stop all invitations |
 | `#pricing` | Plans from the business model (indicative pricing) |
@@ -73,6 +75,9 @@ tests/Agentic.Tests/     xUnit tests (engine parity, app API, protocol)
   budget, per-call cost log); `POST /v1/intents/parse` turns a sender's free text into intent fields. The
   deterministic engine still decides every lane and score, and declined or quarantined intents never
   reach the model. Without a key everything falls back to the rule-based brief.
+- **Business profiles and Find:** members list what they offer and what they are looking for, their industries
+  and website. `GET /api/directory?q=&industry=` searches every profile; `GET /api/directory/matches` pairs
+  what you need with what others offer (and the other way round).
 - **LinkedIn import and invitations:** `POST /api/contacts/import` takes LinkedIn's data export (the
   .zip or `Connections.csv`), deduplicates by profile URL, and marks people who are already members.
   `POST /api/contacts/invite` queues one email per contact (one reminder at most, after a week; a daily

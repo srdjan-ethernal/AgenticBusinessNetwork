@@ -13,93 +13,109 @@
   A.me = 'maya-okafor';
 
   A.CATS = {
-    fundraising: { label: 'Fundraising', icon: 'trend', desc: 'Founders pitching a round or asking for a meeting.' },
-    partnership: { label: 'Partnership', icon: 'users', desc: 'Co-investment, events, co-marketing, distribution.' },
-    intro: { label: 'Intro request', icon: 'link', desc: 'Asks for, or offers, an introduction.' },
-    press: { label: 'Press', icon: 'article', desc: 'Journalists and newsletters asking for comment.' },
-    advisory: { label: 'Expert request', icon: 'help', desc: 'Podcasts, panels, advice and diligence calls.' },
-    sales: { label: 'Sales', icon: 'briefcase', desc: 'Vendors selling a product or asking for a call.' },
-    recruiting: { label: 'Recruiting', icon: 'user', desc: 'Roles pitched to you.' },
-    support: { label: 'Support', icon: 'people', desc: 'Customers and portfolio companies asking for help.' },
+    purchase: { label: 'Buying request', icon: 'target', desc: 'Someone who wants to buy from you or asks for a quote.' },
+    sales: { label: 'Sales offer', icon: 'briefcase', desc: 'Someone offering you a product or a service.' },
+    partnership: { label: 'Partnership', icon: 'users', desc: 'Collaboration, reselling, distribution and joint offers.' },
+    intro: { label: 'Introduction', icon: 'link', desc: 'Asks for, or offers, an introduction.' },
+    recruiting: { label: 'Jobs & hiring', icon: 'user', desc: 'Job offers, candidates and freelance work.' },
+    fundraising: { label: 'Investment & funding', icon: 'trend', desc: 'Businesses looking for investors or loans, and investors looking for businesses.' },
+    advisory: { label: 'Expert advice', icon: 'help', desc: 'Requests for advice, consulting, interviews and opinions.' },
+    event: { label: 'Events & speaking', icon: 'calendar', desc: 'Invitations to events, fairs, panels and talks.' },
+    press: { label: 'Media & press', icon: 'article', desc: 'Journalists, bloggers and newsletters.' },
+    support: { label: 'Customer support', icon: 'people', desc: 'Existing customers or partners asking for help.' },
     other: { label: 'Other', icon: 'more', desc: 'Anything that fits no other category.' },
   };
 
   A.EVID = {
-    traction: { label: 'Traction metric', q: 'What are your current traction numbers (MRR, paying customers, growth)?', ph: 'e.g. $45K MRR from 14 design partners' },
-    round: { label: 'Round details', q: 'How much are you raising, who leads, and how much is committed?', ph: 'e.g. $1.5M pre-seed, $600K committed' },
-    deck: { label: 'Deck or memo', q: 'Can you share a deck or a one-page memo?', ph: 'e.g. Deck, 18 slides' },
-    team: { label: 'Team background', q: 'Who is on the founding team, and what have they built before?', ph: 'e.g. Ex-staff engineers at two GPU clouds' },
-    icp: { label: 'ICP fit', q: 'Which customers like us use it today?', ph: 'e.g. 12 seed-stage funds in Europe' },
-    integration: { label: 'Integration proof', q: 'Which of our current tools does it integrate with?', ph: 'e.g. Works with our CRM and data room' },
-    roi: { label: 'ROI claim', q: 'What measurable result can you show, and how was it measured?', ph: 'e.g. 6 hours saved per partner per week' },
-    reference: { label: 'Reference customer', q: 'Can you share a reference customer we can speak with?', ph: 'e.g. COO at a comparable fund' },
-    comp: { label: 'Compensation band', q: 'What is the compensation band, including equity?', ph: 'e.g. €220–260K + equity' },
-    remote: { label: 'Remote policy', q: 'Is the role remote, hybrid or on-site?', ph: 'e.g. Remote, EU time zones' },
-    teamstage: { label: 'Company stage', q: 'What stage is the company, and how big is the team?', ph: 'e.g. Series B, 140 people' },
-    audience: { label: 'Audience overlap', q: 'Who is the audience, and how does it overlap with mine?', ph: 'e.g. 12 of 18 startups build AI infrastructure' },
-    mutual_value: { label: 'Mutual value', q: 'What does each side get out of this?', ph: 'e.g. First meetings before the public demo' },
-    timeline: { label: 'Timeline', q: 'What is the timeline, and what are the key dates?', ph: 'e.g. Demo Day on Oct 22' },
-    topic: { label: 'Topic and scope', q: 'What exactly would we cover, and is it on the record?', ph: 'e.g. Inference pricing, on the record' },
-    time: { label: 'Time budget', q: 'How much time will this take, and in what format?', ph: 'e.g. 45 minutes, remote recording' },
-    fee: { label: 'Compensation', q: 'Is this paid, or what do you offer in return?', ph: 'e.g. Honorarium or audience reach' },
+    offer: { label: 'What you offer', q: 'What exactly do you offer, and at what price?', ph: 'e.g. Office cleaning, 3 times a week, from €900 a month' },
+    need: { label: 'What you need', q: 'What exactly do you need, how much of it, and by when?', ph: 'e.g. 400 sets of bed linen, delivered by 1 May' },
+    budget: { label: 'Budget', q: 'What is your budget or price range?', ph: 'e.g. €10,000–12,000' },
+    company: { label: 'About your company', q: 'Who are you, where are you based, and how long have you been in business?', ph: 'e.g. Family bakery in Novi Sad since 2009, 14 people' },
+    website: { label: 'Website or portfolio', q: 'Where can I see your work?', ph: 'e.g. example.com/portfolio' },
+    reference: { label: 'Reference', q: 'Can you share a customer or partner we can talk to?', ph: 'e.g. Owner of a hotel we supplied in 2025' },
+    traction: { label: 'Results so far', q: 'What results can you show: customers, sales, growth?', ph: 'e.g. 120 regular customers, sales up 30% this year' },
+    round: { label: 'Funding details', q: 'How much funding do you need or offer, and on what terms?', ph: 'e.g. €150K for a second production line, 5-year loan' },
+    deck: { label: 'Presentation or proposal', q: 'Can you share a presentation or a written proposal?', ph: 'e.g. 6-page proposal (PDF)' },
+    team: { label: 'Team', q: 'Who is on the team, and what have they done before?', ph: 'e.g. Two engineers with 10 years in heating systems' },
+    icp: { label: 'Customer fit', q: 'Which businesses like mine use it today?', ph: 'e.g. 40 restaurants in the region' },
+    integration: { label: 'Fit with what I use', q: 'How does it work with what I already use?', ph: 'e.g. Works with our accounting software' },
+    roi: { label: 'Measurable benefit', q: 'What measurable result can you show, and how was it measured?', ph: 'e.g. 15% lower energy bills over 12 months' },
+    comp: { label: 'Pay', q: 'What is the pay or the rate?', ph: 'e.g. €2,400 net a month, or €40 an hour' },
+    remote: { label: 'Where and how', q: 'Is the work remote, hybrid or on-site, and where?', ph: 'e.g. On-site in Belgrade, 3 days a week' },
+    teamstage: { label: 'Company size', q: 'How big is the company, and how long has it been running?', ph: 'e.g. 60 people, founded in 2012' },
+    audience: { label: 'Audience overlap', q: 'Who are your customers, and how do they overlap with mine?', ph: 'e.g. We both sell to small hotels on the coast' },
+    mutual_value: { label: 'Mutual value', q: 'What does each side get out of this?', ph: 'e.g. You get our customers, we get your delivery network' },
+    timeline: { label: 'Timeline', q: 'What is the timeline, and what are the key dates?', ph: 'e.g. The fair opens on 12 March' },
+    topic: { label: 'Topic and scope', q: 'What exactly would we cover, and is it on the record?', ph: 'e.g. Exporting food to the EU, on the record' },
+    time: { label: 'Time budget', q: 'How much time will this take, and in what format?', ph: 'e.g. 45 minutes, video call' },
+    fee: { label: 'Compensation', q: 'Is this paid, or what do you offer in return?', ph: 'e.g. €300 fee, or a free stand at the fair' },
     confidentiality: { label: 'Confidentiality', q: 'Are there confidentiality or NDA requirements?', ph: 'e.g. No NDA needed' },
-    outlet: { label: 'Outlet', q: 'Which outlet is this for, and who reads it?', ph: 'e.g. Circuit Weekly, 60K readers' },
-    deadline: { label: 'Deadline', q: 'What is your deadline?', ph: 'e.g. Tomorrow 17:00 CET' },
-    context: { label: 'Context', q: 'How are we connected, and what exactly do you need from me?', ph: 'e.g. Portfolio founder, needs two intros' },
+    outlet: { label: 'Outlet', q: 'Which outlet is this for, and who reads it?', ph: 'e.g. Business Daily, 60K readers' },
+    deadline: { label: 'Deadline', q: 'What is your deadline?', ph: 'e.g. Tomorrow at 17:00' },
+    context: { label: 'Context', q: 'How are we connected, and what exactly do you need from me?', ph: 'e.g. We met at the Belgrade trade fair' },
   };
 
   A.CLAIMS = { identity: 'Identity', work_email: 'Work email', company_domain: 'Company domain', org: 'Verified organization' };
 
-  A.TOPICS = ['AI infrastructure', 'Inference', 'Developer tools', 'Data tooling', 'Evaluation', 'Edge AI', 'Fintech', 'Climate', 'Healthtech', 'Robotics', 'Security', 'Crypto', 'Marketing', 'Sales automation'];
+  A.TOPICS = ['Technology & software', 'AI & data', 'Manufacturing', 'Construction & real estate', 'Retail & e-commerce', 'Food & drink', 'Hospitality & tourism', 'Transport & logistics', 'Agriculture', 'Energy & environment', 'Finance & insurance', 'Legal & accounting', 'Consulting & business services', 'Marketing & advertising', 'Media & creative', 'Health & wellness', 'Education & training', 'HR & staffing', 'Fashion & beauty', 'Automotive', 'Import & export', 'Crafts & trades', 'Nonprofit & public sector'];
   A.STAGES = ['Pre-seed', 'Seed', 'Series A', 'Series B+'];
   A.GEOS = ['Europe', 'North America', 'Latin America', 'Asia', 'Middle East', 'Africa', 'Oceania'];
 
+  // The fictional demo member's own policy (static demo only).
   const inv = {
     categories: { fundraising: 'open', partnership: 'open', intro: 'open', press: 'ask', advisory: 'ask', sales: 'ask', support: 'ask', recruiting: 'closed', other: 'ask' },
     evidence: { fundraising: ['traction', 'round', 'deck'], partnership: ['audience', 'mutual_value', 'timeline'], intro: ['context'], press: ['outlet', 'deadline', 'topic'], advisory: ['topic', 'time', 'fee'], sales: ['icp', 'integration', 'roi', 'reference'], recruiting: ['comp', 'remote', 'teamstage'], support: ['context'], other: ['context'] },
     thresholds: { high: 75, medium: 45 },
     thesisHardFilter: true,
   };
+  // Policy templates: the same rules as src/Agentic.Api/Seed/domain.json.
   A.templates = {
-    investor: { name: 'Investor deal flow', icon: 'trend', who: 'Investors and accelerators', desc: 'Screen founder pitches by thesis, stage and check size. Traction is required before anything reaches you.', policy: inv },
     founder: {
-      name: 'Founder inbound', icon: 'zap', who: 'Founders and operators', desc: 'Route investors, customers, candidates and partners. Gate vendors hard and batch the rest.',
+      name: 'Business owner', icon: 'building', who: 'Owners and managers of any business', desc: 'Customers, partners and introductions come straight through. Sales offers must say what, for whom and at what price.',
       policy: {
-        categories: { fundraising: 'open', partnership: 'open', intro: 'open', support: 'open', recruiting: 'ask', press: 'ask', advisory: 'ask', sales: 'ask', other: 'ask' },
-        evidence: { fundraising: ['round', 'context'], partnership: ['audience', 'mutual_value'], intro: ['context'], support: ['context'], recruiting: ['comp', 'remote'], press: ['outlet', 'deadline'], advisory: ['topic', 'time'], sales: ['icp', 'integration', 'roi', 'reference'], other: ['context'] },
+        categories: { purchase: 'open', sales: 'ask', partnership: 'open', intro: 'open', recruiting: 'ask', fundraising: 'ask', advisory: 'ask', event: 'ask', press: 'ask', support: 'open', other: 'ask' },
+        evidence: { purchase: ['need', 'budget'], sales: ['offer', 'icp', 'reference'], partnership: ['mutual_value', 'company'], intro: ['context'], recruiting: ['comp', 'remote'], fundraising: ['round', 'company'], advisory: ['topic', 'time'], event: ['timeline', 'audience'], press: ['outlet', 'deadline'], support: ['context'], other: ['context'] },
         thresholds: { high: 72, medium: 42 }, thesisHardFilter: false,
       },
     },
-    recruiter: {
-      name: 'Recruiter & candidate', icon: 'user', who: 'Candidates and hiring teams', desc: 'Accept roles above your compensation floor and remote policy. Ask for the band before anything else.',
+    vendor: {
+      name: 'Buyer & procurement', icon: 'shield', who: 'Buyers, purchasing and office managers', desc: 'Suppliers reach you only with a concrete offer, a measurable benefit and a reference. Generic sales pitches stay out.',
       policy: {
-        categories: { recruiting: 'open', intro: 'open', partnership: 'ask', advisory: 'ask', press: 'ask', fundraising: 'ask', sales: 'closed', support: 'ask', other: 'ask' },
-        evidence: { recruiting: ['comp', 'remote', 'teamstage'], intro: ['context'], partnership: ['mutual_value'], advisory: ['topic', 'time'], press: ['outlet'], fundraising: ['round'], sales: ['icp', 'roi'], support: ['context'], other: ['context'] },
+        categories: { purchase: 'ask', sales: 'ask', partnership: 'ask', intro: 'open', recruiting: 'closed', fundraising: 'ask', advisory: 'ask', event: 'ask', press: 'ask', support: 'open', other: 'ask' },
+        evidence: { purchase: ['need'], sales: ['offer', 'icp', 'roi', 'reference'], partnership: ['mutual_value'], intro: ['context'], recruiting: ['comp'], fundraising: ['round'], advisory: ['topic'], event: ['timeline'], press: ['outlet'], support: ['context'], other: ['context'] },
+        thresholds: { high: 80, medium: 50 }, thesisHardFilter: false,
+      },
+    },
+    partnership: {
+      name: 'Sales & partnerships', icon: 'users', who: 'Sales, business development and partnership managers', desc: 'Buyers and partners get priority. Your agent asks for quantities, budget and timeline when they are missing.',
+      policy: {
+        categories: { purchase: 'open', sales: 'ask', partnership: 'open', intro: 'open', recruiting: 'closed', fundraising: 'ask', advisory: 'ask', event: 'ask', press: 'ask', support: 'ask', other: 'ask' },
+        evidence: { purchase: ['need', 'budget', 'deadline'], sales: ['offer', 'icp', 'roi'], partnership: ['audience', 'mutual_value', 'timeline'], intro: ['context'], recruiting: ['comp'], fundraising: ['round'], advisory: ['topic', 'time'], event: ['timeline', 'audience'], press: ['outlet', 'deadline'], support: ['context'], other: ['context'] },
         thresholds: { high: 72, medium: 45 }, thesisHardFilter: false,
       },
     },
     expert: {
-      name: 'Expert requests', icon: 'help', who: 'Advisors, creators and experts', desc: 'Podcasts, panels, advisory and diligence calls. Require scope, time budget and compensation.',
+      name: 'Freelancer & consultant', icon: 'help', who: 'Freelancers, consultants, advisors and creators', desc: 'Client requests come through with scope, deadline and budget. Talks, podcasts and interviews need a topic and a time budget.',
       policy: {
-        categories: { advisory: 'open', press: 'open', intro: 'ask', partnership: 'ask', fundraising: 'ask', recruiting: 'ask', sales: 'closed', support: 'ask', other: 'ask' },
-        evidence: { advisory: ['topic', 'time', 'fee', 'confidentiality'], press: ['outlet', 'deadline', 'topic'], intro: ['context'], partnership: ['mutual_value', 'timeline'], fundraising: ['round'], recruiting: ['comp'], sales: ['icp'], support: ['context'], other: ['context'] },
+        categories: { purchase: 'open', sales: 'closed', partnership: 'ask', intro: 'ask', recruiting: 'ask', fundraising: 'ask', advisory: 'open', event: 'ask', press: 'open', support: 'ask', other: 'ask' },
+        evidence: { purchase: ['need', 'budget', 'deadline'], sales: ['offer'], partnership: ['mutual_value', 'timeline'], intro: ['context'], recruiting: ['comp', 'remote'], fundraising: ['round'], advisory: ['topic', 'time', 'fee', 'confidentiality'], event: ['timeline', 'fee'], press: ['outlet', 'deadline', 'topic'], support: ['context'], other: ['context'] },
         thresholds: { high: 70, medium: 45 }, thesisHardFilter: false,
       },
     },
-    partnership: {
-      name: 'Partnerships', icon: 'users', who: 'Partnership and BD leads', desc: 'Escalate when audience overlap and mutual value are explicit. Ask for the timeline when it is missing.',
+    recruiter: {
+      name: 'Jobs & hiring', icon: 'user', who: 'Job seekers and hiring managers', desc: 'Job offers and candidates must state the pay and where the work is. Everything else waits.',
       policy: {
-        categories: { partnership: 'open', intro: 'open', press: 'ask', advisory: 'ask', fundraising: 'ask', sales: 'ask', recruiting: 'closed', support: 'ask', other: 'ask' },
-        evidence: { partnership: ['audience', 'mutual_value', 'timeline'], intro: ['context'], press: ['outlet', 'deadline'], advisory: ['topic', 'time'], fundraising: ['round'], sales: ['icp', 'integration', 'roi'], recruiting: ['comp'], support: ['context'], other: ['context'] },
+        categories: { recruiting: 'open', intro: 'open', purchase: 'ask', sales: 'closed', partnership: 'ask', fundraising: 'ask', advisory: 'ask', event: 'ask', press: 'ask', support: 'ask', other: 'ask' },
+        evidence: { recruiting: ['comp', 'remote', 'teamstage'], intro: ['context'], purchase: ['need'], sales: ['offer'], partnership: ['mutual_value'], fundraising: ['round'], advisory: ['topic', 'time'], event: ['timeline'], press: ['outlet'], support: ['context'], other: ['context'] },
         thresholds: { high: 72, medium: 45 }, thesisHardFilter: false,
       },
     },
-    vendor: {
-      name: 'Vendor gate', icon: 'shield', who: 'Buyers and procurement', desc: 'Block generic outreach. Vendors need ICP fit, an integration, an ROI claim and a reference to reach you.',
+    investor: {
+      name: 'Investor', icon: 'trend', who: 'Investors, lenders and business angels', desc: 'Businesses looking for funding reach you with results, a proposal and funding details. Outside your industries, they wait.',
       policy: {
-        categories: { sales: 'ask', support: 'open', partnership: 'ask', intro: 'open', press: 'ask', advisory: 'ask', fundraising: 'ask', recruiting: 'closed', other: 'ask' },
-        evidence: { sales: ['icp', 'integration', 'roi', 'reference'], support: ['context'], partnership: ['mutual_value'], intro: ['context'], press: ['outlet'], advisory: ['topic'], fundraising: ['round'], recruiting: ['comp'], other: ['context'] },
-        thresholds: { high: 80, medium: 50 }, thesisHardFilter: false,
+        categories: { fundraising: 'open', partnership: 'open', intro: 'open', purchase: 'ask', sales: 'ask', recruiting: 'closed', advisory: 'ask', event: 'ask', press: 'ask', support: 'ask', other: 'ask' },
+        evidence: { fundraising: ['traction', 'round', 'deck'], partnership: ['audience', 'mutual_value', 'timeline'], intro: ['context'], purchase: ['need'], sales: ['offer', 'icp', 'roi', 'reference'], recruiting: ['comp', 'remote', 'teamstage'], advisory: ['topic', 'time', 'fee'], event: ['timeline'], press: ['outlet', 'deadline', 'topic'], support: ['context'], other: ['context'] },
+        thresholds: { high: 75, medium: 45 }, thesisHardFilter: true,
       },
     },
   };

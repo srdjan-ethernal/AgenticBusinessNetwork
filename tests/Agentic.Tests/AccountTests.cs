@@ -15,7 +15,7 @@ public sealed class AccountTests(ApiFactory factory) : IClassFixture<ApiFactory>
     private static object Signup(string email, string name = "Ana Kovač", string password = "correct horse battery", string template = "founder") => new
     {
         name, email, password, headline = "Founder at Brightline · Data tooling", location = "Belgrade", template,
-        topics = new[] { "Data tooling", "Developer tools", "Not a real topic" },
+        topics = new[] { "Food & drink", "Retail & e-commerce", "Not a real topic" },
     };
 
     [Fact]
@@ -42,7 +42,7 @@ public sealed class AccountTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var policy = boot["policy"]!;
         Assert.Equal("founder", (string)policy["template"]!);
         Assert.Equal(1, (int)policy["version"]!);
-        Assert.Equal(["Data tooling", "Developer tools"], policy["openTo"]!.AsArray().Select(t => (string)t!));
+        Assert.Equal(["Food & drink", "Retail & e-commerce"], policy["openTo"]!.AsArray().Select(t => (string)t!));
     }
 
     [Fact]
@@ -111,14 +111,14 @@ public sealed class AccountTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var c = Client();
         await c.PostAsJsonAsync("/api/auth/signup", Signup("profile@example.org", "Pro File"));
 
-        var res = await c.PutAsJsonAsync("/api/profile", new { name = "Pro Filer", headline = "CEO at Brightline", about = "Building data tools.", topics = new[] { "Fintech" } });
+        var res = await c.PutAsJsonAsync("/api/profile", new { name = "Pro Filer", headline = "CEO at Brightline", about = "Building data tools.", topics = new[] { "Finance & insurance" } });
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
         var me = (await res.Content.ReadFromJsonAsync<JsonObject>())!["people"]!["pro-file"]!;
         Assert.Equal("Pro Filer", (string)me["name"]!);
         Assert.Equal("CEO at Brightline", (string)me["headline"]!);
         Assert.Equal("Building data tools.", (string)me["about"]!);
         Assert.Equal("Belgrade", (string)me["loc"]!);   // fields left out stay as they were
-        Assert.Equal(["Fintech"], me["topics"]!.AsArray().Select(t => (string)t!));
+        Assert.Equal(["Finance & insurance"], me["topics"]!.AsArray().Select(t => (string)t!));
 
         var bad = await c.PutAsJsonAsync("/api/profile", new { headline = "x" });
         Assert.Equal(HttpStatusCode.BadRequest, bad.StatusCode);

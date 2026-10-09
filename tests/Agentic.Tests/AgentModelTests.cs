@@ -32,7 +32,7 @@ public sealed class FakeAgentModel : IAgentModel
 
     public Task<ParsedIntent?> Parse(string text, string? memberId, CancellationToken ct) => Task.FromResult<ParsedIntent?>(new ParsedIntent(
         "fundraising", "Meet about our $900K pre-seed", "Cuts GPU inference cost by 38%", "meet",
-        ["Inference", "Not a topic"], "Pre-seed", 900000, "Mars", "whenever",
+        ["Hospitality & tourism", "Not a topic"], "Pre-seed", 900000, "Mars", "whenever",
         [new EvidenceItem("round", "$900K pre-seed, $400K committed"), new EvidenceItem("horoscope", "Leo")]));
 }
 
@@ -172,7 +172,7 @@ public sealed class AgentModelTests(AiFactory factory) : IClassFixture<AiFactory
         var it = await Wait(maya, id, x => x["briefPending"] is null);
         Assert.Null(it["briefBy"]);
         Assert.Null(it["briefPending"]);
-        Assert.StartsWith("Fundraising from Failing Fred", (string)it["brief"]![0]!);
+        Assert.StartsWith("Investment & funding from Failing Fred", (string)it["brief"]![0]!);
     }
 
     [Fact]
@@ -185,7 +185,7 @@ public sealed class AgentModelTests(AiFactory factory) : IClassFixture<AiFactory
         var intent = p!["intent"]!;
         Assert.Equal("fundraising", (string)intent["category"]!);
         Assert.Equal("meet", (string)intent["requested_action"]!);
-        Assert.Equal(["Inference"], intent["topics"]!.AsArray().Select(t => (string)t!));
+        Assert.Equal(["Hospitality & tourism"], intent["topics"]!.AsArray().Select(t => (string)t!));
         Assert.Equal("Pre-seed", (string)intent["stage"]!);
         Assert.Equal(900000, (double)intent["round_size_usd"]!);
         Assert.Null(intent["geo"]);

@@ -121,6 +121,36 @@
     save({ education: list }, el, 'pf-err', 'Education saved.');
   };
 
+  // ---------- what you offer / what you are looking for ----------
+  const LISTS = {
+    offers: { title: 'What we offer', add: 'Add a product or service', ph: 'e.g. Bed linen and towels for hotels', dph: 'e.g. Cotton, made to order, delivery in 3 weeks', saved: 'Offers saved.' },
+    needs: { title: 'Looking for', add: 'Add something you need', ph: 'e.g. Distributors in Germany', dph: 'e.g. Shops or wholesalers for home textiles', saved: 'Saved what you’re looking for.' },
+  };
+  function itemRow(i, key) {
+    i = i || {};
+    const L = LISTS[key];
+    return '<fieldset class="pf-row">' + field('Title', 'title', i.title, ' maxlength="100" placeholder="' + esc(L.ph) + '"') +
+      '<div class="field"><label class="label">Details <span class="muted">(optional)</span><textarea class="textarea" name="desc" rows="2" maxlength="500" placeholder="' + esc(L.dph) + '">' + esc(i.desc || '') + '</textarea></label></div>' +
+      '<button type="button" class="btn btn--tertiary btn--sm" data-act="pf-row-rm">' + I('x', 'ico-16') + 'Remove</button></fieldset>';
+  }
+  function editList(key) {
+    const L = LISTS[key], items = me()[key] || [];
+    A.modal({
+      title: L.title, wide: true,
+      body: '<div class="stack-16"><p class="small muted">Short titles work best: they show in search results and help your agent match you with the right people.</p><div class="stack-16" id="pf-rows">' + (items.map(function (i) { return itemRow(i, key); }).join('') || itemRow(null, key)) + '</div>' +
+        '<button type="button" class="btn btn--secondary btn--sm" data-act="pf-list-add" data-k="' + key + '" style="align-self:flex-start">' + I('plus', 'ico-16') + L.add + '</button><p class="small err" id="pf-err" role="alert" hidden></p></div>',
+      foot: '<button class="btn btn--tertiary" data-act="modal-close">Cancel</button><button class="btn btn--primary" data-act="pf-list-save" data-k="' + key + '">Save</button>',
+    });
+  }
+  A.act['pf-offers'] = function () { editList('offers'); };
+  A.act['pf-needs'] = function () { editList('needs'); };
+  A.act['pf-list-add'] = function (el) { document.getElementById('pf-rows').insertAdjacentHTML('beforeend', itemRow(null, el.dataset.k)); };
+  A.act['pf-list-save'] = function (el) {
+    const key = el.dataset.k, body = {};
+    body[key] = Array.prototype.map.call(document.querySelectorAll('#pf-rows .pf-row'), function (r) { return { title: val(r, 'title'), description: val(r, 'desc') }; });
+    save(body, el, 'pf-err', LISTS[key].saved);
+  };
+
   // ---------- skills ----------
   let skillList = [];
   function chips() {

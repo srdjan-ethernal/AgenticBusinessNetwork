@@ -117,7 +117,7 @@
     const inv = A.invitations.filter(function (x) { return !A.S.inv[x.who]; }).length;
     return { feed: 0, network: inv, inbox: high, policy: 0, notifications: notif };
   }
-  const NAV = [['feed', 'home', 'Home'], ['network', 'network', 'Network'], ['inbox', 'inbox', 'Inbox'], ['policy', 'policy', 'Policy'], ['notifications', 'bell', 'Activity']];
+  const NAV = [['feed', 'home', 'Home'], ['find', 'search', 'Find'], ['network', 'network', 'Network'], ['inbox', 'inbox', 'Inbox'], ['policy', 'policy', 'Policy'], ['notifications', 'bell', 'Activity']];
   function badge(n, key) { return '<span class="nbadge" data-badge="' + key + '"' + (n ? '' : ' hidden') + '>' + n + '</span>'; }
 
   A.appNav = function (active) {
@@ -138,7 +138,7 @@
       '<div class="menu" id="menu-me" hidden>' +
         '<div class="menu__sec"><div class="row-top">' + A.avatar(me, 48) + '<div class="grow"><div class="b">' + esc(me.name) + '</div><div class="small muted">' + esc(me.headline) + '</div></div></div><a class="btn btn--secondary btn--sm btn--block" style="margin-top:10px" href="#in.' + A.me + '">View profile</a></div>' +
         '<div class="menu__sec"><div class="menu__h">Your agent</div>' + link('a.' + A.me, 'eye', 'Public agent page') + link('policy', 'sliders', 'Attention policy') + link('contacts', 'users', 'Invite LinkedIn connections') + (A.live ? link('settings', 'lock', 'Account and email') : '') + link('developers', 'code', 'API keys and webhooks') + '</div>' +
-        '<div class="menu__sec"><div class="menu__h">Explore</div>' + (A.live ? '' : link('company.tidewell', 'building', 'Tidewell Ventures')) + link('pricing', 'star', 'Plans') + link('about.trust', 'shieldo', 'Trust center') + link('about.brief', 'trend', 'Investor brief') + '</div>' +
+        '<div class="menu__sec"><div class="menu__h">Explore</div>' + (A.live ? '' : link('company.tidewell', 'building', 'Tidewell Ventures')) + link('pricing', 'star', 'Plans') + link('about.trust', 'shieldo', 'Trust center') + link('about.brief', 'trend', 'Company brief') + '</div>' +
         '<div class="menu__sec"><div class="menu__h">Theme</div>' + [['', 'System'], ['light', 'Light'], ['dark', 'Dark']].map(function (o) { return '<button class="menu__a' + (th === o[0] ? ' is-on' : '') + '" data-act="theme" data-v="' + o[0] + '">' + A.icon(th === o[0] ? 'check' : o[0] === 'dark' ? 'moon' : 'sun') + o[1] + '</button>'; }).join('') + '</div>' +
         '<div class="menu__sec">' + (A.live ? '' : '<button class="menu__a" data-act="reset-demo">' + A.icon('repost') + 'Reset demo data</button>') + '<button class="menu__a" data-act="signout">' + A.icon('left') + 'Sign out</button></div>' +
       '</div></div>' +
@@ -161,7 +161,7 @@
   A.publicNav = function (active) {
     const l = function (h, t) { return '<a class="lo-link' + (active === h.split('.')[0] && h.indexOf('.') < 0 ? ' is-active' : '') + '" href="#' + h + '">' + t + '</a>'; };
     return '<header class="lo-hd"><a class="wordmark" href="#welcome" aria-label="' + esc(B.name) + ' home">' + A.logo(32) + '<span class="wm-text">' + esc(B.name) + '</span></a>' +
-      '<nav class="lo-hd__nav" aria-label="Main">' + l('welcome', 'Product') + l('developers', 'Protocol') + l('pricing', 'Pricing') + l('about', 'About') + l('about.brief', 'Investors') + '</nav>' +
+      '<nav class="lo-hd__nav" aria-label="Main">' + l('welcome', 'Product') + l('developers', 'Protocol') + l('pricing', 'Pricing') + l('about', 'About') + l('about.brief', 'Company') + '</nav>' +
       '<div class="lo-hd__cta"><a class="btn btn--tertiary" href="#signin">Sign in</a><a class="btn btn--primary" href="#join">Join</a></div></header>';
   };
 
@@ -331,7 +331,7 @@
   };
   A.ui.pname = function (id) { return '<a href="#in.' + id + '" class="b" style="color:var(--fg)">' + esc(A.P(id).name) + '</a>'; };
   A.ui.appFooter = function () {
-    const links = [['about', 'About'], ['about.trust', 'Trust & privacy'], ['developers', 'Protocol'], ['pricing', 'Plans'], ['about.brief', 'Investors']];
+    const links = [['about', 'About'], ['about.trust', 'Trust & privacy'], ['developers', 'Protocol'], ['pricing', 'Plans'], ['about.brief', 'Company']];
     return '<footer class="appfoot"><div class="brand">' + A.logo(18) + '<b>' + esc(B.name) + '</b></div>' + links.map(function (l) { return '<a href="#' + l[0] + '">' + esc(l[1]) + '</a>'; }).join('') +
       '<div class="brand"><span class="demo-flag">Prototype · fictional data · ' + B.year + '</span></div></footer>';
   };

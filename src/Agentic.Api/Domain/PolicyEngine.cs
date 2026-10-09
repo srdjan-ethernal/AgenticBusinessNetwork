@@ -142,7 +142,7 @@ public sealed partial class PolicyEngine(Catalog catalog)
         else if (blockedKw is not null) { lane = Lanes.Declined; why = "Contains a blocked topic: “" + blockedKw + "”."; }
         else if (status == "closed" && !vip) { lane = Lanes.Declined; why = catLabel + " is closed in your policy. Declined automatically with a reason."; }
         else if (vip) { lane = Lanes.High; why = "VIP bypass: escalated regardless of score."; }
-        else if (pol.ThesisHardFilter && it.Category == "fundraising" && pol.OpenTo.Count > 0 && overlap.Count == 0) { lane = Lanes.Low; why = "Outside your thesis. Your policy caps these at LOW."; }
+        else if (pol.ThesisHardFilter && it.Category == "fundraising" && pol.OpenTo.Count > 0 && overlap.Count == 0) { lane = Lanes.Low; why = "Outside the industries you invest in. Your policy caps these at LOW."; }
         else if (score >= th.High && pf >= 0.6 && (!pol.RequireVerified || verified)) { lane = Lanes.High; why = "Score " + score + " clears your HIGH threshold of " + th.High + " and the policy check passed."; }
         else if (score >= th.High) { lane = Lanes.Medium; why = pf < 0.6 ? "Score is high, but policy fit is weak. Held for review." : "Score is high, but the sender is not verified."; }
         else if (score >= th.Medium) { lane = Lanes.Medium; why = missing.Count > 0 || questions.Count > 0 ? "Promising but incomplete. Qualification questions triggered." : "Score " + score + " sits between your MEDIUM (" + th.Medium + ") and HIGH (" + th.High + ") thresholds."; }

@@ -173,7 +173,7 @@ public sealed class ApiTests : IClassFixture<ApiFactory>
         }));
         var view = await closed.Content.ReadFromJsonAsync<JsonObject>();
         Assert.Equal("declined", (string)view!["status"]!);
-        Assert.Contains("Recruiting is closed", (string)view["decline_reason"]!);
+        Assert.Contains("Jobs & hiring is closed", (string)view["decline_reason"]!);
 
         // A low-scoring intent is declined without revealing the recipient's score or thresholds.
         var vague = await c.PostAsync("/v1/intents", Body(new
@@ -187,7 +187,7 @@ public sealed class ApiTests : IClassFixture<ApiFactory>
         var reason = (string)low["decline_reason"]!;
         Assert.DoesNotContain("Score", reason);
         Assert.DoesNotContain("threshold", reason);
-        Assert.Contains("ICP fit", reason);
+        Assert.Contains("customer fit", reason, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

@@ -46,6 +46,23 @@
     return '<section class="card sec">' + secHead(title, true, act) + '<p class="muted small">' + text + '</p>' +
       '<div class="row wrap" style="gap:8px;margin-top:10px"><button class="btn btn--secondary btn--sm" data-act="' + act + '">' + I('plus', 'ico-16') + 'Add</button><button class="btn btn--tertiary btn--sm" data-act="pf-linkedin">Fill from LinkedIn</button></div></section>';
   }
+  // What a member offers and what they are looking for: the heart of a business profile.
+  function listSec(p, isMe, key, title, act, emptyText) {
+    const items = p[key] || [];
+    if (!items.length) {
+      return isMe && A.live ? '<section class="card sec">' + secHead(title, true, act) + '<p class="muted small">' + emptyText + '</p><div style="margin-top:10px"><button class="btn btn--secondary btn--sm" data-act="' + act + '">' + I('plus', 'ico-16') + 'Add</button></div></section>' : '';
+    }
+    return '<section class="card sec">' + secHead(title, isMe, act) + '<ul class="offer-list">' + items.map(function (i) {
+      return '<li><b>' + esc(i.title) + '</b>' + (i.desc ? '<span class="small muted">' + esc(i.desc) + '</span>' : '') + '</li>';
+    }).join('') + '</ul></section>';
+  }
+  function offers(p, isMe) { return listSec(p, isMe, 'offers', 'What we offer', 'pf-offers', 'Your products and services. People searching for them will find you.'); }
+  function needs(p, isMe) { return listSec(p, isMe, 'needs', 'Looking for', 'pf-needs', 'Customers, suppliers, partners, people or investment you need. Members who offer it can find you.'); }
+  function siteLink(url) {
+    if (!/^https?:\/\//.test(url || '')) return '';
+    return '<a href="' + esc(url) + '" target="_blank" rel="noopener nofollow ugc">' + I('globe', 'ico-16') + esc(url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')) + '</a>';
+  }
+
   function experience(p, isMe) {
     const exp = p.exp || (p.org ? [{ title: p.headline.split(' at ')[0].split(' · ')[0], org: p.org, type: 'Full-time', period: '2023 – Present', loc: p.loc }] : []);
     if (!exp.length) return isMe && A.live ? emptySec('Experience', 'pf-exp', 'Where you work and worked. Senders see it, and it helps your agent explain who you are.') : '';
@@ -105,7 +122,8 @@
           '<div class="phead__id">' +
             '<h1 class="phead__name">' + esc(p.name) + ((p.verified || []).length ? A.verifiedBadge(p.verified.map(function (v) { return A.CLAIMS[v]; }).join(', ')) : '') + '</h1>' +
             '<div class="phead__hl">' + esc(p.headline) + '</div>' +
-            '<div class="phead__meta"><span>' + esc(p.loc || '') + '</span>' + (o ? '<a href="#company.' + p.org + '">' + esc(o.name) + '</a>' : '') + '<a href="#network">' + esc(p.connections || (p.mutuals ? p.mutuals * 23 + '' : '120')) + ' connections</a>' + (p.followers ? '<span>' + fmt(p.followers) + ' followers</span>' : '') + '<button data-act="contact" data-id="' + id + '">Contact info</button></div>' +
+            ((p.topics || []).length && !p.kind ? '<div class="phead__tags">' + p.topics.slice(0, 4).map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join('') + '</div>' : '') +
+            '<div class="phead__meta"><span>' + esc(p.loc || '') + '</span>' + siteLink(p.website) + (o ? '<a href="#company.' + p.org + '">' + esc(o.name) + '</a>' : '') + '<a href="#network">' + esc(p.connections || (p.mutuals ? p.mutuals * 23 + '' : '120')) + ' connections</a>' + (p.followers ? '<span>' + fmt(p.followers) + ' followers</span>' : '') + '<button data-act="contact" data-id="' + id + '">Contact info</button></div>' +
             (!isMe && p.mutuals ? '<div class="row small muted" style="margin-top:10px"><span class="av-stack">' + mutualIds.map(function (m) { return A.avatar(A.P(m), 22, 'av--ring'); }).join('') + '</span>' + esc(mutualIds.map(function (m) { return first(A.P(m)); }).join(', ')) + ' and ' + Math.max(1, p.mutuals - 2) + ' other mutual connections</div>' : '') +
             '<div class="ptop__btns">' + btns + '</div></div></div>' +
           (p.kind === 'agent'
@@ -117,6 +135,7 @@
           '<a class="stat" href="#inbox">' + I('inbox') + '<div><b>' + A.stats.triaged + ' intents screened</b><span class="small muted">This week, by your agent.</span></div></a>' +
           '<a class="stat" href="#inbox">' + I('clock') + '<div><b>' + A.stats.saved + ' hours saved</b><span class="small muted">Compared with reading everything.</span></div></a></div></section>' : '') +
         '<section class="card sec"><div class="sec__h"><h2>About</h2></div><p style="white-space:pre-line">' + esc(p.about || (p.name + ' is ' + p.headline.charAt(0).toLowerCase() + p.headline.slice(1) + '.')) + '</p></section>' +
+        offers(p, isMe) + needs(p, isMe) +
         (p.kind === 'agent' ? '' : agentSection(id, p, isMe)) +
         activity(id) + experience(p, isMe) + education(p, isMe) + skills(p, isMe) + reputation(p) +
         '</div><aside class="rail rail--right">' +
@@ -179,8 +198,9 @@
       body: '<div class="stack-16">' +
         '<div class="grid2">' + f('pe-name', 'Full name', p.name, 80, ' autocomplete="name"') + f('pe-loc', 'Location', p.loc, 80) + '</div>' +
         f('pe-head', 'Headline', p.headline, 160) +
-        '<div class="field"><label class="label" for="pe-about">About</label><textarea class="textarea" id="pe-about" rows="5" maxlength="2000">' + esc(p.about || '') + '</textarea></div>' +
-        '<div class="stack"><span class="label">Topics you work on</span><div class="pills wrap" id="pe-topics">' + A.ui.topicPills(p.topics || []) + '</div><span class="small muted">The topics your agent is open to are set separately, under Policy.</span></div>' +
+        f('pe-web', 'Website', (p.website || '').replace(/^https:\/\//, '').replace(/\/$/, ''), 200, ' placeholder="example.com" inputmode="url"') +
+        '<div class="field"><label class="label" for="pe-about">About</label><textarea class="textarea" id="pe-about" rows="5" maxlength="2600">' + esc(p.about || '') + '</textarea></div>' +
+        '<div class="stack"><span class="label">Your industries</span><div class="pills wrap" id="pe-topics">' + A.ui.topicPills(p.topics || []) + '</div><span class="small muted">The topics your agent is open to are set separately, under Policy.</span></div>' +
         '<p class="small err" id="pe-err" role="alert" hidden></p></div>',
       foot: '<button class="btn btn--tertiary" data-act="modal-close">Cancel</button><button class="btn btn--primary" data-act="save-profile">Save</button>',
     });
@@ -188,7 +208,7 @@
   A.act['save-profile'] = function (el) {
     const v = function (id) { return document.getElementById(id).value; };
     el.disabled = true;
-    A.Live.updateProfile({ name: v('pe-name'), headline: v('pe-head'), location: v('pe-loc'), about: v('pe-about'), topics: A.ui.pickedTopics('pe-topics') })
+    A.Live.updateProfile({ name: v('pe-name'), headline: v('pe-head'), location: v('pe-loc'), about: v('pe-about'), website: v('pe-web'), topics: A.ui.pickedTopics('pe-topics') })
       .then(function () { A.closeModal(); A._keep = true; A.render(); A.toast('Profile saved.', 'info'); },
         function (err) { el.disabled = false; const e = document.getElementById('pe-err'); e.textContent = err.message; e.hidden = false; });
   };

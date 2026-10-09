@@ -26,8 +26,8 @@ public sealed class Catalog
     public static readonly string[] Urgencies = ["low", "normal", "time_sensitive"];
     public static readonly Dictionary<string, double> ValueByCategory = new()
     {
-        ["fundraising"] = 0.7, ["intro"] = 0.6, ["partnership"] = 0.55, ["press"] = 0.4, ["advisory"] = 0.4,
-        ["sales"] = 0.3, ["recruiting"] = 0.3, ["support"] = 0.3, ["other"] = 0.25,
+        ["fundraising"] = 0.7, ["purchase"] = 0.65, ["intro"] = 0.6, ["partnership"] = 0.55, ["press"] = 0.4, ["advisory"] = 0.4,
+        ["event"] = 0.35, ["sales"] = 0.3, ["recruiting"] = 0.3, ["support"] = 0.3, ["other"] = 0.25,
     };
 
     public Catalog(string domainJsonPath)

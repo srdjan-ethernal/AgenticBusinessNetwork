@@ -166,7 +166,7 @@
     else if (blockedKw) { lane = 'declined'; why = 'Contains a blocked topic: “' + blockedKw + '”.'; }
     else if (status === 'closed' && !vip) { lane = 'declined'; why = catLabel + ' is closed in your policy. Declined automatically with a reason.'; }
     else if (vip) { lane = 'high'; why = 'VIP bypass: escalated regardless of score.'; }
-    else if (pol.thesisHardFilter && it.category === 'fundraising' && pol.openTo.length && !overlap.length) { lane = 'low'; why = 'Outside your thesis. Your policy caps these at LOW.'; }
+    else if (pol.thesisHardFilter && it.category === 'fundraising' && pol.openTo.length && !overlap.length) { lane = 'low'; why = 'Outside the industries you invest in. Your policy caps these at LOW.'; }
     else if (score >= th.high && pf >= 0.6 && (!pol.requireVerified || verified)) { lane = 'high'; why = 'Score ' + score + ' clears your HIGH threshold of ' + th.high + ' and the policy check passed.'; }
     else if (score >= th.high) { lane = 'medium'; why = pf < 0.6 ? 'Score is high, but policy fit is weak. Held for review.' : 'Score is high, but the sender is not verified.'; }
     else if (score >= th.medium) { lane = 'medium'; why = missing.length || questions.length ? 'Promising but incomplete. Qualification questions triggered.' : 'Score ' + score + ' sits between your MEDIUM (' + th.medium + ') and HIGH (' + th.high + ') thresholds.'; }
@@ -207,53 +207,71 @@
 
   // ---------- free text → structured intent (used by the live demo and the sandbox) ----------
   const CAT_RE = {
-    fundraising: /\b(rais(e|es|ing)|pre-?seed|seed|series [abc]|investors?|round|valuation|term sheet|cap table)\b/g,
-    sales: /\b(our (platform|product|solution|tool|software)|demo|pricing|free trial|book a (call|demo)|quick call|synerg\w*|unlock\w*|boost\w*|10x|3x)\b/g,
-    recruiting: /\b(hiring|role|position|candidate|recruit\w*|compensation|salary|vp|head of|job)\b/g,
-    partnership: /\b(partner(ship)?s?|co-?market\w*|co-?host\w*|collaborat\w*|syndicate|co-?invest\w*|distribution|demo day|judg(e|ing))\b/g,
-    press: /\b(journalist|reporter|story|article|on (the )?record|press|newsletter|quote|feature)\b/g,
-    advisory: /\b(podcast|panel|speak(er|ing)?|advice|advis(e|or|ory)|mentor\w*|office hours|interview|episode|guest)\b/g,
+    purchase: /\b(quotes?|quotation|price list|prices|order(ing)?|buy(ing)?|purchas\w*|we need|need \d+|supply|supplier|deliver(y|ed)? by|samples?|rfq|tender)\b/g,
+    fundraising: /\b(investors?|investment|invest(ing)?|funding|loans?|rais(e|es|ing)|pre-?seed|series [abc]|valuation|equity stake|cap table|funding round)\b/g,
+    sales: /\b(our (platform|product|solution|tool|software|services?)|demo|pricing|free trial|book a (call|demo)|quick call|synerg\w*|unlock\w*|boost\w*|10x|3x|special offer|discount)\b/g,
+    recruiting: /\b(hiring|role|position|candidate|recruit\w*|compensation|salary|vacanc\w*|head of|job|cv|resume)\b/g,
+    partnership: /\b(partner(ship)?s?|co-?market\w*|collaborat\w*|resell\w*|distribut\w*|joint offer|together we)\b/g,
+    press: /\b(journalist|reporter|story|article|on (the )?record|press|newsletter|quote from you|feature)\b/g,
+    advisory: /\b(podcast|advice|advis(e|or|ory)|consult\w*|mentor\w*|interview|episode|guest|opinion)\b/g,
+    event: /\b(events?|fair|expo|conference|summit|panel|speak(er|ing)?|talk|workshop|webinar|festival|booth)\b/g,
     intro: /\b(intro(duce|duction|s)?|connect (you|me) with)\b/g,
   };
   const TAG_RE = [
-    ['AI infrastructure', /\b(ai infra\w*|infrastructure|gpus?|model serving|mlops|compute|clusters?)\b/],
-    ['Inference', /\b(inference|latency|serving)\b/],
-    ['Developer tools', /\b(developer tools?|devtools|sdks?|developers?)\b/],
-    ['Data tooling', /\b(vector|database|data (pipelines?|tooling|platform)|etl)\b/],
-    ['Evaluation', /\b(evals?|evaluation|benchmarks?)\b/],
-    ['Edge AI', /\b(edge devices?|on-device)\b/],
-    ['Fintech', /\b(fintech|payments?|bookkeeping|banking|invoic\w*|accounting)\b/],
-    ['Crypto', /\b(crypto|defi|yield vault|apy|web3|staking)\b/],
-    ['Robotics', /\brobot\w*\b/],
-    ['Marketing', /\b(seo|marketing agency|lead gen\w*|growth hack\w*)\b/],
-    ['Healthtech', /\b(healthcare|health tech|clinic\w*|patients?)\b/],
-    ['Climate', /\b(climate|carbon|emissions)\b/],
-    ['Sales automation', /\b(sdrs?|outbound automation|pipeline on autopilot)\b/],
+    ['Hospitality & tourism', /\b(hotels?|hostels?|tourism|tourists?|travel agenc\w*|guest ?houses?|resorts?)\b/],
+    ['Food & drink', /\b(restaurants?|caf(e|é)s?|bakery|bakeries|food|catering|coffee|wine|drinks?|beverages?)\b/],
+    ['Retail & e-commerce', /\b(shops?|stores?|retail\w*|e-?commerce|online shop|webshop)\b/],
+    ['Manufacturing', /\b(manufactur\w*|factory|factories|production line|machin\w*|cnc|textiles?)\b/],
+    ['Construction & real estate', /\b(construction|real estate|renovation|architect\w*|property|properties)\b/],
+    ['Transport & logistics', /\b(logistics|transport\w*|deliveries|shipping|freight|warehouse\w*|trucks?)\b/],
+    ['Technology & software', /\b(software|apps?|saas|it services|websites?|developers?)\b/],
+    ['AI & data', /\b(ai|artificial intelligence|machine learning|analytics|data (science|platform))\b/],
+    ['Agriculture', /\b(farm\w*|agricultur\w*|crops?|harvest|orchards?|livestock)\b/],
+    ['Energy & environment', /\b(energy|solar|electricity|heating|recycl\w*|emissions|carbon)\b/],
+    ['Finance & insurance', /\b(bank\w*|loans?|insurance|payments?|crypto|fintech|apy|yield)\b/],
+    ['Legal & accounting', /\b(lawyers?|legal|accountants?|accounting|bookkeeping|tax(es)?)\b/],
+    ['Consulting & business services', /\b(consult\w*|office supplies|cleaning|outsourc\w*|business services)\b/],
+    ['Marketing & advertising', /\b(marketing|advertis\w*|seo|social media|branding|lead gen\w*)\b/],
+    ['Media & creative', /\b(design(ers)?|photograph\w*|video|magazine|newsletter|podcast|journalis\w*)\b/],
+    ['Health & wellness', /\b(health\w*|clinic\w*|patients?|doctors?|fitness|wellness|pharma\w*)\b/],
+    ['Education & training', /\b(schools?|training|courses?|education|students?)\b/],
+    ['HR & staffing', /\b(staffing|hr|human resources|recruit\w*)\b/],
+    ['Fashion & beauty', /\b(fashion|clothing|beauty|cosmetics|salons?|bed linen)\b/],
+    ['Automotive', /\b(cars?|vehicles?|automotive|garages?|tyres?|tires?)\b/],
+    ['Import & export', /\b(import\w*|export\w*|customs)\b/],
+    ['Crafts & trades', /\b(plumb\w*|electricians?|carpent\w*|craftsm\w*|repairs?)\b/],
+    ['Nonprofit & public sector', /\b(nonprofit|ngo|charity|municipal\w*|public sector|government)\b/],
   ];
+  const MONTH = '(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\.?';
   const EV_RE = {
-    traction: /(\d[\d,.]*\s?(k|m)?\s?(mrr|arr))|\b(mrr|arr|paying customers|design partners|paid pilots?|\d[\d,.]*\s?(users|customers|pilots))\b/i,
-    deck: /\b(deck|memo|one-?pager|data room)\b/i,
-    team: /\b(co-?founders?|previously|we built|team of \d+)\b/i,
-    icp: /\b(used by|customers include|\d+ (funds|firms|teams) (like|similar))\b/i,
-    integration: /\bintegrat(es|ion|ions)\s+with\b/i,
+    offer: /\b(we offer|our (offer|services?|products?)|price list|from (€|\$)\s?\d|per (month|hour|piece|unit|night))\b/i,
+    need: /\b(we need|i need|looking for|need \d+|\d+\s?(pcs|pieces|units|sets|kg|tons?|rooms|liters?|litres?))\b/i,
+    budget: /\b(budget|price range)\b|(€|\$)\s?\d[\d,.]*|\b\d[\d,.]*\s?(k\s)?(eur|euros?|usd|rsd|dinars?)\b/i,
+    company: /\b(we are an? [a-z]+ (company|business|firm|shop|agency)|our company|family business|since (19|20)\d\d|founded in|in business for)\b/i,
+    website: /\b(www\.[a-z0-9-]+|https?:\/\/|[a-z0-9-]+\.(com|rs|net|org|io|eu)\b|portfolio)/i,
+    traction: /(\d[\d,.]*\s?(k|m)?\s?(mrr|arr))|\b(mrr|arr|paying customers|regular customers|\d[\d,.]*\s?(users|customers|clients|pilots))\b/i,
+    deck: /\b(deck|presentation|proposal|memo|one-?pager|brochure|catalog(ue)?)\b/i,
+    team: /\b(co-?founders?|previously|we built|team of \d+|years of experience)\b/i,
+    icp: /\b(used by|customers include|clients include|\d+ (companies|businesses|restaurants|hotels|shops|firms) (like|use|already))\b/i,
+    integration: /\b(integrat(es|ion|ions)\s+with|works with (your|our))\b/i,
     roi: /(\b\d+\s?%|\b\d+x\b|\broi\b|\bsaves?\s+\d)/i,
-    reference: /\b(reference customer|case study|customers include)\b/i,
-    comp: /((€|\$)\s?\d+\s?(k|000))|\b(compensation|salary|equity|comp band)\b/i,
+    reference: /\b(reference|case study|customers include|clients include|we (supplied|delivered|worked) (for|with))\b/i,
+    comp: /((€|\$)\s?\d+\s?(k|000))|\b(compensation|salary|pay|net (a|per) month|per hour|equity)\b/i,
     remote: /\b(remote|hybrid|on-?site)\b/i,
-    teamstage: /\b(series [a-d]|\d+ (people|employees))\b/i,
-    audience: /\b(audience|attendees|listeners|readers|subscribers|\d+ (startups|founders|engineers|members))\b/i,
-    mutual_value: /\b(for you|in return|mutual|both ways|two-way|you would get|judges get)\b/i,
-    timeline: /\b((jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s\d{1,2})\b|\bq[1-4]\b|\bnext (week|month)\b/i,
-    topic: /\b(about|topic|story on|feature on|discuss|questions? on)\b/i,
+    teamstage: /\b\d+\s(people|employees|staff)\b/i,
+    audience: /\b(audience|attendees|listeners|readers|subscribers|visitors|\d+ (members|companies|exhibitors))\b/i,
+    mutual_value: /\b(for you|in return|mutual|both ways|two-way|you would get|we both)\b/i,
+    timeline: new RegExp('\\b(' + MONTH + '\\s\\d{1,2}|\\d{1,2}(st|nd|rd|th)?\\s' + MONTH + ')\\b|\\bq[1-4]\\b|\\bnext (week|month)\\b|\\bthis (week|season)\\b', 'i'),
+    topic: /\b(about|topic|story on|feature on|discuss|questions? on|article on)\b/i,
     time: /\b\d+\s?(min|mins|minutes|hours?)\b/i,
     fee: /\b(paid|honorarium|fee|unpaid)\b/i,
     confidentiality: /\b(nda|confidential|off the record)\b/i,
-    outlet: /\b(for|at)\s+(the\s+)?[a-z]+\s+(weekly|daily|times|journal|news|wire|review|post)\b/i,
-    deadline: /\b(deadline|by (tomorrow|monday|tuesday|wednesday|thursday|friday|eod|end of day))\b/i,
-    context: /\b(suggested|introduced|we met|mutual|referred|portfolio|following our)\b/i,
+    outlet: /\b(for|at)\s+(the\s+)?[a-z]+\s+(weekly|daily|times|journal|news|wire|review|post|magazine)\b/i,
+    deadline: new RegExp('\\b(deadline|by (tomorrow|monday|tuesday|wednesday|thursday|friday|eod|end of day|the end of)|by \\d{1,2}(st|nd|rd|th)?\\s' + MONTH + '|by ' + MONTH + '\\s\\d{1,2})', 'i'),
+    context: /\b(suggested|introduced|we met|mutual|referred|following our|recommended you)\b/i,
   };
   const GEN = /\b(hope (this|you)[^.!?]{0,30}well|reach(ing)? out|touch base|synerg\w*|game-?changer|quick call|quick question|circle back|companies like yours|funds like yours|just checking in|unlock\w*|on autopilot|10x)\b/gi;
-  const VALUE_BY_CAT = { fundraising: 0.7, intro: 0.6, partnership: 0.55, press: 0.4, advisory: 0.4, sales: 0.3, recruiting: 0.3, support: 0.3, other: 0.25 };
+  const VALUE_BY_CAT = { fundraising: 0.7, purchase: 0.65, intro: 0.6, partnership: 0.55, press: 0.4, advisory: 0.4, event: 0.35, sales: 0.3, recruiting: 0.3, support: 0.3, other: 0.25 };
 
   function sentenceAt(t, i) {
     let a = t.lastIndexOf('.', i); a = a < 0 ? 0 : a + 1;
@@ -275,14 +293,14 @@
     const monies = [];
     let m;
     while ((m = MONEY.exec(t))) {
-      let n = parseFloat(m[2].replace(',', '.'));
+      let n = parseFloat(m[2].replace(/[,.](\d{3})(?!\d)/g, '$1').replace(',', '.'));
       const u = (m[3] || '').toLowerCase();
       if (u === 'k' || u === 'thousand') n *= 1e3; else if (u === 'm' || u === 'mm' || u === 'million') n *= 1e6; else if (u === 'bn') n *= 1e9;
       const after = lo.slice(m.index + m[0].length, m.index + m[0].length + 12);
       const ctx = lo.slice(Math.max(0, m.index - 40), m.index + m[0].length + 30);
       monies.push({ n: n, rev: /^\s*(mrr|arr|\/mo|per month|revenue|apy)/.test(after), ctx: ctx });
     }
-    const roundM = monies.filter(function (x) { return !x.rev && /(rais|round|pre-?seed|seed|series|closing|committed)/.test(x.ctx); })[0];
+    const roundM = cat === 'fundraising' ? monies.filter(function (x) { return !x.rev && /\b(rais\w*|round|pre-?seed|seed|series|closing|committed|funding|loan|invest\w*)\b/.test(x.ctx); })[0] : null;
     const amount = roundM ? roundM.n : null;
     const stage = /pre-?seed/.test(lo) ? 'Pre-seed' : /\bseries a\b/.test(lo) ? 'Series A' : /\bseries [b-z]\b/.test(lo) ? 'Series B+' : /\bseed\b/.test(lo) ? 'Seed' : null;
 
@@ -293,7 +311,7 @@
     const generic = (t.match(GEN) || []).length;
     const urgency = /\b(urgent|asap|today|tomorrow|deadline|time-?sensitive|within \d+ hours?|within 1 hour)\b/.test(lo) ? 'time_sensitive' : 'normal';
     const warm = /\b(suggested i (reach out|contact|write)|introduced|intro from|we met at|referred)\b/.test(lo);
-    const action = /\b(\d+\s?min\w*|meet\w*|call|chat|coffee)\b/.test(lo) ? 'meet' : /\bintro/.test(lo) ? 'intro' : /\b(review|feedback)\b/.test(lo) ? 'review' : 'reply';
+    const action = /\b(\d+\s?min\w*|meet\w*|call|chat|coffee)\b/.test(lo) ? 'meet' : /\b(quotes?|quotation|prices|price list|offer for)\b/.test(lo) && cat === 'purchase' ? 'quote' : /\bintro/.test(lo) ? 'intro' : /\b(review|feedback)\b/.test(lo) ? 'review' : 'reply';
     const sentences = t.replace(/([.!?])\s+/g, '$1\n').split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
     const objective = sentences.filter(function (s) { return s.length > 12 && /\b(could|can|would|let'?s|request|looking for|raising|hiring|invite|asking|worth a)\b/i.test(s); })[0] || sentences[0] || '';
     const value = sentences.filter(function (s) { return s !== objective && /(\d+\s?%|\d+x|\bcut\w*|\bsav\w+|\breduc\w+|\bgrow\w*|\bhelp\w*|\bautomat\w*)/i.test(s); })[0] || '';

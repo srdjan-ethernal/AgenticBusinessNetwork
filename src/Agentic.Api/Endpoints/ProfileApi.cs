@@ -101,3 +101,16 @@ public static class ProfileApi
 
     private static string Id(ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.NameIdentifier)!;
 }
+
+/// <summary>Find people and businesses (signed-in members only).</summary>
+public static class DirectoryApi
+{
+    public static void MapDirectoryApi(this WebApplication app)
+    {
+        var g = app.MapGroup("/api/directory").RequireAuthorization();
+        g.MapGet("", async (string? q, string? industry, ClaimsPrincipal user, MemberDirectory dir) =>
+            Results.Json(await dir.Search(user.FindFirstValue(ClaimTypes.NameIdentifier)!, q, industry), Json.Web));
+        g.MapGet("/matches", async (ClaimsPrincipal user, MemberDirectory dir) =>
+            Results.Json(await dir.Matches(user.FindFirstValue(ClaimTypes.NameIdentifier)!), Json.Web));
+    }
+}

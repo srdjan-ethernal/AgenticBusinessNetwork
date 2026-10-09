@@ -2,7 +2,7 @@
 (function (A) {
   const esc = A.esc, I = A.icon, E = A.Engine;
   const EV_OPTS = { fundraising: ['traction', 'round', 'deck', 'team'], partnership: ['audience', 'mutual_value', 'timeline'], intro: ['context'], press: ['outlet', 'deadline', 'topic'], advisory: ['topic', 'time', 'fee', 'confidentiality'], sales: ['icp', 'integration', 'roi', 'reference'], recruiting: ['comp', 'remote', 'teamstage'], support: ['context'], other: ['context'] };
-  const SECS = [['templates', 'layers', 'Template'], ['topics', 'target', 'Topics'], ['stages', 'trend', 'Stage and check size'], ['categories', 'filter', 'Categories'], ['thresholds', 'sliders', 'Thresholds'], ['evidence', 'check', 'Required evidence'], ['vip', 'star', 'VIPs and blocklist'], ['availability', 'clock', 'Availability'], ['autonomy', 'spark', 'Agent autonomy'], ['privacy', 'lock', 'Privacy and data']];
+  const SECS = [['templates', 'layers', 'Template'], ['topics', 'target', 'Industries'], ['stages', 'globe', 'Geography'], ['categories', 'filter', 'Categories'], ['thresholds', 'sliders', 'Thresholds'], ['evidence', 'check', 'Required evidence'], ['vip', 'star', 'VIPs and blocklist'], ['availability', 'clock', 'Availability'], ['autonomy', 'spark', 'Agent autonomy'], ['privacy', 'lock', 'Privacy and data']];
   const VIP_SUGGEST = ['daniel-kovac', 'hannah-schulz', 'sofia-marin', 'tomas-herrera', 'omar-haddad'];
   const P = function () { return A.S.policy; };
 
@@ -21,16 +21,14 @@
     },
     topics: function () {
       const p = P();
-      return '<section class="card sec" id="pc-topics"><div class="sec__h"><h2>What you’re open to</h2></div><p class="small muted" style="margin-bottom:12px">Topics decide policy fit. Intents that match none of them lose points.</p>' +
+      return '<section class="card sec" id="pc-topics"><div class="sec__h"><h2>Industries you’re open to</h2></div><p class="small muted" style="margin-bottom:12px">Industries decide policy fit. Intents that match none of them lose points.</p>' +
         '<div class="pills">' + (p.openTo.length ? p.openTo.map(function (t) { return '<span class="tag tag--accent tag--x">' + esc(t) + '<button data-act="topic-rm" data-v="' + esc(t) + '" aria-label="Remove ' + esc(t) + '">' + I('x', 'ico-16') + '</button></span>'; }).join('') : '<span class="small muted">No topics. Every intent counts as a topic match.</span>') + '</div>' +
         '<div class="row wrap" style="margin-top:12px;gap:6px"><span class="small muted">Add:</span>' + A.TOPICS.filter(function (t) { return p.openTo.indexOf(t) < 0; }).map(function (t) { return '<button class="pill" data-act="topic-add" data-v="' + esc(t) + '">' + I('plus', 'ico-16') + esc(t) + '</button>'; }).join('') + '</div>' +
-        '<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:4px">' + row('Cap pitches outside my topics at LOW', 'Fundraising intents with no topic overlap never reach MEDIUM or HIGH.', sw('sw-thesis', 'thesisHardFilter', p.thesisHardFilter)) + '</div></section>';
+        (p.template === 'investor' || p.thesisHardFilter ? '<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:4px">' + row('Cap funding requests outside my industries at LOW', 'Investment and funding intents with no industry overlap never reach MEDIUM or HIGH.', sw('sw-thesis', 'thesisHardFilter', p.thesisHardFilter)) + '</div>' : '') + '</section>';
     },
     stages: function () {
       const p = P();
-      return '<section class="card sec" id="pc-stages"><div class="sec__h"><h2>Stage, check size and geography</h2></div><div class="stack-16">' +
-        '<div class="field"><span class="label">Stages you invest in</span><div class="pills">' + A.STAGES.map(function (s) { const on = p.stages.indexOf(s) >= 0; return '<button class="pill' + (on ? ' is-on' : '') + '" aria-pressed="' + on + '" data-act="stage-t" data-v="' + s + '">' + (on ? I('check', 'ico-16') : '') + s + '</button>'; }).join('') + '</div></div>' +
-        '<div class="grid2"><div class="field"><label class="label" for="chk-min">Smallest first check ($K)</label><input class="input" id="chk-min" type="number" min="0" step="50" value="' + p.check.min / 1000 + '" data-ch="chk"></div><div class="field"><label class="label" for="chk-max">Largest first check ($K)</label><input class="input" id="chk-max" type="number" min="0" step="50" value="' + p.check.max / 1000 + '" data-ch="chk"></div></div>' +
+      return '<section class="card sec" id="pc-stages"><div class="sec__h"><h2>Geography</h2></div><div class="stack-16">' +
         '<div class="field"><span class="label">Geographies</span><div class="pills">' + A.GEOS.map(function (g) { const on = p.geo.indexOf(g) >= 0; return '<button class="pill' + (on ? ' is-on' : '') + '" aria-pressed="' + on + '" data-act="geo-t" data-v="' + g + '">' + (on ? I('check', 'ico-16') : '') + g + '</button>'; }).join('') + '</div></div>' +
         '</div></section>';
     },
@@ -61,7 +59,7 @@
     },
     vip: function () {
       const p = P();
-      const sug = VIP_SUGGEST.filter(function (id) { return p.vip.indexOf(id) < 0; });
+      const sug = (A.live ? A.pymk : VIP_SUGGEST).filter(function (id) { return p.vip.indexOf(id) < 0; });
       return '<section class="card sec" id="pc-vip"><div class="sec__h"><h2>VIPs and blocked topics</h2></div><div class="stack-16">' +
         '<div class="field"><span class="label">VIP list · always reach you and skip every filter</span><div class="stack">' + (p.vip.length ? p.vip.map(function (id) { const u = A.P(id); return '<div class="row">' + A.avatar(u, 40) + '<div class="grow"><a class="b" href="#in.' + id + '" style="color:var(--fg)">' + esc(u.name) + '</a><div class="small muted clamp1">' + esc(u.headline) + '</div></div><button class="btn btn--tertiary btn--sm" data-act="vip-rm" data-id="' + id + '">Remove</button></div>'; }).join('') : '<span class="small muted">No VIPs yet.</span>') + '</div>' +
         (sug.length ? '<div class="row wrap" style="gap:6px;margin-top:8px"><span class="small muted">Suggested:</span>' + sug.map(function (id) { return '<button class="pill" data-act="vip-add2" data-id="' + id + '">' + I('plus', 'ico-16') + esc(A.P(id).name) + '</button>'; }).join('') + '</div>' : '') + '</div>' +
@@ -89,7 +87,7 @@
     },
     privacy: function () {
       const pr = P().privacy;
-      const dis = [['thesis', 'My topics and thesis'], ['check', 'My check size range'], ['response', 'My typical response times'], ['calendar', 'My calendar availability'], ['portfolio', 'My portfolio list']];
+      const dis = [['thesis', 'My industries'], ['response', 'My typical response times'], ['calendar', 'My calendar availability']];
       return '<section class="card sec" id="pc-privacy"><div class="sec__h"><h2>Privacy and data</h2></div>' +
         row('Keep unqualified inbound for', 'Accepted conversations follow your normal retention.', '<select class="select" style="width:auto" id="ret" data-ch="ret" aria-label="Retention">' + [['7', '7 days'], ['30', '30 days'], ['90', '90 days']].map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === pr.retention ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>') +
         row('Allow model training on my data', 'Off by default. Shared models never learn from your data without opt-in.', sw('sw-tr', 'privacy.training', pr.training)) +
@@ -154,10 +152,18 @@
   };
   A.act['pol-reset'] = function () {
     const v = P().version;
+    if (A.live) {
+      // Back to the rules of your own template; your industries, VIPs and blocklist stay.
+      const key = A.templates[P().template] ? P().template : 'founder';
+      A.applyTemplate(key);
+      A.policyTouched(); A.refresh();
+      A.toast('Policy reset to the <b>' + esc(A.templates[key].name) + '</b> template.', 'info');
+      return;
+    }
     A.S.policy = JSON.parse(JSON.stringify(A.defaultPolicy));
     A.S.policy.version = v;
     A.policyTouched(); A.refresh();
-    A.toast('Policy reset to the investor defaults.', 'info');
+    A.toast('Policy reset to the demo defaults.', 'info');
   };
   A.chg['pol-sw'] = function (el) {
     set(el.dataset.k, el.checked);

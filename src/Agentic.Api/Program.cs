@@ -33,6 +33,7 @@ builder.Services.AddScoped<Protocol>();
 builder.Services.AddScoped<Inbox>();
 builder.Services.AddScoped<Accounts>();
 builder.Services.AddScoped<Contacts>();
+builder.Services.AddScoped<MemberDirectory>();
 builder.Services.AddScoped<AccountEmails>();
 builder.Services.AddScoped<Digests>();
 builder.Services.AddSingleton<DigestWorker>();
@@ -174,6 +175,7 @@ app.MapContactsApi();
 app.MapGoogleAuthApi();
 app.MapAccountApi();
 app.MapProfileApi();
+app.MapDirectoryApi();
 
 app.Run();
 return 0;

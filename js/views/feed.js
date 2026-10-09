@@ -155,11 +155,12 @@
   function liveHome() {
     const me = A.P(A.me);
     const steps = [
+      [!!((me.offers || []).length || (me.needs || []).length), 'Say what you offer and what you’re looking for', 'People searching for it find you, and Find shows who matches you.', '#in.' + A.me, 'Open profile'],
       [!!me.photo, 'Add a profile photo', 'People recognise you before they knock.', '#in.' + A.me, 'Open profile'],
       [!!(me.exp && me.exp.length), 'Fill in your experience', 'Add it by hand, or in one click from your LinkedIn export.', '#in.' + A.me, 'Open profile'],
       [!!(A.account && A.account.emailVerified) || !(A.account && A.account.email), 'Confirm your email', 'Senders then see you as verified, and your agent can send its daily digest.', '#settings', 'Account and email'],
       [false, 'Bring your LinkedIn network', 'Import your connections and invite the people you work with.', '#contacts', 'Import connections'],
-      [false, 'Share your agent address', 'Put ' + me.addr + ' in your bio, signature or deck. Anyone can knock.', null, 'Copy address'],
+      [false, 'Share your agent address', 'Put ' + me.addr + ' on your website, in your email signature and on your business card. Anyone can knock.', null, 'Copy address'],
     ];
     const done = steps.filter(function (s) { return s[0]; }).length;
     const recent = E.sort(E.inbox()).filter(function (r) { return r.lane === 'high' || r.lane === 'medium'; }).slice(0, 5);
@@ -168,6 +169,7 @@
           const btn = s[3] ? '<a class="btn btn--tertiary btn--sm" href="' + s[3] + '">' + s[4] + '</a>' : '<button class="btn btn--tertiary btn--sm" data-act="copy" data-text="' + esc(me.addr) + '" data-msg="Agent address copied.">' + s[4] + '</button>';
           return '<div class="gs-step' + (s[0] ? ' is-done' : '') + '"><span class="gs-step__ic">' + I(s[0] ? 'check' : 'right', 'ico-16') + '</span><div class="grow"><b>' + s[1] + '</b><div class="small muted">' + esc(s[2]) + '</div></div>' + (s[0] ? '' : btn) + '</div>';
         }).join('') + '</section>' +
+      '<section class="card" id="home-matches" hidden></section>' +
       '<section class="card"><div class="pad row between"><h2 class="card__h">Waiting for you</h2><a class="link-muted small" href="#inbox">Agent Inbox</a></div>' +
         (recent.length ? recent.map(function (r) {
           const it = r.it, p = A.P(it.from);
@@ -186,6 +188,18 @@
             '<div class="composer__acts"><button class="composer__act" data-act="compose-post">' + I('image') + 'Photo</button><button class="composer__act" data-act="compose-post" data-kind="event">' + I('calendar') + 'Event</button><button class="composer__act" data-act="compose-post" data-kind="article">' + I('article') + 'Article</button><a class="btn btn--primary btn--sm" href="#send">' + I('spark', 'ico-16') + 'New intent</a></div></div>' +
           allPosts().map(renderPost).join('') +
         '</div>' + rightRail() + '</div></div>';
+    },
+    mount: function () {
+      if (!A.live) return;
+      A.Live.call('GET', 'api/directory/matches').then(function (list) {
+        const box = document.getElementById('home-matches');
+        if (!box || !list.length) return;
+        box.innerHTML = '<div class="pad row between"><h2 class="card__h">Matches for you</h2><a class="link-muted small" href="#find">See all</a></div>' +
+          list.slice(0, 3).map(function (c) {
+            return '<a class="gs-intent" href="#in.' + esc(c.id) + '">' + A.avatar({ name: c.name, photo: c.photo, c: c.colors }, 40) + '<span class="grow"><b class="clamp1">' + esc(c.name) + '</b><span class="small muted clamp1">' + esc(c.why || c.headline) + '</span></span>' + I('right', 'ico-16') + '</a>';
+          }).join('');
+        box.hidden = false;
+      }, function () { /* matches are optional on the home page */ });
     },
   });
 
@@ -237,7 +251,7 @@
   };
   A.act['compose-post'] = function (el) {
     const me = A.P(A.me), kind = el.dataset.kind;
-    const pre = kind === 'event' ? 'Office hours for AI infrastructure founders next Thursday, 16:00 CET. Knock on maya.okafor@' + A.brand.ns + ' to get a slot.' : kind === 'article' ? 'What I look for in a pre-seed infrastructure company:\n\n1. ' : '';
+    const pre = kind === 'event' ? 'Open day at our workshop next Thursday, 16:00. Knock on ' + A.addrOf(A.me) + ' to book a slot.' : kind === 'article' ? 'What I look for in a good supplier:\n\n1. ' : '';
     A.modal({
       title: 'Create a post',
       body: '<div class="row">' + A.avatar(me, 48) + '<div><div class="b">' + esc(me.name) + '</div><div class="small muted">Post to anyone</div></div></div>' +
