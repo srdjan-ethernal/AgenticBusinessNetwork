@@ -251,3 +251,11 @@ public sealed class MemberPhoto
     public byte[] Bytes { get; set; } = [];
     public DateTime UpdatedAt { get; set; }
 }
+
+/// <summary>Who may manage a company page: edit it, read its inbox and set its policy.</summary>
+public sealed class OrgAdmin
+{
+    public string OrgId { get; set; } = "";
+    public string MemberId { get; set; } = "";
+    public DateTime AddedAt { get; set; }
+}

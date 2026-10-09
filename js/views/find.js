@@ -4,18 +4,21 @@
   const esc = A.esc, I = A.icon;
   let q = '', industry = '', results = null, matches = null, loading = false, seq = 0, timer = null;
 
+  // Reasons worth showing: what they offer or need, or why they match you (not "the word is in their name").
+  const WEAK = { Name: 1, Headline: 1, Industry: 1 };
   function card(c) {
     const p = { name: c.name, photo: c.photo, c: c.colors || c.c };
+    const href = (c.kind === 'company' ? '#company.' : '#in.') + esc(c.id);
     const list = function (label, items) { return items && items.length ? '<div class="small"><span class="muted">' + label + '</span> ' + esc(items.slice(0, 3).join(' · ')) + '</div>' : ''; };
     return '<div class="card find-card">' +
-      '<div class="row-top" style="gap:12px"><a href="#in.' + esc(c.id) + '">' + A.avatar(p, 52) + '</a><div class="grow stack-4" style="min-width:0">' +
-        '<a class="b t16 clamp1" href="#in.' + esc(c.id) + '" style="color:var(--fg)">' + esc(c.name) + '</a><div class="small clamp2">' + esc(c.headline || '') + '</div>' +
+      '<div class="row-top" style="gap:12px"><a href="' + href + '">' + A.avatar(p, 52) + '</a><div class="grow stack-4" style="min-width:0">' +
+        '<a class="b t16 clamp1" href="' + href + '" style="color:var(--fg)">' + esc(c.name) + '</a>' + (c.kind === 'company' ? '<span class="tag" style="align-self:flex-start">Company</span>' : '') +
+        '<div class="small clamp2">' + esc(c.headline || '') + '</div>' +
         ((c.location || (c.industries || []).length) ? '<div class="small muted clamp1">' + esc([c.location].concat((c.industries || []).slice(0, 2)).filter(Boolean).join(' · ')) + '</div>' : '') +
       '</div></div>' +
-      (c.why && !/^(Name|Headline|Industry)
-.test(c.why) ? '<div class="find-why">' + I('target', 'ico-16') + esc(c.why) + '</div>' : '') +
+      (c.why && !WEAK[c.why] ? '<div class="find-why">' + I('target', 'ico-16') + esc(c.why) + '</div>' : '') +
       list('Offers:', c.offers) + list('Looking for:', c.needs) +
-      '<div class="row wrap" style="gap:8px;margin-top:auto"><a class="btn btn--primary btn--sm" href="#send.' + esc(c.id) + '">' + I('spark', 'ico-16') + 'Knock</a><a class="btn btn--tertiary btn--sm" href="#in.' + esc(c.id) + '">View profile</a></div>' +
+      '<div class="row wrap" style="gap:8px;margin-top:auto"><a class="btn btn--primary btn--sm" href="#send.' + esc(c.id) + '">' + I('spark', 'ico-16') + 'Knock</a><a class="btn btn--tertiary btn--sm" href="' + href + '">' + (c.kind === 'company' ? 'View page' : 'View profile') + '</a></div>' +
       '</div>';
   }
   function grid(list) { return '<div class="find-grid">' + list.map(card).join('') + '</div>'; }

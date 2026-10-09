@@ -34,6 +34,7 @@ builder.Services.AddScoped<Inbox>();
 builder.Services.AddScoped<Accounts>();
 builder.Services.AddScoped<Contacts>();
 builder.Services.AddScoped<MemberDirectory>();
+builder.Services.AddScoped<Companies>();
 builder.Services.AddScoped<AccountEmails>();
 builder.Services.AddScoped<Digests>();
 builder.Services.AddSingleton<DigestWorker>();
@@ -151,6 +152,8 @@ app.UseForwardedHeaders();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+// Company admins act as their company with the X-Act-As header (inbox, policy, profile, searches).
+app.Use((ctx, next) => CompaniesApi.ActAs(ctx, () => next(ctx)));
 
 // The web client lives at the repository root; it is also the static prototype on GitHub Pages.
 // Only index.html, css/ and js/ are served, never the rest of the repository.
@@ -176,6 +179,7 @@ app.MapGoogleAuthApi();
 app.MapAccountApi();
 app.MapProfileApi();
 app.MapDirectoryApi();
+app.MapCompaniesApi();
 
 app.Run();
 return 0;

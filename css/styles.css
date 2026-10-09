@@ -874,3 +874,7 @@ input[type="range"] { width: 100%; accent-color: var(--sel); }
 .gs-intent { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-top: 1px solid var(--line); color: var(--fg); }
 .gs-intent:hover { background: var(--hover-2); text-decoration: none; }
 .gs-intent .grow { display: flex; flex-direction: column; min-width: 0; }
+
+/* ---------- Company pages ---------- */
+.acting-banner { background: var(--accent-soft); border-bottom: 1px solid var(--line); }
+.menu__a .av { flex: none; }

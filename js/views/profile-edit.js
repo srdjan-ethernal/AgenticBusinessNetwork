@@ -59,7 +59,7 @@
     if (!photoBlob) return;
     el.disabled = true;
     try {
-      const res = await fetch('api/profile/photo', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/octet-stream' }, body: photoBlob });
+      const res = await fetch('api/profile/photo', { method: 'POST', credentials: 'same-origin', headers: Object.assign({ 'Content-Type': 'application/octet-stream' }, A.Live.headers()), body: photoBlob });
       const data = await res.json().catch(function () { return {}; });
       if (!res.ok) throw new Error(data.error || 'The upload failed (' + res.status + ').');
       A.Live.apply(data);

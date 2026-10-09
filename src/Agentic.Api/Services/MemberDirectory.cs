@@ -9,7 +9,7 @@ namespace Agentic.Api.Services;
 /// member needs with what another offers. Works on member profiles, so it needs no extra tables.</summary>
 public sealed partial class MemberDirectory(AgenticDb db)
 {
-    public sealed record Card(string Id, string Name, string Headline, JsonNode? Photo, JsonNode? Colors, string? Location,
+    public sealed record Card(string Id, string Kind, string Name, string Headline, JsonNode? Photo, JsonNode? Colors, string? Location,
         List<string> Industries, List<string> Offers, List<string> Needs, string? Website, int Score, string? Why);
 
     private sealed record Profile(Member Member, JsonObject P, string Text, HashSet<string> OfferWords, HashSet<string> NeedWords);
@@ -78,7 +78,7 @@ public sealed partial class MemberDirectory(AgenticDb db)
 
     private async Task<List<Profile>> Load(string meId)
     {
-        var members = await db.Members.AsNoTracking().Where(m => m.Id != meId && m.Kind == "person").ToListAsync();
+        var members = await db.Members.AsNoTracking().Where(m => m.Id != meId && (m.Kind == "person" || m.Kind == "company")).ToListAsync();
         return members.Select(Parse).ToList();
     }
 
@@ -93,7 +93,7 @@ public sealed partial class MemberDirectory(AgenticDb db)
     }
 
     private static Card ToCard(Profile x, int score, string? why) => new(
-        x.Member.Id, x.Member.Name, x.Member.Headline, x.P["photo"]?.DeepClone(), x.P["c"]?.DeepClone(), (string?)x.P["loc"],
+        x.Member.Id, x.Member.Kind, x.Member.Name, x.Member.Headline, x.P["photo"]?.DeepClone(), x.P["c"]?.DeepClone(), (string?)x.P["loc"],
         Strings(x.P["topics"]), Titles(x.P["offers"]), Titles(x.P["needs"]), (string?)x.P["website"], score, why);
 
     private static HashSet<string> Words(string? text) =>

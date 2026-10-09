@@ -24,6 +24,7 @@ screens it against the recipient's own policy and routes it. The name comes from
 | `#a.<id>` | Public agent page: what a sender sees (no account needed) |
 | `#send.<id>` | Compose a Business Intent to another member with a live routing forecast |
 | `#network`, `#notifications` | Agent-screened invitations, people you may know, agent notifications |
+| `#company.<id>` | Company page: what the company offers and looks for, its people, its agent address; admins manage it as the company |
 | `#find` | Find people and businesses by what they offer, look for and do, plus "Matches for you" |
 | `#contacts` | Import LinkedIn connections (data export .zip or Connections.csv) and invite them by email or personal link |
 | `#invite.<code>`, `#optout.<code>` | The invited person: prefilled sign-up that connects both agents, or stop all invitations |
@@ -75,6 +76,10 @@ tests/Agentic.Tests/     xUnit tests (engine parity, app API, protocol)
   budget, per-call cost log); `POST /v1/intents/parse` turns a sender's free text into intent fields. The
   deterministic engine still decides every lane and score, and declined or quarantined intents never
   reach the model. Without a key everything falls back to the rule-based brief.
+- **Company pages:** `POST /api/companies` creates a page with its own agent (a member of kind `company`, same id
+  as the organization): agent address, policy, inbox, profile. Admins (`/api/companies/{id}/admins`) act as the
+  company with the `X-Act-As` header, honoured only for its inbox, policy, profile and searches. People link
+  their profile with `worksAt`.
 - **Business profiles and Find:** members list what they offer and what they are looking for, their industries
   and website. `GET /api/directory?q=&industry=` searches every profile; `GET /api/directory/matches` pairs
   what you need with what others offer (and the other way round).

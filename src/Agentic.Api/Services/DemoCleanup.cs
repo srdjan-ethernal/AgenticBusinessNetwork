@@ -12,7 +12,8 @@ public static class DemoCleanup
 
     public static async Task<Result> Run(AgenticDb db)
     {
-        var demo = await db.Members.Where(m => m.Email == null).Select(m => m.Id).ToListAsync();
+        var demo = await db.Members.Where(m => m.Email == null && m.Kind != "company").Select(m => m.Id).ToListAsync();
+        var companies = await db.Members.Where(m => m.Kind == "company").Select(m => m.Id).ToListAsync();
         var intents = await db.Intents.Where(i => demo.Contains(i.RecipientId) || (i.SenderId != null && demo.Contains(i.SenderId)))
             .Select(i => i.Id).ToListAsync();
 
@@ -29,9 +30,9 @@ public static class DemoCleanup
             .ExecuteUpdateAsync(s => s.SetProperty(c => c.JoinedMemberId, (string?)null).SetProperty(c => c.Status, "new"));
         await db.EmailTokens.Where(t => demo.Contains(t.MemberId)).ExecuteDeleteAsync();
         await db.Outbox.Where(o => o.OwnerId != null && demo.Contains(o.OwnerId)).ExecuteDeleteAsync();
-        // Members can't create organizations yet, so every organization is part of the demo.
-        await db.Members.Where(m => m.OrgId != null).ExecuteUpdateAsync(s => s.SetProperty(m => m.OrgId, (string?)null));
-        var orgCount = await db.Organizations.ExecuteDeleteAsync();
+        // Real company pages have their own agent (a member of kind "company"); every other organization is demo.
+        await db.Members.Where(m => m.OrgId != null && !companies.Contains(m.OrgId)).ExecuteUpdateAsync(s => s.SetProperty(m => m.OrgId, (string?)null));
+        var orgCount = await db.Organizations.Where(o => !companies.Contains(o.Id)).ExecuteDeleteAsync();
         var memberCount = await db.Members.Where(m => demo.Contains(m.Id)).ExecuteDeleteAsync();
         await tx.CommitAsync();
         return new Result(memberCount, intentCount, orgCount, relCount);

@@ -18,6 +18,7 @@ public sealed class AgenticDb(DbContextOptions<AgenticDb> options) : DbContext(o
     public DbSet<AiUsage> AiUsage => Set<AiUsage>();
     public DbSet<EmailToken> EmailTokens => Set<EmailToken>();
     public DbSet<MemberPhoto> Photos => Set<MemberPhoto>();
+    public DbSet<OrgAdmin> OrgAdmins => Set<OrgAdmin>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -57,6 +58,12 @@ public sealed class AgenticDb(DbContextOptions<AgenticDb> options) : DbContext(o
         b.Entity<EmailOptOut>().HasKey(x => x.EmailHash);
         b.Entity<AiUsage>().HasIndex(x => x.CreatedAt);
         b.Entity<MemberPhoto>().HasKey(x => x.MemberId);
+        b.Entity<OrgAdmin>(e =>
+        {
+            e.HasKey(x => new { x.OrgId, x.MemberId });
+            e.HasIndex(x => x.MemberId);
+        });
+        b.Entity<Member>().HasIndex(x => x.OrgId);
         b.Entity<EmailToken>(e =>
         {
             e.HasIndex(x => x.TokenHash).IsUnique();

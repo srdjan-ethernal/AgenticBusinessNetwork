@@ -5,6 +5,9 @@
 
   async function call(method, url, body, headers) {
     const opts = { method: method, credentials: 'same-origin', headers: Object.assign({}, headers || {}) };
+    // A company admin managing a page sends every request "as" the company; the server only honours it
+    // for the company's inbox, policy, profile and searches, and only for its admins.
+    if (L.actingAs) opts.headers['X-Act-As'] = L.actingAs;
     if (body !== undefined) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
     const res = await fetch(url, opts);
     let data = null;
@@ -17,6 +20,18 @@
     return data;
   }
   L.call = call;
+  L.headers = function () { return L.actingAs ? { 'X-Act-As': L.actingAs } : {}; };
+
+  // ---------- company pages: who you are, which pages you manage, acting as one ----------
+  function stored() { try { return sessionStorage.getItem('abn.actingAs') || null; } catch (e) { return null; } }
+  function store(id) { try { if (id) sessionStorage.setItem('abn.actingAs', id); else sessionStorage.removeItem('abn.actingAs'); } catch (e) { /* private mode */ } }
+  L.companies = [];
+  L.loadCompanies = async function () { try { L.companies = await call('GET', 'api/companies/mine'); } catch (e) { L.companies = []; } return L.companies; };
+  L.actAs = async function (id) {
+    L.actingAs = id || null;
+    store(L.actingAs);
+    await L.bootstrap();
+  };
 
   L.detect = async function () {
     try {
@@ -57,14 +72,25 @@
       return id !== b.me && id.indexOf('anon-') !== 0 && !p.kind;
     }).sort(function (x, y) { return (b.people[x].degree === '1st') - (b.people[y].degree === '1st'); });
   };
-  L.bootstrap = async function () { const b = await call('GET', 'api/bootstrap'); L.apply(b); return b; };
+  L.bootstrap = async function () {
+    const b = await call('GET', 'api/bootstrap');
+    L.apply(b);
+    if (!L.actingAs) L.realMe = b.me;
+    await L.loadCompanies();
+    return b;
+  };
 
   L.init = async function () {
     if (!(await L.detect())) return;
     A.S.signedIn = false;
     try {
       const s = await call('GET', 'api/session');
-      if (s && s.member) await L.bootstrap();
+      if (s && s.member) {
+        L.realMe = s.member;
+        L.actingAs = stored();
+        try { await L.bootstrap(); }
+        catch (e) { if (!L.actingAs) throw e; L.actingAs = null; store(null); await L.bootstrap(); }
+      }
     } catch (e) { A.S.signedIn = false; }
     if (L.devLogin) { try { L.members = await call('GET', 'api/members'); } catch (e) { L.members = []; } }
   };
@@ -92,6 +118,7 @@
   };
   L.updateProfile = async function (body) { L.apply(await call('PUT', 'api/profile', body)); };
   L.signOut = async function () {
+    L.actingAs = null; store(null); L.companies = []; L.realMe = null;
     try { await call('DELETE', 'api/session'); } catch (e) { /* already signed out */ }
     A.S.signedIn = false;
   };

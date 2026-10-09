@@ -16,7 +16,7 @@ public sealed record ExternalIdentity(string Provider, string Subject, string Em
 public sealed record ExternalSignupRequest(string? Name, string? Headline, string? Location, string? Template, List<string>? Topics);
 public sealed record ProfileUpdate(string? Name, string? Headline, string? Location, string? About, List<string>? Topics,
     List<ExperienceItem>? Experience = null, List<EducationItem>? Education = null, List<string>? Skills = null,
-    List<OfferItem>? Offers = null, List<OfferItem>? Needs = null, string? Website = null);
+    List<OfferItem>? Offers = null, List<OfferItem>? Needs = null, string? Website = null, string? WorksAt = null);
 /// <summary>Something a member offers, or something they are looking for.</summary>
 public sealed record OfferItem(string? Title, string? Description);
 public sealed record ExperienceItem(string? Title, string? Company, string? Type, string? Start, string? End, string? Location, string? Description);
@@ -208,7 +208,24 @@ public sealed partial class Accounts(AgentCore core)
             if (skills.Count > 60) return (false, "Keep it to 60 skills.");
             p["skills"] = new JsonArray(skills.Select(s => (JsonNode)s).ToArray());
         }
+        if (req.WorksAt is not null)
+        {
+            // Anyone can say where they work; company admins can't remove people from their page.
+            if (m.Kind != "person") return (false, "Only people can work at a company.");
+            var orgId = req.WorksAt.Trim();
+            if (orgId.Length == 0) m.OrgId = null;
+            else if (await Db.Organizations.AnyAsync(o => o.Id == orgId)) m.OrgId = orgId;
+            else return (false, "That company page doesn’t exist.");
+        }
         m.ProfileJson = p.ToJsonString();
+        if (m.Kind == "company" && await Db.Organizations.FindAsync(m.Id) is { } org)
+        {
+            // The company page shows the same name and tagline as the company's agent.
+            org.Name = m.Name;
+            var o = JsonNode.Parse(org.ProfileJson) as JsonObject ?? [];
+            o["name"] = m.Name; o["tagline"] = m.Headline;
+            org.ProfileJson = o.ToJsonString();
+        }
         await Db.SaveChangesAsync();
         return (true, null);
     }

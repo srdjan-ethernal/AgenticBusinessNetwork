@@ -58,6 +58,9 @@
   }
   function offers(p, isMe) { return listSec(p, isMe, 'offers', 'What we offer', 'pf-offers', 'Your products and services. People searching for them will find you.'); }
   function needs(p, isMe) { return listSec(p, isMe, 'needs', 'Looking for', 'pf-needs', 'Customers, suppliers, partners, people or investment you need. Members who offer it can find you.'); }
+  A.ui.offersSec = function (p, isMe) { return offers(p, isMe); };
+  A.ui.needsSec = function (p, isMe) { return needs(p, isMe); };
+  A.ui.siteLink = function (url) { return siteLink(url); };
   function siteLink(url) {
     if (!/^https?:\/\//.test(url || '')) return '';
     return '<a href="' + esc(url) + '" target="_blank" rel="noopener nofollow ugc">' + I('globe', 'ico-16') + esc(url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')) + '</a>';
@@ -108,6 +111,7 @@
     nav: 'profile',
     render: function (arg) {
       const id = A.people[arg] ? arg : A.me;
+      if (A.live && A.P(id).kind === 'company') return A.ui.companyPage(id);
       const p = A.P(id), isMe = id === A.me, o = p.org ? A.O(p.org) : null;
       const addr = A.addrOf(id);
       const conn = A.S.conn[id], fol = A.S.follows[id];
@@ -142,6 +146,7 @@
           '<div class="card pad stack-12"><h2 class="card__h">Agent address</h2><div class="addr"><span>' + esc(addr) + '</span><button class="iconbtn" data-act="copy" data-text="' + esc(addr) + '" data-msg="Agent address copied." aria-label="Copy agent address">' + I('copy', 'ico-16') + '</button></div><p class="small muted">Works in bios, signatures and decks. Senders don’t need an account.</p></div>' +
           alsoViewed(id) + '<div class="sticky">' + A.ui.appFooter() + '</div></aside></div></div>';
     },
+    mount: function (arg) { const id = A.people[arg] ? arg : A.me; if (A.live && A.P(id).kind === 'company' && A.ui.companyMount) A.ui.companyMount(id); },
   });
 
   A.act.connect = function (el) {
@@ -161,7 +166,7 @@
 
   A.view('company', {
     render: function (arg) {
-      if (A.live && !A.orgs[arg]) return '<div class="page"><div class="card pad-24 stack-12"><h1 class="t24">Company pages are coming</h1><p class="muted">Companies can’t have their own page on Knockero yet. Each person has an agent you can knock on.</p><a class="btn btn--secondary" href="#network" style="align-self:flex-start">People on Knockero</a></div></div>';
+      if (A.live) return A.ui.companyPage(arg);
       const id = A.orgs[arg] ? arg : 'tidewell';
       const o = A.O(id), mine = id === 'tidewell';
       const people = Object.keys(A.people).filter(function (pid) { return A.people[pid].org === id; });
@@ -187,17 +192,20 @@
           ['aldermoor', 'latticeforge', 'kinetic', 'parsewell'].filter(function (x) { return x !== id; }).slice(0, 3).map(function (x) { const oo = A.O(x); return '<div class="person-row">' + A.orgLogo(Object.assign({ id: x }, oo), 48) + '<div class="grow"><a class="b" href="#company.' + x + '" style="color:var(--fg)">' + esc(oo.name) + '</a><div class="small muted">' + esc(oo.industry) + '</div><div class="small muted">' + fmt(oo.followers) + ' followers</div></div></div>'; }).join('') +
         '</div><div class="sticky">' + A.ui.appFooter() + '</div></aside></div></div>';
     },
+    mount: function (arg) { if (A.live && A.ui.companyMount) A.ui.companyMount(arg); },
   });
   A.act['co-jump'] = function (el) { const t = document.getElementById(el.dataset.to); if (t) window.scrollTo(0, t.getBoundingClientRect().top + window.scrollY - 70); };
   A.act['edit-profile'] = function () {
     const p = A.P(A.me);
+    const isCo = p.kind === 'company';
     const f = function (id, label, val, max, extra) { return '<div class="field"><label class="label" for="' + id + '">' + label + '</label><input class="input" id="' + id + '" maxlength="' + max + '" value="' + esc(val || '') + '"' + (extra || '') + '></div>'; };
     A.modal({
-      title: 'Edit profile',
+      title: isCo ? 'Edit company page' : 'Edit profile',
       wide: true,
       body: '<div class="stack-16">' +
-        '<div class="grid2">' + f('pe-name', 'Full name', p.name, 80, ' autocomplete="name"') + f('pe-loc', 'Location', p.loc, 80) + '</div>' +
-        f('pe-head', 'Headline', p.headline, 160) +
+        '<div class="grid2">' + f('pe-name', isCo ? 'Company name' : 'Full name', p.name, 80, isCo ? '' : ' autocomplete="name"') + f('pe-loc', 'Location', p.loc, 80) + '</div>' +
+        f('pe-head', isCo ? 'What the company does' : 'Headline', p.headline, 160) +
+        (isCo ? '' : '<div class="field"><label class="label" for="pe-org">Works at</label><select class="select" id="pe-org"><option value="">Not shown</option>' + Object.keys(A.orgs).sort(function (a, b) { return A.O(a).name.localeCompare(A.O(b).name); }).map(function (oid) { return '<option value="' + esc(oid) + '"' + (oid === p.org ? ' selected' : '') + '>' + esc(A.O(oid).name) + '</option>'; }).join('') + '</select><span class="small muted">Pick your company’s page. If it isn’t here, create it from the menu under “Company pages”.</span></div>') +
         f('pe-web', 'Website', (p.website || '').replace(/^https:\/\//, '').replace(/\/$/, ''), 200, ' placeholder="example.com" inputmode="url"') +
         '<div class="field"><label class="label" for="pe-about">About</label><textarea class="textarea" id="pe-about" rows="5" maxlength="2600">' + esc(p.about || '') + '</textarea></div>' +
         '<div class="stack"><span class="label">Your industries</span><div class="pills wrap" id="pe-topics">' + A.ui.topicPills(p.topics || []) + '</div><span class="small muted">The topics your agent is open to are set separately, under Policy.</span></div>' +
@@ -208,7 +216,7 @@
   A.act['save-profile'] = function (el) {
     const v = function (id) { return document.getElementById(id).value; };
     el.disabled = true;
-    A.Live.updateProfile({ name: v('pe-name'), headline: v('pe-head'), location: v('pe-loc'), about: v('pe-about'), website: v('pe-web'), topics: A.ui.pickedTopics('pe-topics') })
+    A.Live.updateProfile({ name: v('pe-name'), headline: v('pe-head'), location: v('pe-loc'), about: v('pe-about'), website: v('pe-web'), topics: A.ui.pickedTopics('pe-topics'), worksAt: document.getElementById('pe-org') ? v('pe-org') : undefined })
       .then(function () { A.closeModal(); A._keep = true; A.render(); A.toast('Profile saved.', 'info'); },
         function (err) { el.disabled = false; const e = document.getElementById('pe-err'); e.textContent = err.message; e.hidden = false; });
   };
