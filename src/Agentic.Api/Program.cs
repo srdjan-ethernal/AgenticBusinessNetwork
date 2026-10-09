@@ -166,6 +166,7 @@ app.MapProtocolApi();
 app.MapContactsApi();
 app.MapGoogleAuthApi();
 app.MapAccountApi();
+app.MapProfileApi();
 
 app.Run();
 return 0;

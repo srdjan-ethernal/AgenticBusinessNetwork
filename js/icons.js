@@ -104,6 +104,7 @@ window.ABN = window.ABN || {};
   };
   A.avatar = function (p, size, extra) {
     const s = size || 48;
+    if (p && p.photo) return '<span class="av av--photo' + (extra ? ' ' + extra : '') + '" style="width:' + s + 'px;height:' + s + 'px" aria-hidden="true"><img src="' + A.esc(p.photo) + '" alt="" loading="lazy" decoding="async"></span>';
     const c = (p && p.c) || ['#56687a', '#9db3c8'];
     const inner = p && p.kind === 'agent' ? A.glyph.replace('<svg ', '<svg style="width:' + Math.round(s * 0.55) + 'px;height:' + Math.round(s * 0.55) + 'px" ') : A.esc(A.initials(p && p.name));
     return '<span class="av' + (extra ? ' ' + extra : '') + '" style="width:' + s + 'px;height:' + s + 'px;font-size:' + Math.round(s * 0.38) + 'px;background:linear-gradient(135deg,' + c[0] + ',' + c[1] + ')" aria-hidden="true">' + inner + '</span>';

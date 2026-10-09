@@ -14,7 +14,10 @@ public sealed record LoginRequest(string? Email, string? Password);
 /// <summary>An identity confirmed by an external provider (Google), not yet or already tied to a member.</summary>
 public sealed record ExternalIdentity(string Provider, string Subject, string Email, bool EmailVerified, string Name);
 public sealed record ExternalSignupRequest(string? Name, string? Headline, string? Location, string? Template, List<string>? Topics);
-public sealed record ProfileUpdate(string? Name, string? Headline, string? Location, string? About, List<string>? Topics);
+public sealed record ProfileUpdate(string? Name, string? Headline, string? Location, string? About, List<string>? Topics,
+    List<ExperienceItem>? Experience = null, List<EducationItem>? Education = null, List<string>? Skills = null);
+public sealed record ExperienceItem(string? Title, string? Company, string? Type, string? Start, string? End, string? Location, string? Description);
+public sealed record EducationItem(string? School, string? Degree, string? Start, string? End);
 
 /// <summary>Real accounts: email + password (PBKDF2), a member, an agent address and a policy from a template.</summary>
 public sealed partial class Accounts(AgentCore core)
@@ -150,9 +153,44 @@ public sealed partial class Accounts(AgentCore core)
             m.Headline = headline; p["headline"] = headline;
         }
         if (req.Location is not null) { if (req.Location.Length > 80) return (false, "The location is too long."); p["loc"] = NullIfEmpty(req.Location.Trim()); }
-        if (req.About is not null) { if (req.About.Length > 2000) return (false, "Keep the about text under 2,000 characters."); p["about"] = NullIfEmpty(req.About.Trim()); }
+        if (req.About is not null) { if (req.About.Length > 2600) return (false, "Keep the about text under 2,600 characters."); p["about"] = NullIfEmpty(req.About.Trim()); }
         if (req.Topics is not null)
             p["topics"] = new JsonArray(req.Topics.Where(t => core.Catalog.Topics.Contains(t)).Distinct().Take(12).Select(t => (JsonNode)t).ToArray());
+        if (req.Experience is not null)
+        {
+            if (req.Experience.Count > 30) return (false, "Keep it to 30 positions.");
+            var list = new JsonArray();
+            foreach (var e in req.Experience)
+            {
+                var title = Clean(e.Title, 120); var company = Clean(e.Company, 120);
+                if (title is null && company is null) continue;
+                if (title is null) return (false, "Every position needs a title.");
+                list.Add(new JsonObject
+                {
+                    ["title"] = title, ["company"] = company, ["type"] = Clean(e.Type, 40), ["start"] = Clean(e.Start, 20),
+                    ["end"] = Clean(e.End, 20), ["loc"] = Clean(e.Location, 80), ["desc"] = Clean(e.Description, 2000),
+                });
+            }
+            p["exp"] = list;
+        }
+        if (req.Education is not null)
+        {
+            if (req.Education.Count > 15) return (false, "Keep it to 15 schools.");
+            var list = new JsonArray();
+            foreach (var e in req.Education)
+            {
+                var school = Clean(e.School, 150);
+                if (school is null) { if (Clean(e.Degree, 150) is null) continue; return (false, "Every education entry needs a school."); }
+                list.Add(new JsonObject { ["school"] = school, ["deg"] = Clean(e.Degree, 150), ["start"] = Clean(e.Start, 20), ["end"] = Clean(e.End, 20) });
+            }
+            p["edu"] = list;
+        }
+        if (req.Skills is not null)
+        {
+            var skills = req.Skills.Select(s => Clean(s, 60)).OfType<string>().DistinctBy(s => s.ToLowerInvariant()).ToList();
+            if (skills.Count > 60) return (false, "Keep it to 60 skills.");
+            p["skills"] = new JsonArray(skills.Select(s => (JsonNode)s).ToArray());
+        }
         m.ProfileJson = p.ToJsonString();
         await Db.SaveChangesAsync();
         return (true, null);
@@ -245,6 +283,13 @@ public sealed partial class Accounts(AgentCore core)
         var at = baseAddress.IndexOf('@');
         for (var n = 2; await Db.Members.AnyAsync(m => m.AgentAddress == address); n++) address = baseAddress[..at] + "." + n + baseAddress[at..];
         return address;
+    }
+
+    private static string? Clean(string? s, int max)
+    {
+        s = (s ?? "").Trim();
+        if (s.Length == 0) return null;
+        return s.Length > max ? s[..max].TrimEnd() : s;
     }
 
     private static string? NullIfEmpty(string s) => s.Length == 0 ? null : s;

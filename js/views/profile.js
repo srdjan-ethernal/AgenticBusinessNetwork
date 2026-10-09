@@ -36,25 +36,41 @@
       }).join('') : '<div style="padding:12px 24px;border-top:1px solid var(--line)" class="muted">' + esc(first(u)) + ' hasn’t posted recently.</div>') +
       '<div class="card__foot"><a href="#feed">Show all posts ' + I('arrow', 'ico-16') + '</a></div></section>';
   }
-  function experience(p) {
+  // ---------- experience, education, skills (demo data and member-entered data) ----------
+  function period(e) { return e.period || [e.start, e.end || (e.start ? 'Present' : '')].filter(Boolean).join(' – '); }
+  function plainLogo(name) { const n = (name || '?').trim() || '?'; return A.orgLogo({ name: n, c: ['#475569', '#94a3b8'], mark: n[0].toUpperCase() }, 48); }
+  function secHead(title, isMe, act) {
+    return '<div class="sec__h"><h2>' + title + '</h2>' + (isMe && A.live ? '<button class="iconbtn" data-act="' + act + '" aria-label="Edit ' + title.toLowerCase() + '" title="Edit">' + I('edit', 'ico-20') + '</button>' : '') + '</div>';
+  }
+  function emptySec(title, act, text) {
+    return '<section class="card sec">' + secHead(title, true, act) + '<p class="muted small">' + text + '</p>' +
+      '<div class="row wrap" style="gap:8px;margin-top:10px"><button class="btn btn--secondary btn--sm" data-act="' + act + '">' + I('plus', 'ico-16') + 'Add</button><button class="btn btn--tertiary btn--sm" data-act="pf-linkedin">Fill from LinkedIn</button></div></section>';
+  }
+  function experience(p, isMe) {
     const exp = p.exp || (p.org ? [{ title: p.headline.split(' at ')[0].split(' · ')[0], org: p.org, type: 'Full-time', period: '2023 – Present', loc: p.loc }] : []);
-    if (!exp.length) return '';
-    return '<section class="card sec"><div class="sec__h"><h2>Experience</h2></div>' + exp.map(function (e) {
-      const o = A.O(e.org);
-      return '<div class="exp"><a href="#company.' + e.org + '">' + A.orgLogo(Object.assign({ id: e.org }, o), 48) + '</a><div class="exp__t grow"><b>' + esc(e.title) + '</b><div>' + esc(o.name) + (e.type ? ' · ' + esc(e.type) : '') + '</div><div class="small muted">' + esc(e.period || '') + '</div><div class="small muted">' + esc(e.loc || '') + '</div>' + (e.desc ? '<p style="margin-top:8px">' + esc(e.desc) + '</p>' : '') + '</div></div>';
+    if (!exp.length) return isMe && A.live ? emptySec('Experience', 'pf-exp', 'Where you work and worked. Senders see it, and it helps your agent explain who you are.') : '';
+    return '<section class="card sec">' + secHead('Experience', isMe, 'pf-exp') + exp.map(function (e) {
+      const o = e.org ? A.O(e.org) : null;
+      const logo = o ? '<a href="#company.' + e.org + '">' + A.orgLogo(Object.assign({ id: e.org }, o), 48) + '</a>' : plainLogo(e.company || e.title);
+      const company = o ? o.name : e.company;
+      return '<div class="exp">' + logo + '<div class="exp__t grow"><b>' + esc(e.title) + '</b><div>' + esc(company || '') + (e.type ? (company ? ' · ' : '') + esc(e.type) : '') + '</div><div class="small muted">' + esc(period(e)) + '</div><div class="small muted">' + esc(e.loc || '') + '</div>' + (e.desc ? '<p style="margin-top:8px;white-space:pre-line">' + esc(e.desc) + '</p>' : '') + '</div></div>';
     }).join('') + '</section>';
   }
-  function education(p) {
-    if (!p.edu) return '';
-    return '<section class="card sec"><div class="sec__h"><h2>Education</h2></div>' + p.edu.map(function (e) {
-      return '<div class="exp">' + A.orgLogo({ name: e.school, c: ['#475569', '#94a3b8'], mark: e.school[0] }, 48) + '<div class="exp__t grow"><b>' + esc(e.school) + '</b><div>' + esc(e.deg) + '</div><div class="small muted">' + esc(e.period) + '</div></div></div>';
+  function education(p, isMe) {
+    if (!p.edu || !p.edu.length) return isMe && A.live ? emptySec('Education', 'pf-edu', 'Schools, degrees and courses.') : '';
+    return '<section class="card sec">' + secHead('Education', isMe, 'pf-edu') + p.edu.map(function (e) {
+      return '<div class="exp">' + plainLogo(e.school) + '<div class="exp__t grow"><b>' + esc(e.school) + '</b><div>' + esc(e.deg || '') + '</div><div class="small muted">' + esc(period(e)) + '</div></div></div>';
     }).join('') + '</section>';
   }
-  function skills(p) {
-    if (!p.skills) return '';
-    return '<section class="card sec"><div class="sec__h"><h2>Skills</h2></div>' + p.skills.map(function (s) {
-      return '<div class="skill"><b>' + esc(s[0]) + '</b><div class="row small muted">' + I('users', 'ico-16') + 'Endorsed by ' + esc(s[1]) + '</div></div>';
-    }).join('') + '</section>';
+  function skills(p, isMe) {
+    if (!p.skills || !p.skills.length) return isMe && A.live ? emptySec('Skills', 'pf-skills', 'What you are good at. Up to 60 skills.') : '';
+    const named = p.skills.filter(function (s) { return Array.isArray(s); });
+    if (named.length) {
+      return '<section class="card sec">' + secHead('Skills', isMe, 'pf-skills') + named.map(function (s) {
+        return '<div class="skill"><b>' + esc(s[0]) + '</b><div class="row small muted">' + I('users', 'ico-16') + 'Endorsed by ' + esc(s[1]) + '</div></div>';
+      }).join('') + '</section>';
+    }
+    return '<section class="card sec">' + secHead('Skills', isMe, 'pf-skills') + '<div class="pills wrap skill-pills">' + p.skills.map(function (s) { return '<span class="tag">' + esc(s) + '</span>'; }).join('') + '</div></section>';
   }
   function reputation(p) {
     const rep = p.rep == null ? 50 : p.rep;
@@ -66,7 +82,7 @@
     const ids = ['hannah-schulz', 'grace-liu', 'daniel-kovac', 'sofia-marin', 'marko-ilic', 'samir-kapoor'].filter(function (x) { return x !== exclude; }).slice(0, 5);
     return '<div class="card pad"><h2 class="card__h">Similar profiles</h2>' + ids.map(function (id) {
       const u = A.P(id);
-      return '<div class="person-row" style="border-bottom:1px solid var(--line);padding-bottom:12px">' + A.avatar(u, 44) + '<div class="grow"><span class="row" style="gap:6px"><a class="b" href="#in.' + id + '" style="color:var(--fg)">' + esc(u.name) + '</a>' + A.ui.trust(u) + '</span><div class="small muted clamp2">' + esc(u.headline) + '</div><a class="btn btn--muted btn--sm" style="margin-top:6px" href="#send.' + id + '">' + I('spark', 'ico-16') + 'Send intent</a></div></div>';
+      return '<div class="person-row" style="border-bottom:1px solid var(--line);padding-bottom:12px">' + A.avatar(u, 44) + '<div class="grow"><span class="row" style="gap:6px"><a class="b" href="#in.' + id + '" style="color:var(--fg)">' + esc(u.name) + '</a>' + A.ui.trust(u) + '</span><div class="small muted clamp2">' + esc(u.headline) + '</div><a class="btn btn--muted btn--sm" style="margin-top:6px" href="#send.' + id + '">' + I('spark', 'ico-16') + 'Knock</a></div></div>';
     }).join('') + '</div>';
   }
 
@@ -79,12 +95,12 @@
       const conn = A.S.conn[id], fol = A.S.follows[id];
       const mutualIds = ['grace-liu', 'jonas-lindqvist', 'hannah-schulz'].filter(function (x) { return x !== id; }).slice(0, 2);
       const btns = isMe
-        ? (A.live ? '<button class="btn btn--secondary" data-act="edit-profile">' + I('edit', 'ico-20') + 'Edit profile</button>' : '') + '<a class="btn btn--primary" href="#policy">Edit agent policy</a><button class="btn btn--secondary" data-act="copy" data-text="' + esc(addr) + '" data-msg="Agent address copied.">Share agent address</button><a class="btn btn--muted" href="#a.' + id + '">View as sender</a>'
+        ? (A.live ? '<button class="btn btn--secondary" data-act="edit-profile">' + I('edit', 'ico-20') + 'Edit profile</button><button class="btn btn--secondary" data-act="pf-linkedin">Fill from LinkedIn</button>' : '') + '<a class="btn btn--primary" href="#policy">Edit agent policy</a><button class="btn btn--secondary" data-act="copy" data-text="' + esc(addr) + '" data-msg="Agent address copied.">Share agent address</button><a class="btn btn--muted" href="#a.' + id + '">View as sender</a>'
         : (p.kind === 'agent' ? '<button class="btn btn--danger" data-act="soon" data-msg="This agent is already blocked by your policy.">' + I('block', 'ico-20') + 'Blocked by your agent</button>'
           : '<a class="btn btn--primary" href="#send.' + id + '">' + I('spark', 'ico-20') + 'Knock</a><button class="btn btn--secondary" data-act="connect" data-id="' + id + '"' + (conn || p.degree === '1st' ? ' disabled' : '') + '>' + (p.degree === '1st' ? I('check', 'ico-20') + 'Connected' : conn ? I('clock', 'ico-20') + 'Pending' : I('plus', 'ico-20') + 'Connect') + '</button><button class="btn btn--muted" data-act="follow" data-id="' + id + '">' + (fol ? 'Following' : 'Follow') + '</button>');
       return '<div class="page"><div class="scaffold scaffold--mr"><div class="main">' +
         '<div class="card phead"><div class="phead__main">' +
-          '<div class="phead__av">' + A.avatar(p, 104) + (p.kind === 'agent' ? '' : '<span class="agent-dot" title="Agent active">' + I('spark') + '</span>') + '</div>' +
+          '<div class="phead__av">' + (isMe && A.live ? '<button class="phead__photo" data-act="pf-photo" aria-label="Change profile photo" title="Change photo">' + A.avatar(p, 104) + '<span class="phead__cam">' + I('image', 'ico-20') + '</span></button>' : A.avatar(p, 104)) + (p.kind === 'agent' ? '' : '<span class="agent-dot" title="Agent active">' + I('spark') + '</span>') + '</div>' +
           '<div class="phead__id">' +
             '<h1 class="phead__name">' + esc(p.name) + ((p.verified || []).length ? A.verifiedBadge(p.verified.map(function (v) { return A.CLAIMS[v]; }).join(', ')) : '') + '</h1>' +
             '<div class="phead__hl">' + esc(p.headline) + '</div>' +
@@ -101,7 +117,7 @@
           '<a class="stat" href="#inbox">' + I('clock') + '<div><b>' + A.stats.saved + ' hours saved</b><span class="small muted">Compared with reading everything.</span></div></a></div></section>' : '') +
         '<section class="card sec"><div class="sec__h"><h2>About</h2></div><p style="white-space:pre-line">' + esc(p.about || (p.name + ' is ' + p.headline.charAt(0).toLowerCase() + p.headline.slice(1) + '.')) + '</p></section>' +
         (p.kind === 'agent' ? '' : agentSection(id, p, isMe)) +
-        activity(id) + experience(p) + education(p) + skills(p) + reputation(p) +
+        activity(id) + experience(p, isMe) + education(p, isMe) + skills(p, isMe) + reputation(p) +
         '</div><aside class="rail rail--right">' +
           '<div class="card pad stack-12"><h2 class="card__h">Agent address</h2><div class="addr"><span>' + esc(addr) + '</span><button class="iconbtn" data-act="copy" data-text="' + esc(addr) + '" data-msg="Agent address copied." aria-label="Copy agent address">' + I('copy', 'ico-16') + '</button></div><p class="small muted">Works in bios, signatures and decks. Senders don’t need an account.</p></div>' +
           alsoViewed(id) + '<div class="sticky">' + A.ui.appFooter() + '</div></aside></div></div>';
@@ -138,7 +154,7 @@
           '<div class="phead__meta"><span>' + esc(o.industry || '') + '</span><span>' + esc(o.loc || '') + '</span><span>' + fmt(o.followers) + ' followers</span><span>' + esc(o.size || '') + '</span></div>' +
           (people.length ? '<div class="row small muted" style="margin-top:10px"><span class="av-stack">' + people.slice(0, 3).map(function (pid) { return A.avatar(A.P(pid), 22, 'av--ring'); }).join('') + '</span>' + (o.employees || people.length) + ' employees on the network</div>' : '') +
           '<div class="ptop__btns">' + (mine ? '<a class="btn btn--primary" href="#policy">Edit routing policy</a><button class="btn btn--secondary" data-act="soon" data-msg="Admin tools for verified organizations are on the roadmap for months 12 to 24.">Admin tools</button>'
-            : '<button class="btn btn--primary" data-act="follow" data-id="' + id + '">' + (fol ? I('check', 'ico-20') + 'Following' : I('plus', 'ico-20') + 'Follow') + '</button>' + (contact ? '<a class="btn btn--secondary" href="#send.' + contact + '">' + I('spark', 'ico-20') + 'Send intent to the company agent</a>' : '')) + '</div></div></div>' +
+            : '<button class="btn btn--primary" data-act="follow" data-id="' + id + '">' + (fol ? I('check', 'ico-20') + 'Following' : I('plus', 'ico-20') + 'Follow') + '</button>' + (contact ? '<a class="btn btn--secondary" href="#send.' + contact + '">' + I('spark', 'ico-20') + 'Knock on the company agent</a>' : '')) + '</div></div></div>' +
           '<aside class="phead__agent" style="border-radius:0 var(--r) 0 0"><div class="row between"><span class="eyebrow">Company agent</span><span class="live">Active</span></div><div class="small">' + (o.depts ? 'Routes inbound to ' + o.depts.length + ' departments and asks for anything missing before a person is interrupted.' : 'Screens inbound for the team and routes it to the right person.') + '</div><div class="small muted">' + (o.verified ? 'Verified domain and employees' : 'Verification pending') + '</div></aside></div>' +
         '<div class="tabs" role="tablist" style="border-top:1px solid var(--line)"><a class="tab is-on" href="#company.' + id + '">Home</a><button class="tab" data-act="co-jump" data-to="co-about">About</button>' + (o.depts ? '<button class="tab" data-act="co-jump" data-to="co-routing">Agent routing</button>' : '') + '<button class="tab" data-act="co-jump" data-to="co-people">People</button><button class="tab" data-act="co-jump" data-to="co-posts">Posts</button></div></div>' +
         '<section class="card sec" id="co-about"><div class="sec__h"><h2>About</h2></div><p style="white-space:pre-line">' + esc(o.about || o.tagline) + '</p><dl class="kv" style="margin-top:16px"><dt>Industry</dt><dd>' + esc(o.industry || '—') + '</dd><dt>Company size</dt><dd>' + esc(o.size || '—') + '</dd><dt>Headquarters</dt><dd>' + esc(o.loc || '—') + '</dd><dt>Verification</dt><dd>' + (o.verified ? A.verifiedBadge() + ' Verified domain and employees' : 'Not verified yet') + '</dd></dl></section>' +

@@ -242,3 +242,12 @@ public sealed class EmailToken
     public DateTime ExpiresAt { get; set; }
     public DateTime? UsedAt { get; set; }
 }
+
+/// <summary>A member's profile photo (already resized in the browser, at most 1 MB). Served at /api/members/{id}/photo.</summary>
+public sealed class MemberPhoto
+{
+    public string MemberId { get; set; } = "";
+    public string ContentType { get; set; } = "image/jpeg";
+    public byte[] Bytes { get; set; } = [];
+    public DateTime UpdatedAt { get; set; }
+}

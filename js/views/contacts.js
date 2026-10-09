@@ -160,9 +160,46 @@
       '</section>';
   }
 
+  // ---------- global search: "Your LinkedIn contacts" ----------
+  let gsT = null, gsSeq = 0;
+  function gsItem(c) {
+    const name = (c.first + ' ' + c.last).trim() || 'LinkedIn member';
+    const sub = [c.position, c.company].filter(Boolean).join(' · ');
+    const here = c.status === 'joined' || c.status === 'member';
+    const tag = here ? 'On Knockero' : c.status === 'invited' ? 'Invited' : c.status === 'opted_out' ? 'No invitations' : c.hasEmail ? 'Has email' : '';
+    const body = A.avatar({ name: name }, 32) + '<span class="grow"><span class="b clamp1" style="display:block">' + esc(name) + (tag ? ' <span class="ct-st' + (here ? ' ct-st--high' : '') + '">' + tag + '</span>' : '') + '</span>' +
+      (sub ? '<span class="small muted clamp1" style="display:block">' + esc(sub) + '</span>' : '') + '</span>';
+    if (here && c.memberId) return '<a class="gsearch__item" href="#in.' + esc(c.memberId) + '">' + body + '</a>';
+    return '<div class="gsearch__item gs-ct"><button class="gs-ct__open" data-act="gs-ct-open" data-q="' + esc(name) + '" title="Open in your contacts">' + body + '</button>' +
+      '<span class="gs-ct__acts">' + (c.status === 'opted_out' ? '' : '<button class="iconbtn" data-act="gs-ct-copy" data-id="' + c.id + '" data-name="' + esc(c.first) + '" title="Copy invite message" aria-label="Copy invite message for ' + esc(name) + '">' + I('copy', 'ico-16') + '</button>') +
+      (c.url ? '<a class="iconbtn" href="' + esc(c.url) + '" target="_blank" rel="noopener noreferrer" title="Open on LinkedIn" aria-label="Open ' + esc(name) + ' on LinkedIn">' + I('ext', 'ico-16') + '</a>' : '') + '</span></div>';
+  }
+  A.ui.contactSearch = function (q, raw, noLocal) {
+    clearTimeout(gsT);
+    const seq = ++gsSeq;
+    gsT = setTimeout(function () {
+      A.Live.call('GET', 'api/contacts/search?q=' + encodeURIComponent(q)).then(function (list) {
+        const slot = document.getElementById('gs-ct');
+        if (seq !== gsSeq || !slot) return;
+        slot.innerHTML = list.length
+          ? '<div class="gsearch__h">Your LinkedIn contacts · only you see these</div>' + list.map(gsItem).join('')
+          : (noLocal ? '<div class="gsearch__h">No results for “' + esc(raw) + '”</div>' : '');
+      }, function () { const slot = document.getElementById('gs-ct'); if (slot && seq === gsSeq) slot.innerHTML = ''; });
+    }, 200);
+  };
+  A.act['gs-ct-open'] = function (el) { A._ctQuery = el.dataset.q; if (A.route && A.route.name === 'contacts') A.render(); else A.go('contacts'); };
+  A.act['gs-ct-copy'] = async function (el) {
+    try {
+      const r = await A.Live.call('POST', 'api/contacts/' + el.dataset.id + '/link');
+      if (!r.url) { A.toast(esc(el.dataset.name) + ' is already on Knockero.', 'info'); return; }
+      A.copy(r.message, 'Invite message with ' + esc(el.dataset.name) + '’s personal link copied. Paste it into a LinkedIn message.');
+    } catch (e) { A.toast(esc(e.message), 'warn'); }
+  };
+
   A.view('contacts', {
     nav: 'network',
     render: function () {
+      if (A._ctQuery) { query = A._ctQuery.toLowerCase(); filter = 'all'; shown = 100; A._ctQuery = null; }
       return '<div class="page"><div class="stack-16" style="max-width:860px;margin-inline:auto">' +
         '<div class="stack-4"><h1 class="ct-h1">Invite your LinkedIn connections</h1><p class="muted">Bring the people you already work with, so business requests between you go agent to agent.</p></div>' +
         '<div class="stack-16" id="ct-body">' + body() + '</div></div></div>';

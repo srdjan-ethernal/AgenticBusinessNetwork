@@ -174,6 +174,30 @@ public sealed class Contacts(AgentCore core, EmailOptions email, IConfiguration 
         return Db.Outbox.CountAsync(m => m.OwnerId == ownerId && m.Kind == "invite" && m.CreatedAt > since);
     }
 
+    /// <summary>The owner's own contacts matching a name, company, position or email (for the global search box).</summary>
+    public async Task<List<object>> Search(string ownerId, string? query, int take = 5)
+    {
+        var q = (query ?? "").Trim().ToLowerInvariant();
+        if (q.Length < 2) return [];
+        var hits = await Db.Contacts.AsNoTracking()
+            .Where(c => c.OwnerId == ownerId && (
+                (c.FirstName + " " + c.LastName).ToLower().Contains(q) ||
+                (c.Company ?? "").ToLower().Contains(q) ||
+                (c.Position ?? "").ToLower().Contains(q) ||
+                (c.Email ?? "").Contains(q)))
+            // People who are already here first, then those you can email, then the rest.
+            .OrderByDescending(c => c.Status == "joined" || c.Status == "member")
+            .ThenByDescending(c => c.Email != null)
+            .ThenBy(c => c.FirstName).ThenBy(c => c.LastName)
+            .Take(Math.Clamp(take, 1, 10))
+            .ToListAsync();
+        return hits.Select(c => (object)new
+        {
+            id = c.Id, first = c.FirstName, last = c.LastName, company = c.Company, position = c.Position,
+            hasEmail = c.Email is not null, url = c.LinkedInUrl, status = c.Status, memberId = c.JoinedMemberId,
+        }).ToList();
+    }
+
     // ---------- invite ----------
 
     public async Task<(InviteResult? result, string? error)> Invite(string ownerId, InviteRequest req, string baseUrl)

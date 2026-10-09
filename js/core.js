@@ -226,8 +226,12 @@
     if (ppl.length) h += '<div class="gsearch__h">People</div>' + ppl.map(function (id) { const p = A.people[id]; return '<a class="gsearch__item" href="#in.' + id + '">' + A.avatar(p, 32) + '<span class="grow"><span class="b clamp1" style="display:block">' + esc(p.name) + '</span><span class="small muted clamp1" style="display:block">' + esc(p.headline) + '</span></span></a>'; }).join('');
     if (orgs.length) h += '<div class="gsearch__h">Companies</div>' + orgs.map(function (id) { const o = A.orgs[id]; return '<a class="gsearch__item" href="#company.' + id + '">' + A.orgLogo(Object.assign({ id: id }, o), 32) + '<span class="grow"><span class="b clamp1" style="display:block">' + esc(o.name) + '</span><span class="small muted clamp1" style="display:block">' + esc(o.tagline) + '</span></span></a>'; }).join('');
     if (ints.length && A.S.signedIn) h += '<div class="gsearch__h">Intents in your inbox</div>' + ints.map(function (it) { return '<a class="gsearch__item" href="#inbox.' + it.id + '">' + A.icon('inbox', 'ico-20') + '<span class="grow small clamp2">' + esc(it.objective) + '</span></a>'; }).join('');
-    box.innerHTML = h || '<div class="gsearch__h">No results for “' + esc(el.value) + '”</div>';
+    // Your own imported LinkedIn contacts arrive a moment later from the server (only you see them).
+    const contacts = !!(A.ui.contactSearch && A.live && A.S.signedIn && q.length >= 2);
+    box.innerHTML = (h || (contacts ? '' : '<div class="gsearch__h">No results for “' + esc(el.value) + '”</div>')) +
+      (contacts ? '<div id="gs-ct">' + (h ? '' : '<div class="gsearch__h">Searching…</div>') + '</div>' : '');
     box.hidden = false;
+    if (contacts) A.ui.contactSearch(q, el.value, !h);
   };
 
   // ---------- toast, modal, copy ----------

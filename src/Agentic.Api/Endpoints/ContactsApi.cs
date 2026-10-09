@@ -48,6 +48,9 @@ public static class ContactsApi
             return result is null ? Results.BadRequest(new { error }) : Results.Ok(result);
         }).RequireRateLimiting("invite");
 
+        me.MapGet("/search", async (string? q, ClaimsPrincipal user, Contacts contacts) =>
+            Results.Ok(await contacts.Search(Id(user), q)));
+
         me.MapPost("/{id:int}/link", async (int id, HttpRequest req, ClaimsPrincipal user, Contacts contacts) =>
             await contacts.Link(Id(user), id, BaseUrl(req)) is { } link ? Results.Ok(link) : Results.NotFound());
 

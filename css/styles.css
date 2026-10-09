@@ -826,3 +826,25 @@ input[type="range"] { width: 100%; accent-color: var(--sel); }
 /* ---------- Account: confirm-your-email banner ---------- */
 .acct-banner { background: var(--med-bg); border-bottom: 1px solid var(--line); }
 .acct-banner .page { padding-block: 10px; }
+
+/* ---------- Global search: your LinkedIn contacts ---------- */
+.gs-ct { padding-right: 8px; }
+.gs-ct__open { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; }
+.gs-ct__acts { display: flex; gap: 2px; flex: none; }
+
+/* ---------- Profile: photo, experience, education, skills editing ---------- */
+.av--photo { background: var(--card-alt); }
+.av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.phead__photo { position: relative; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 28%; display: block; }
+.phead__cam { position: absolute; right: -6px; top: -6px; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--card); color: var(--fg); border: 1px solid var(--line-2); box-shadow: 0 1px 3px rgb(0 0 0 / 0.15); }
+.phead__photo:hover .phead__cam, .phead__photo:focus-visible .phead__cam { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.pf-row { border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pf-row .label { display: flex; flex-direction: column; gap: 4px; }
+.pf-row > .btn { align-self: flex-start; }
+.skill-pills { gap: 8px; }
+.skill-pills .tag { font-size: 13px; padding: 4px 10px; }
+.skill-chip { gap: 6px; padding-right: 4px; }
+.skill-chip button { border: 0; background: none; padding: 0; display: inline-grid; color: var(--fg-2); cursor: pointer; }
+.li-opt { align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
+.li-opt > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.li-opt.is-off { opacity: 0.55; }

@@ -245,6 +245,28 @@ public sealed class ContactsTests(MailFactory factory) : IClassFixture<MailFacto
     }
 
     [Fact]
+    public async Task Search_finds_only_your_own_contacts()
+    {
+        var c = await Owner("searcher@example.org", "Sea Rcher");
+        await Upload(c, Encoding.UTF8.GetBytes(Csv("s")));
+
+        var byCompany = await c.GetFromJsonAsync<JsonArray>("/api/contacts/search?q=BRIGHTLINE");
+        Assert.Equal("Ana", (string)byCompany!.Single()!["first"]!);
+        Assert.True((bool)byCompany[0]!["hasEmail"]!);
+        Assert.Null(byCompany[0]!["email"]);   // the address itself stays on the contacts page
+
+        var byName = await c.GetFromJsonAsync<JsonArray>("/api/contacts/search?q=marko jov");
+        Assert.Equal("Marko", (string)byName!.Single()!["first"]!);
+        var byPosition = await c.GetFromJsonAsync<JsonArray>("/api/contacts/search?q=cto");
+        Assert.Single(byPosition!);
+        Assert.Empty((await c.GetFromJsonAsync<JsonArray>("/api/contacts/search?q=a"))!);
+
+        var stranger = await Owner("nosy@example.org", "No Sy");
+        Assert.Empty((await stranger.GetFromJsonAsync<JsonArray>("/api/contacts/search?q=brightline"))!);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await Client().GetAsync("/api/contacts/search?q=brightline")).StatusCode);
+    }
+
+    [Fact]
     public async Task Personal_link_for_contacts_without_email_and_delete_all()
     {
         var c = await Owner("linker@example.org", "Lin Ker");
