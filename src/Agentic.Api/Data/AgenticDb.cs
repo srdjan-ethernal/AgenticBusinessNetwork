@@ -24,6 +24,7 @@ public sealed class AgenticDb(DbContextOptions<AgenticDb> options) : DbContext(o
     public DbSet<PostLike> PostLikes => Set<PostLike>();
     public DbSet<PostComment> PostComments => Set<PostComment>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<CompanyFollow> CompanyFollows => Set<CompanyFollow>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -69,6 +70,11 @@ public sealed class AgenticDb(DbContextOptions<AgenticDb> options) : DbContext(o
             e.HasIndex(x => x.MemberId);
         });
         b.Entity<Member>().HasIndex(x => x.OrgId);
+        b.Entity<CompanyFollow>(e =>
+        {
+            e.HasKey(x => new { x.CompanyId, x.MemberId });
+            e.HasIndex(x => x.MemberId);
+        });
         b.Entity<ConnectionRequest>(e =>
         {
             e.HasIndex(x => new { x.ToId, x.Status });

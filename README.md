@@ -79,7 +79,10 @@ tests/Agentic.Tests/     xUnit tests (engine parity, app API, protocol)
 - **Company pages:** `POST /api/companies` creates a page with its own agent (a member of kind `company`, same id
   as the organization): agent address, policy, inbox, profile. Admins (`/api/companies/{id}/admins`) act as the
   company with the `X-Act-As` header, honoured only for its inbox, policy, profile, searches and posts. People link
-  their profile with `worksAt`.
+  their profile with `worksAt`; admins can take someone off the list (`DELETE /api/companies/{id}/employees/{memberId}`).
+  Company pages are public: `knockero.com/company/{id}` serves link-preview tags and opens the page, and
+  `GET /api/companies/{id}/page` and `/posts` work without an account. Members follow a company
+  (`POST|DELETE /api/companies/{id}/follow`) and its posts appear in their feed; admins see the followers.
 - **Connections, posts and the feed:** `POST /api/connections` sends a request (or accepts theirs if they already
   asked), `/api/connections/requests` lists and answers them. `POST /api/posts` (up to 3,000 characters, one
   JPEG/PNG/WebP image up to 2 MB, resized in the browser), likes and comments. `GET /api/feed` shows your posts,

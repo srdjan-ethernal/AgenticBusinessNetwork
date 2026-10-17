@@ -146,4 +146,97 @@ public sealed class CompaniesTests(ApiFactory factory) : IClassFixture<ApiFactor
         Assert.NotNull(await db.Members.FindAsync(id));
         Assert.Equal(id, db.Members.Single(m => m.Email == "keeper@demo.example").OrgId);
     }
+
+    [Fact]
+    public async Task Anyone_can_open_a_company_page_and_its_posts_without_an_account()
+    {
+        var (owner, ownerId) = await Person("owner@public.example", "Public Owner");
+        var id = (string)(await CreateCompany(owner, "Open Bakery"))["id"]!;
+        var post = new HttpRequestMessage(HttpMethod.Post, "/api/posts") { Content = JsonContent.Create(new { text = "Fresh bread every morning from 6:00." }) };
+        post.Headers.Add("X-Act-As", id);
+        var postId = (long)(await (await owner.SendAsync(post)).Content.ReadFromJsonAsync<JsonObject>())!["id"]!;
+        byte[] png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0x0D, 0x49, 0x48, 0x44, 0x52];
+        var img = new HttpRequestMessage(HttpMethod.Post, $"/api/posts/{postId}/image") { Content = new ByteArrayContent(png) };
+        img.Headers.Add("X-Act-As", id);
+        (await owner.SendAsync(img)).EnsureSuccessStatusCode();
+
+        var anon = factory.CreateClient();
+        var page = await anon.GetFromJsonAsync<JsonObject>($"/api/companies/{id}/page");
+        Assert.Equal("Open Bakery", (string)page!["name"]!);
+        Assert.Equal(0, (int)page["followers"]!);
+        Assert.False((bool)page["following"]!);
+        Assert.False((bool)page["admin"]!);
+        Assert.Equal(ownerId, (string)page["employees"]!.AsArray().Single()!["id"]!);
+        Assert.Null(page["email"]);
+
+        var posts = await anon.GetFromJsonAsync<JsonArray>($"/api/companies/{id}/posts");
+        Assert.Equal(postId, (long)posts!.Single()!["id"]!);
+        Assert.Equal(HttpStatusCode.OK, (await anon.GetAsync($"/api/posts/{postId}/image")).StatusCode);
+
+        // A person's posts and images stay members-only.
+        var personal = await owner.PostAsJsonAsync("/api/posts", new { text = "My own post" });
+        var personalId = (long)(await personal.Content.ReadFromJsonAsync<JsonObject>())!["id"]!;
+        Assert.Equal(HttpStatusCode.NotFound, (await anon.GetAsync($"/api/companies/{ownerId}/posts")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anon.GetAsync($"/api/members/{ownerId}/posts")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anon.GetAsync($"/api/posts/{personalId}/image")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await anon.GetAsync("/api/companies/no-such-company/page")).StatusCode);
+
+        // The shareable address carries a link preview and sends browsers on to the page.
+        var share = await anon.GetStringAsync($"/company/{id}");
+        Assert.Contains("<meta property=\"og:title\" content=\"Open Bakery · Knockero\">", share);
+        Assert.Contains($"/#company.{id}", share);
+    }
+
+    [Fact]
+    public async Task Followers_see_company_posts_and_admins_see_who_follows()
+    {
+        var (owner, _) = await Person("owner@follow.example", "Follow Owner");
+        var id = (string)(await CreateCompany(owner, "Follow Me Ltd"))["id"]!;
+        var (fan, fanId) = await Person("fan@follow.example", "Page Fan");
+
+        var post = new HttpRequestMessage(HttpMethod.Post, "/api/posts") { Content = JsonContent.Create(new { text = "New catalog is out." }) };
+        post.Headers.Add("X-Act-As", id);
+        var postId = (long)(await (await owner.SendAsync(post)).Content.ReadFromJsonAsync<JsonObject>())!["id"]!;
+        Assert.DoesNotContain((await fan.GetFromJsonAsync<JsonArray>("/api/feed"))!, p => (long)p!["id"]! == postId);
+
+        var followed = await (await fan.PostAsync($"/api/companies/{id}/follow", null)).Content.ReadFromJsonAsync<JsonObject>();
+        Assert.Equal(1, (int)followed!["followers"]!);
+        await fan.PostAsync($"/api/companies/{id}/follow", null);   // twice is still one follower
+        var page = await fan.GetFromJsonAsync<JsonObject>($"/api/companies/{id}/page");
+        Assert.True((bool)page!["following"]!);
+        Assert.Equal(1, (int)page["followers"]!);
+        Assert.Contains((await fan.GetFromJsonAsync<JsonArray>("/api/feed"))!, p => (long)p!["id"]! == postId);
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await fan.GetAsync($"/api/companies/{id}/followers")).StatusCode);
+        var followers = await owner.GetFromJsonAsync<JsonArray>($"/api/companies/{id}/followers");
+        Assert.Equal(fanId, (string)followers!.Single()!["id"]!);
+
+        var notes = new HttpRequestMessage(HttpMethod.Get, "/api/notifications");
+        notes.Headers.Add("X-Act-As", id);
+        var list = await (await owner.SendAsync(notes)).Content.ReadFromJsonAsync<JsonArray>();
+        Assert.Single(list!, n => (string)n!["kind"]! == "follow" && (string)n["actor"]!["id"]! == fanId);
+
+        var unfollowed = await (await fan.DeleteAsync($"/api/companies/{id}/follow")).Content.ReadFromJsonAsync<JsonObject>();
+        Assert.Equal(0, (int)unfollowed!["followers"]!);
+        Assert.DoesNotContain((await fan.GetFromJsonAsync<JsonArray>("/api/feed"))!, p => (long)p!["id"]! == postId);
+        Assert.Equal(HttpStatusCode.NotFound, (await fan.PostAsync("/api/companies/no-such-company/follow", null)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Admins_can_take_someone_off_the_employee_list()
+    {
+        var (owner, _) = await Person("owner@staff.example", "Staff Owner");
+        var id = (string)(await CreateCompany(owner, "Staff Co"))["id"]!;
+        var (worker, workerId) = await Person("worker@staff.example", "Claimed Worker");
+        await worker.PutAsJsonAsync("/api/profile", new { worksAt = id });
+        var page = await worker.GetFromJsonAsync<JsonObject>($"/api/companies/{id}/page");
+        Assert.True((bool)page!["worksHere"]!);
+        Assert.Equal(2, page["employees"]!.AsArray().Count);
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await worker.DeleteAsync($"/api/companies/{id}/employees/{workerId}")).StatusCode);
+        (await owner.DeleteAsync($"/api/companies/{id}/employees/{workerId}")).EnsureSuccessStatusCode();
+        page = await worker.GetFromJsonAsync<JsonObject>($"/api/companies/{id}/page");
+        Assert.False((bool)page!["worksHere"]!);
+        Assert.Single(page["employees"]!.AsArray());
+    }
 }

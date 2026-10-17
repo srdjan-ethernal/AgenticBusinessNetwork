@@ -106,6 +106,68 @@ public sealed class Companies(AgentCore core, Accounts accounts)
         return null;
     }
 
+    // ---------- the public page, followers and employees ----------
+
+    /// <summary>Everything the company page shows, for anyone (signed in or not). Null when there is no such company.</summary>
+    public async Task<JsonObject?> Page(string companyId, string? viewerId)
+    {
+        var c = await Db.Members.AsNoTracking().FirstOrDefaultAsync(m => m.Id == companyId && m.Kind == "company");
+        if (c is null) return null;
+        var page = Inbox.PersonJson(c, null);
+        page["id"] = c.Id;
+        page["followers"] = await Db.CompanyFollows.CountAsync(f => f.CompanyId == companyId);
+        page["following"] = viewerId is not null && await Db.CompanyFollows.AnyAsync(f => f.CompanyId == companyId && f.MemberId == viewerId);
+        page["admin"] = viewerId is not null && await IsAdmin(viewerId, companyId);
+        page["worksHere"] = viewerId is not null && await Db.Members.AnyAsync(m => m.Id == viewerId && m.OrgId == companyId);
+        var staff = await Db.Members.AsNoTracking().Where(m => m.OrgId == companyId && m.Kind == "person").OrderBy(m => m.Name).Take(500).ToListAsync();
+        page["employees"] = new JsonArray(staff.Select(m => (JsonNode)Card(m)).ToArray());
+        return page;
+    }
+
+    public static JsonObject Card(Member m)
+    {
+        var p = JsonNode.Parse(m.ProfileJson) as JsonObject ?? [];
+        return new JsonObject { ["id"] = m.Id, ["name"] = m.Name, ["headline"] = m.Headline, ["photo"] = p["photo"]?.DeepClone(), ["c"] = p["c"]?.DeepClone() };
+    }
+
+    /// <summary>Follow or unfollow. Returns the new follower count, or null when the company doesn't exist.</summary>
+    public async Task<int?> Follow(string memberId, string companyId, bool follow)
+    {
+        if (!await Db.Members.AnyAsync(m => m.Id == companyId && m.Kind == "company") || memberId == companyId) return null;
+        var row = await Db.CompanyFollows.FindAsync(companyId, memberId);
+        if (follow && row is null)
+        {
+            Db.CompanyFollows.Add(new CompanyFollow { CompanyId = companyId, MemberId = memberId, At = DateTime.UtcNow });
+            // The company's admins see it on the company's Activity page.
+            if (!await Db.Notifications.AnyAsync(n => n.MemberId == companyId && n.Kind == "follow" && n.ActorId == memberId))
+                Db.Notifications.Add(new Notification { MemberId = companyId, Kind = "follow", ActorId = memberId, CreatedAt = DateTime.UtcNow });
+        }
+        else if (!follow && row is not null) Db.CompanyFollows.Remove(row);
+        await Db.SaveChangesAsync();
+        return await Db.CompanyFollows.CountAsync(f => f.CompanyId == companyId);
+    }
+
+    /// <summary>Followers, newest first (admins only).</summary>
+    public async Task<List<JsonObject>?> Followers(string viewerId, string companyId)
+    {
+        if (!await IsAdmin(viewerId, companyId)) return null;
+        var rows = await Db.CompanyFollows.AsNoTracking().Where(f => f.CompanyId == companyId).OrderByDescending(f => f.At).Take(500).ToListAsync();
+        var ids = rows.Select(r => r.MemberId).ToList();
+        var people = await Db.Members.AsNoTracking().Where(m => ids.Contains(m.Id)).ToDictionaryAsync(m => m.Id);
+        return rows.Where(r => people.ContainsKey(r.MemberId)).Select(r => { var card = Card(people[r.MemberId]); card["at"] = r.At; return card; }).ToList();
+    }
+
+    /// <summary>People add a company to their profile themselves; an admin can take someone off the list.</summary>
+    public async Task<string?> RemoveEmployee(string actorId, string companyId, string memberId)
+    {
+        if (!await IsAdmin(actorId, companyId)) return "You don’t manage this company page.";
+        var m = await Db.Members.FirstOrDefaultAsync(x => x.Id == memberId && x.OrgId == companyId);
+        if (m is null) return "That person isn’t listed at this company.";
+        m.OrgId = null;
+        await Db.SaveChangesAsync();
+        return null;
+    }
+
     private async Task<string> Unique(string baseId)
     {
         var id = baseId;

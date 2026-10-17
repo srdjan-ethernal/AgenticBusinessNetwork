@@ -21,7 +21,7 @@
   P.when = when;
 
   function av(a, size) {
-    return a.kind === 'company' ? (a.photo ? A.avatar(a, size) : A.orgLogo({ name: a.name, c: a.c }, size)) : A.avatar(a, size);
+    return A.avatar(a, size);
   }
 
   // Escaped text with clickable links and #hashtags; line breaks are kept by .post__body.
@@ -57,19 +57,27 @@
   }
 
   function card(p) {
-    const a = p.author, href = '#in.' + esc(a.id);
+    const a = p.author, signedIn = A.S.signedIn;
+    // Company pages are public, so a company author links to its page; people's profiles are for members.
+    const href = a.kind === 'company' ? '#company.' + esc(a.id) : '#in.' + esc(a.id);
+    const act = function (name) { return signedIn ? name : 'lp-signin'; };
     return '<article class="card post" data-post="' + p.id + '">' +
       '<div class="post__hd"><a href="' + href + '" aria-label="' + esc(a.name) + '">' + av(a, 44) + '</a>' +
-        '<div class="post__who"><a class="nm" href="' + href + '">' + esc(a.name) + '</a><span class="hl clamp1">' + esc(a.headline) + '</span><a class="tm" href="#post.' + p.id + '" style="color:inherit">' + when(p.at) + '</a></div>' +
+        '<div class="post__who"><a class="nm" href="' + href + '">' + esc(a.name) + '</a><span class="hl clamp1">' + esc(a.headline) + '</span>' + (signedIn ? '<a class="tm" href="#post.' + p.id + '" style="color:inherit">' + when(p.at) + '</a>' : '<span class="tm">' + when(p.at) + '</span>') + '</div>' +
         (p.mine ? '<button class="iconbtn" data-act="lp-del" data-id="' + p.id + '" aria-label="Delete post" title="Delete post">' + I('x', 'ico-20') + '</button>' : '') +
       '</div>' + body(p) +
       (p.image ? '<div class="post__media"><img class="post__img" src="' + esc(p.image) + '" alt="" loading="lazy" decoding="async"></div>' : '') +
       '<div class="post__foot">' +
-        '<button class="post__act' + (p.liked ? ' is-on' : '') + '" data-act="lp-like" data-id="' + p.id + '" aria-pressed="' + p.liked + '" aria-label="Like">' + I('heart') + '<span class="num">' + fmt(p.likes) + '</span></button>' +
-        '<button class="post__act" data-act="lp-cm" data-id="' + p.id + '" aria-expanded="' + !!openCm[p.id] + '" aria-label="Comments">' + I('comment') + '<span class="num">' + fmt(p.comments) + '</span></button>' +
-        '<span class="grow"></span><button class="post__act" data-act="copy" data-text="' + esc(location.origin + location.pathname + '#post.' + p.id) + '" data-msg="Link copied. Members of Knockero can open it.">' + I('link') + '<span>Copy link</span></button>' +
-      '</div>' + (openCm[p.id] ? commentsHtml(p) : '') + '</article>';
+        '<button class="post__act' + (p.liked ? ' is-on' : '') + '" data-act="' + act('lp-like') + '" data-id="' + p.id + '" aria-pressed="' + p.liked + '" aria-label="Like">' + I('heart') + '<span class="num">' + fmt(p.likes) + '</span></button>' +
+        '<button class="post__act" data-act="' + act('lp-cm') + '" data-id="' + p.id + '" aria-expanded="' + !!openCm[p.id] + '" aria-label="Comments">' + I('comment') + '<span class="num">' + fmt(p.comments) + '</span></button>' +
+        (signedIn ? '<span class="grow"></span><button class="post__act" data-act="copy" data-text="' + esc(location.origin + location.pathname + '#post.' + p.id) + '" data-msg="Link copied. Members of Knockero can open it.">' + I('link') + '<span>Copy link</span></button>' : '') +
+      '</div>' + (openCm[p.id] && signedIn ? commentsHtml(p) : '') + '</article>';
   }
+  A.act['lp-signin'] = function () {
+    A.afterSignin = A.cur;
+    A.go('signin');
+    A.toast('Sign in or join Knockero to like and comment.', 'info');
+  };
   P.card = card;
 
   function find(id) {
@@ -85,7 +93,10 @@
 
   // ---------- lists: the feed, someone's activity, one post ----------
   function url(key, before) {
-    const base = key === 'feed' ? 'api/feed' : key.indexOf('author:') === 0 ? 'api/members/' + encodeURIComponent(key.slice(7)) + '/posts' : null;
+    const base = key === 'feed' ? 'api/feed'
+      : key.indexOf('author:') === 0 ? 'api/members/' + encodeURIComponent(key.slice(7)) + '/posts'
+      : key.indexOf('company:') === 0 ? 'api/companies/' + encodeURIComponent(key.slice(8)) + '/posts'   // public
+      : null;
     return base + (before ? '?before=' + before : '');
   }
   P.html = function (key, o) {
@@ -120,6 +131,7 @@
     });
   };
   P.empty = function (key, html) { emptyText[key] = html; };
+  P.forget = function (key) { delete lists[key]; };
   P.reset = function () { Object.keys(lists).forEach(function (k) { delete lists[k]; }); Object.keys(comments).forEach(function (k) { delete comments[k]; }); };
 
   A.act['lp-page'] = function (el) {
@@ -253,7 +265,7 @@
       draftImage = null;
       A.closeModal();
       const post = await call('GET', 'api/posts/' + r.id);
-      ['feed', 'author:' + A.me].forEach(function (k) { if (lists[k]) { lists[k].items.unshift(post); paint(k); } });
+      ['feed', 'author:' + A.me, 'company:' + A.me].forEach(function (k) { if (lists[k]) { lists[k].items.unshift(post); paint(k); } });
       A.toast('Posted. Your connections see it in their feed.', 'info');
     } catch (e) { el.disabled = false; err.textContent = e.message; err.hidden = false; }
   };
@@ -350,6 +362,7 @@
       accepted: [who + ' accepted your invitation. You now see each other’s posts.', 'in.' + n.actor.id],
       like: [who + ' liked your post' + snip, 'post.' + n.postId],
       comment: [who + ' commented on your post' + snip, 'post.' + n.postId],
+      follow: [who + ' started following your page.', 'in.' + n.actor.id],
     }[n.kind] || [who, 'feed'];
   }
   function notesHtml(list) {

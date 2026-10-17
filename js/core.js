@@ -62,7 +62,7 @@
   // ---------- router ----------
   const R = {};
   A.view = function (name, def) { R[name] = def; };
-  const PUBLIC = { welcome: 1, signin: 1, join: 1, a: 1, pricing: 1, developers: 1, about: 1, invite: 1, optout: 1, verify: 1, forgot: 1, reset: 1, 'digest-off': 1 };
+  const PUBLIC = { welcome: 1, company: 1, signin: 1, join: 1, a: 1, pricing: 1, developers: 1, about: 1, invite: 1, optout: 1, verify: 1, forgot: 1, reset: 1, 'digest-off': 1 };
   function parse(h) {
     h = String(h || '').replace(/^#/, '');
     const i = h.indexOf('.');

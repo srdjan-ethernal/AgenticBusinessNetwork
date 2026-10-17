@@ -133,6 +133,9 @@ svg { flex: none; }
 @media (max-width: 1100px) {
   .scaffold { grid-template-columns: 248px minmax(0, 1fr); }
   .scaffold > .rail--right { grid-column: 2; }
+  /* Two-column pages (profiles, company pages) keep their main column wide. */
+  .scaffold--mr { grid-template-columns: minmax(0, 1fr) 280px; }
+  .scaffold--mr > .rail--right { grid-column: auto; }
 }
 @media (max-width: 860px) {
   .scaffold, .scaffold--mr, .scaffold--lm { grid-template-columns: minmax(0, 1fr); }
@@ -883,3 +886,11 @@ input[type="range"] { width: 100%; accent-color: var(--sel); }
 /* ---------- Company pages ---------- */
 .acting-banner { background: var(--accent-soft); border-bottom: 1px solid var(--line); }
 .menu__a .av { flex: none; }
+
+/* Company page (live): cover, logo over the cover, tabs */
+.co-head { overflow: hidden; }
+.co-cover { height: 132px; }
+.co-head__b { padding: 0 24px 16px; }
+.co-logo { display: inline-block; margin-top: -48px; padding: 4px; border-radius: 30%; background: var(--card); line-height: 0; }
+.co-head .tabs { border-top: 1px solid var(--line); border-bottom: 0; }
+@media (max-width: 560px) { .co-cover { height: 96px; } .co-head__b { padding: 0 16px 14px; } }

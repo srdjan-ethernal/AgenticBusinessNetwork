@@ -82,6 +82,24 @@ namespace Agentic.Api.Migrations
                     b.ToTable("AiUsage");
                 });
 
+            modelBuilder.Entity("Agentic.Api.Data.CompanyFollow", b =>
+                {
+                    b.Property<string>("CompanyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MemberId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("CompanyId", "MemberId");
+
+                    b.HasIndex("MemberId");
+
+                    b.ToTable("CompanyFollows");
+                });
+
             modelBuilder.Entity("Agentic.Api.Data.ConnectionRequest", b =>
                 {
                     b.Property<long>("Id")

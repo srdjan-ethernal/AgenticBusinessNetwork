@@ -62,10 +62,12 @@ public static class SocialApi
             if (type is null) return Results.BadRequest(new { error = "Use a JPEG, PNG or WebP image." });
             return await social.SetImage(Id(user), id, bytes, type) is { } error ? Results.BadRequest(new { error }) : Results.Ok(new { ok = true });
         });
-        api.MapGet("/posts/{id:long}/image", async (long id, Social social, HttpContext ctx) =>
+        // Public for company posts (company pages can be opened without an account); members only otherwise.
+        app.MapGet("/api/posts/{id:long}/image", async (long id, Social social, HttpContext ctx) =>
         {
-            if (await social.Image(id) is not { } img) return Results.NotFound();
-            ctx.Response.Headers.CacheControl = "private, max-age=86400";
+            var signedIn = ctx.User.Identity?.IsAuthenticated == true;
+            if (await social.Image(id, signedIn) is not { } img) return signedIn ? Results.NotFound() : Results.Unauthorized();
+            ctx.Response.Headers.CacheControl = signedIn ? "private, max-age=86400" : "public, max-age=86400";
             ctx.Response.Headers.XContentTypeOptions = "nosniff";
             return Results.File(img.bytes, img.type);
         });

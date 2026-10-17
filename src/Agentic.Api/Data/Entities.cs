@@ -260,6 +260,14 @@ public sealed class OrgAdmin
     public DateTime AddedAt { get; set; }
 }
 
+/// <summary>A member following a company page: its posts appear in the member's feed.</summary>
+public sealed class CompanyFollow
+{
+    public string CompanyId { get; set; } = "";
+    public string MemberId { get; set; } = "";
+    public DateTime At { get; set; }
+}
+
 /// <summary>"Connect": pending until the other person accepts; accepting creates 1st-degree relationships both ways.</summary>
 public sealed class ConnectionRequest
 {

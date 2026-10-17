@@ -109,7 +109,7 @@ public sealed class Social(AgenticDb db)
         return true;
     }
 
-    /// <summary>Your posts, your connections’ posts and posts by the companies you work at or manage, newest first.</summary>
+    /// <summary>Your posts, your connections’ posts and posts by the companies you work at, manage or follow, newest first.</summary>
     public async Task<List<object>> Feed(string me, long? before)
     {
         var authors = await ConnectionIds(me);
@@ -117,6 +117,7 @@ public sealed class Social(AgenticDb db)
         var mine = await db.Members.FindAsync(me);
         if (mine?.OrgId is { } org) authors.Add(org);
         authors.AddRange(await db.OrgAdmins.Where(a => a.MemberId == me).Select(a => a.OrgId).ToListAsync());
+        authors.AddRange(await db.CompanyFollows.Where(f => f.MemberId == me).Select(f => f.CompanyId).ToListAsync());
         authors = authors.Distinct().ToList();
         var q = db.Posts.AsNoTracking().Where(p => authors.Contains(p.AuthorId));
         if (before is long b) q = q.Where(p => p.Id < b);
@@ -133,9 +134,11 @@ public sealed class Social(AgenticDb db)
     public async Task<object?> One(string me, long postId) =>
         (await Shape(me, await db.Posts.AsNoTracking().Where(p => p.Id == postId).ToListAsync())).FirstOrDefault();
 
-    public async Task<(byte[] bytes, string type)?> Image(long postId)
+    /// <summary>A post's image. Without a signed-in viewer only company posts are shown (company pages are public).</summary>
+    public async Task<(byte[] bytes, string type)?> Image(long postId, bool signedIn)
     {
-        var p = await db.Posts.AsNoTracking().Where(x => x.Id == postId).Select(x => new { x.Image, x.ImageType }).FirstOrDefaultAsync();
+        var p = await db.Posts.AsNoTracking().Where(x => x.Id == postId && (signedIn || db.Members.Any(m => m.Id == x.AuthorId && m.Kind == "company")))
+            .Select(x => new { x.Image, x.ImageType }).FirstOrDefaultAsync();
         return p?.Image is { } img ? (img, p.ImageType ?? "image/jpeg") : null;
     }
 
