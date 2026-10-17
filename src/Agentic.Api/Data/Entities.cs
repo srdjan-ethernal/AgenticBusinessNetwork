@@ -259,3 +259,55 @@ public sealed class OrgAdmin
     public string MemberId { get; set; } = "";
     public DateTime AddedAt { get; set; }
 }
+
+/// <summary>"Connect": pending until the other person accepts; accepting creates 1st-degree relationships both ways.</summary>
+public sealed class ConnectionRequest
+{
+    public long Id { get; set; }
+    public string FromId { get; set; } = "";
+    public string ToId { get; set; } = "";
+    public string? Note { get; set; }
+    /// <summary>pending · accepted · ignored</summary>
+    public string Status { get; set; } = "pending";
+    public DateTime CreatedAt { get; set; }
+}
+
+/// <summary>A post by a member or a company page, shown on their profile and in their connections' feeds.</summary>
+public sealed class Post
+{
+    public long Id { get; set; }
+    public string AuthorId { get; set; } = "";
+    public string Text { get; set; } = "";
+    public string? ImageType { get; set; }
+    public byte[]? Image { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public sealed class PostLike
+{
+    public long PostId { get; set; }
+    public string MemberId { get; set; } = "";
+    public DateTime At { get; set; }
+}
+
+public sealed class PostComment
+{
+    public long Id { get; set; }
+    public long PostId { get; set; }
+    public string AuthorId { get; set; } = "";
+    public string Text { get; set; } = "";
+    public DateTime CreatedAt { get; set; }
+}
+
+/// <summary>Something that happened to a member: a connection request, an accepted request, a like or a comment.</summary>
+public sealed class Notification
+{
+    public long Id { get; set; }
+    public string MemberId { get; set; } = "";
+    /// <summary>connect · accepted · like · comment</summary>
+    public string Kind { get; set; } = "";
+    public string ActorId { get; set; } = "";
+    public long? PostId { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? ReadAt { get; set; }
+}

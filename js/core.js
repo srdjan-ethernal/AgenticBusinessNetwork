@@ -115,6 +115,8 @@
     const high = list.filter(function (r) { return r.lane === 'high' && !(r.decision && r.decision.status); }).length;
     const notif = A.notifications.filter(function (n) { return n.unread && !A.S.readN[n.id]; }).length;
     const inv = A.invitations.filter(function (x) { return !A.S.inv[x.who]; }).length;
+    // Live: invitations and notifications come from the server.
+    if (A.live && A.social) return { feed: 0, network: A.social.requestsIn, inbox: high, policy: 0, notifications: A.social.unread };
     return { feed: 0, network: inv, inbox: high, policy: 0, notifications: notif };
   }
   const NAV = [['feed', 'home', 'Home'], ['find', 'search', 'Find'], ['network', 'network', 'Network'], ['inbox', 'inbox', 'Inbox'], ['policy', 'policy', 'Policy'], ['notifications', 'bell', 'Activity']];

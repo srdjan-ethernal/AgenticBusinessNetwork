@@ -78,8 +78,13 @@ tests/Agentic.Tests/     xUnit tests (engine parity, app API, protocol)
   reach the model. Without a key everything falls back to the rule-based brief.
 - **Company pages:** `POST /api/companies` creates a page with its own agent (a member of kind `company`, same id
   as the organization): agent address, policy, inbox, profile. Admins (`/api/companies/{id}/admins`) act as the
-  company with the `X-Act-As` header, honoured only for its inbox, policy, profile and searches. People link
+  company with the `X-Act-As` header, honoured only for its inbox, policy, profile, searches and posts. People link
   their profile with `worksAt`.
+- **Connections, posts and the feed:** `POST /api/connections` sends a request (or accepts theirs if they already
+  asked), `/api/connections/requests` lists and answers them. `POST /api/posts` (up to 3,000 characters, one
+  JPEG/PNG/WebP image up to 2 MB, resized in the browser), likes and comments. `GET /api/feed` shows your posts,
+  your connections' posts and the posts of the companies you work at or manage, newest first, 20 per page.
+  `GET /api/notifications` covers invitations, accepted invitations, likes and comments.
 - **Business profiles and Find:** members list what they offer and what they are looking for, their industries
   and website. `GET /api/directory?q=&industry=` searches every profile; `GET /api/directory/matches` pairs
   what you need with what others offer (and the other way round).

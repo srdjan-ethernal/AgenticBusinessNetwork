@@ -151,31 +151,32 @@
       '<div class="sticky">' + A.ui.appFooter() + '</div></aside>';
   }
 
-  // ---------- live home: getting started and what your agent did ----------
+  // ---------- live home: composer, getting started, what your agent did, then posts ----------
+  const feedEmpty = '<div class="card pad stack-12"><b>Your feed is empty</b><p class="small muted">Posts from your connections show up here. Connect with people you work with, or write the first post yourself.</p><div class="row wrap"><a class="btn btn--secondary btn--sm" href="#network">Find people to connect with</a><button class="btn btn--tertiary btn--sm" data-act="lp-compose">Write a post</button></div></div>';
   function liveHome() {
     const me = A.P(A.me);
     const steps = [
       [!!((me.offers || []).length || (me.needs || []).length), 'Say what you offer and what you’re looking for', 'People searching for it find you, and Find shows who matches you.', '#in.' + A.me, 'Open profile'],
       [!!me.photo, 'Add a profile photo', 'People recognise you before they knock.', '#in.' + A.me, 'Open profile'],
-      [!!(me.exp && me.exp.length), 'Fill in your experience', 'Add it by hand, or in one click from your LinkedIn export.', '#in.' + A.me, 'Open profile'],
+      [!!(me.exp && me.exp.length) || me.kind === 'company', 'Fill in your experience', 'Add it by hand, or in one click from your LinkedIn export.', '#in.' + A.me, 'Open profile'],
       [!!(A.account && A.account.emailVerified) || !(A.account && A.account.email), 'Confirm your email', 'Senders then see you as verified, and your agent can send its daily digest.', '#settings', 'Account and email'],
-      [false, 'Bring your LinkedIn network', 'Import your connections and invite the people you work with.', '#contacts', 'Import connections'],
+      [A.pymk.some(function (id) { return A.P(id).degree === '1st'; }), 'Connect with people you work with', 'You see your connections’ posts in your feed, and they see yours.', '#network', 'Find people'],
       [false, 'Share your agent address', 'Put ' + me.addr + ' on your website, in your email signature and on your business card. Anyone can knock.', null, 'Copy address'],
     ];
     const done = steps.filter(function (s) { return s[0]; }).length;
     const recent = E.sort(E.inbox()).filter(function (r) { return r.lane === 'high' || r.lane === 'medium'; }).slice(0, 5);
-    return '<section class="card pad stack-12"><div class="row between wrap"><h2 class="card__h">Getting started</h2><span class="small muted">' + done + ' of ' + steps.length + ' done</span></div>' +
+    // The checklist steps aside once everything but sharing the address is done.
+    const gs = done >= steps.length - 1 ? '' : '<section class="card pad stack-12"><div class="row between wrap"><h2 class="card__h">Getting started</h2><span class="small muted">' + done + ' of ' + steps.length + ' done</span></div>' +
         steps.map(function (s) {
           const btn = s[3] ? '<a class="btn btn--tertiary btn--sm" href="' + s[3] + '">' + s[4] + '</a>' : '<button class="btn btn--tertiary btn--sm" data-act="copy" data-text="' + esc(me.addr) + '" data-msg="Agent address copied.">' + s[4] + '</button>';
           return '<div class="gs-step' + (s[0] ? ' is-done' : '') + '"><span class="gs-step__ic">' + I(s[0] ? 'check' : 'right', 'ico-16') + '</span><div class="grow"><b>' + s[1] + '</b><div class="small muted">' + esc(s[2]) + '</div></div>' + (s[0] ? '' : btn) + '</div>';
-        }).join('') + '</section>' +
-      '<section class="card" id="home-matches" hidden></section>' +
-      '<section class="card"><div class="pad row between"><h2 class="card__h">Waiting for you</h2><a class="link-muted small" href="#inbox">Agent Inbox</a></div>' +
-        (recent.length ? recent.map(function (r) {
+        }).join('') + '</section>';
+    const waiting = recent.length ? '<section class="card"><div class="pad row between"><h2 class="card__h">Waiting for you</h2><a class="link-muted small" href="#inbox">Agent Inbox</a></div>' +
+        recent.map(function (r) {
           const it = r.it, p = A.P(it.from);
           return '<a class="gs-intent" href="#inbox.' + it.id + '">' + A.avatar(p, 40) + '<span class="grow"><b class="clamp1">' + esc(p.name) + '</b><span class="small muted clamp1">' + esc(it.objective) + '</span></span>' + A.ui.lane(r.lane) + '</a>';
-        }).join('') : '<p class="pad muted" style="padding-top:0">' + (A.intents.length ? 'Nothing needs you right now: your agent handled the rest.' : 'Nobody has knocked yet. Share your agent address: anyone can send you a Business Intent, with or without an account.') + '</p>') +
-      '</section>';
+        }).join('') + '</section>' : '';
+    return A.Posts.composer() + gs + waiting + '<section class="card" id="home-matches" hidden></section>' + A.Posts.html('feed', { empty: feedEmpty });
   }
 
   A.view('feed', {
@@ -191,6 +192,7 @@
     },
     mount: function () {
       if (!A.live) return;
+      A.Posts.load('feed');
       A.Live.call('GET', 'api/directory/matches').then(function (list) {
         const box = document.getElementById('home-matches');
         if (!box || !list.length) return;

@@ -49,6 +49,8 @@
   };
 
   L.apply = function (b) {
+    // Switching between yourself and a company page: the cached feed and notifications belong to the other identity.
+    if (A.Posts && A.me !== b.me) { A.Posts.reset(); A.Posts.notificationsReset(); }
     A.me = b.me;
     A.people = b.people;
     A.orgs = b.orgs || {};
@@ -63,6 +65,7 @@
     A.S.sent = b.sent || [];
     A.stats = b.stats || A.stats;
     A.account = b.account || null;
+    A.social = b.social || { requestsIn: 0, outgoing: [], unread: 0 };
     A.S.signedIn = true;
   };
   /** Other real members (not you, not anonymous senders), people you aren't connected with first. */

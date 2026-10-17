@@ -19,6 +19,11 @@ public sealed class AgenticDb(DbContextOptions<AgenticDb> options) : DbContext(o
     public DbSet<EmailToken> EmailTokens => Set<EmailToken>();
     public DbSet<MemberPhoto> Photos => Set<MemberPhoto>();
     public DbSet<OrgAdmin> OrgAdmins => Set<OrgAdmin>();
+    public DbSet<ConnectionRequest> ConnectionRequests => Set<ConnectionRequest>();
+    public DbSet<Post> Posts => Set<Post>();
+    public DbSet<PostLike> PostLikes => Set<PostLike>();
+    public DbSet<PostComment> PostComments => Set<PostComment>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -64,6 +69,15 @@ public sealed class AgenticDb(DbContextOptions<AgenticDb> options) : DbContext(o
             e.HasIndex(x => x.MemberId);
         });
         b.Entity<Member>().HasIndex(x => x.OrgId);
+        b.Entity<ConnectionRequest>(e =>
+        {
+            e.HasIndex(x => new { x.ToId, x.Status });
+            e.HasIndex(x => new { x.FromId, x.ToId });
+        });
+        b.Entity<Post>().HasIndex(x => new { x.AuthorId, x.CreatedAt });
+        b.Entity<PostLike>().HasKey(x => new { x.PostId, x.MemberId });
+        b.Entity<PostComment>().HasIndex(x => x.PostId);
+        b.Entity<Notification>().HasIndex(x => new { x.MemberId, x.CreatedAt });
         b.Entity<EmailToken>(e =>
         {
             e.HasIndex(x => x.TokenHash).IsUnique();

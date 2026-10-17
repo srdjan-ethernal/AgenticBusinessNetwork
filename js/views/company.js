@@ -90,9 +90,11 @@
     const team = '<section class="card sec"><div class="sec__h"><h2>People</h2></div>' + (people.length
       ? '<div class="stack">' + people.map(function (pid) { const u = A.P(pid); return '<a class="person-row" href="#in.' + esc(pid) + '" style="color:var(--fg)">' + A.avatar(u, 40) + '<div class="grow"><b>' + esc(u.name) + '</b><div class="small muted clamp1">' + esc(u.headline) + '</div></div></a>'; }).join('') + '</div>'
       : '<p class="muted small">Nobody has added this company to their profile yet. People can choose it under “Edit profile → Works at”.</p>') + '</section>';
+    const posts = '<section class="card sec" id="co-posts"><div class="sec__h"><h2>Posts</h2>' + (me ? '<button class="btn btn--secondary btn--sm" data-act="lp-compose">' + I('edit', 'ico-16') + 'Start a post</button>' : admin ? '<button class="btn btn--tertiary btn--sm" data-act="co-switch" data-id="' + esc(id) + '">Post as ' + esc(c.name) + '</button>' : '') + '</div>' +
+      A.Posts.html('author:' + id, { limit: 3, empty: '<p class="muted small">' + (me ? 'No posts yet. News, offers and job openings posted here reach everyone who works at ' + esc(c.name) + '.' : esc(c.name) + ' hasn’t posted yet.') + '</p>' }) + '</section>';
     const admins = admin ? '<section class="card sec" id="co-admins-sec"><div class="sec__h"><h2>Admins</h2><span class="small muted">Only admins see this</span></div><div id="co-admins"><p class="muted small">Loading…</p></div>' +
       '<form id="co-admin-form" class="row" style="gap:8px;margin-top:12px"><label class="sr" for="co-admin-email">Email of a Knockero member</label><input class="input" id="co-admin-email" type="email" placeholder="Email of a Knockero member"><button class="btn btn--secondary" type="submit">Add admin</button></form><p class="small err" id="co-admin-err" role="alert" hidden></p></section>' : '';
-    return '<div class="page"><div class="scaffold scaffold--mr"><div class="main">' + head + about + A.ui.offersSec(c, me) + A.ui.needsSec(c, me) + team + admins + '</div>' +
+    return '<div class="page"><div class="scaffold scaffold--mr"><div class="main">' + head + about + A.ui.offersSec(c, me) + A.ui.needsSec(c, me) + posts + team + admins + '</div>' +
       '<aside class="rail rail--right"><div class="card pad stack-12"><h2 class="card__h">Agent address</h2><div class="addr"><span>' + esc(addr) + '</span><button class="iconbtn" data-act="copy" data-text="' + esc(addr) + '" data-msg="Agent address copied." aria-label="Copy agent address">' + I('copy', 'ico-16') + '</button></div><p class="small muted">Put it on your website, invoices and catalog. Senders don’t need an account.</p></div>' +
       '<div class="sticky">' + A.ui.appFooter() + '</div></aside></div></div>';
   };
@@ -114,6 +116,7 @@
     return data;
   }
   A.ui.companyMount = function (id) {
+    A.Posts.load('author:' + id);
     if (!isAdmin(id) || !document.getElementById('co-admins')) return;
     adminsCall('GET', 'api/companies/' + encodeURIComponent(id) + '/admins').then(function (list) { paintAdmins(id, list); }, function () { /* not an admin any more */ });
     document.getElementById('co-admin-form').addEventListener('submit', async function (e) {

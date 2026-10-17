@@ -35,6 +35,7 @@ builder.Services.AddScoped<Accounts>();
 builder.Services.AddScoped<Contacts>();
 builder.Services.AddScoped<MemberDirectory>();
 builder.Services.AddScoped<Companies>();
+builder.Services.AddScoped<Social>();
 builder.Services.AddScoped<AccountEmails>();
 builder.Services.AddScoped<Digests>();
 builder.Services.AddSingleton<DigestWorker>();
@@ -180,6 +181,7 @@ app.MapAccountApi();
 app.MapProfileApi();
 app.MapDirectoryApi();
 app.MapCompaniesApi();
+app.MapSocialApi();
 
 app.Run();
 return 0;

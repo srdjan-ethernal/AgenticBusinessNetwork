@@ -15,7 +15,7 @@ public static class CompaniesApi
 
     /// <summary>Routes where an admin may act as a company: its inbox, policy, profile and searches.
     /// Everything personal (account, contacts, sign-in) always uses the signed-in person.</summary>
-    private static readonly string[] ActingPaths = ["/api/bootstrap", "/api/policy", "/api/intents", "/api/profile", "/api/directory"];
+    private static readonly string[] ActingPaths = ["/api/bootstrap", "/api/policy", "/api/intents", "/api/profile", "/api/directory", "/api/feed", "/api/posts", "/api/comments", "/api/members", "/api/notifications", "/api/social", "/api/connections"];
 
     /// <summary>With header X-Act-As: {companyId}, a company admin's request runs as the company.</summary>
     public static async Task ActAs(HttpContext ctx, Func<Task> next)

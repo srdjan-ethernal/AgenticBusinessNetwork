@@ -85,6 +85,12 @@ public sealed class Inbox(AgentCore core, Protocol protocol)
             ["sent"] = sent,
             ["stats"] = stats,
             ["account"] = new JsonObject { ["email"] = me.Email, ["emailVerified"] = me.EmailVerified },
+            ["social"] = new JsonObject
+            {
+                ["requestsIn"] = await Db.ConnectionRequests.CountAsync(r => r.ToId == meId && r.Status == "pending"),
+                ["outgoing"] = new JsonArray((await Db.ConnectionRequests.Where(r => r.FromId == meId && r.Status == "pending").Select(r => r.ToId).ToListAsync()).Select(x => (JsonNode)x!).ToArray()),
+                ["unread"] = await Db.Notifications.CountAsync(n => n.MemberId == meId && n.ReadAt == null),
+            },
         };
     }
 

@@ -28,6 +28,11 @@
       '</div></section>';
   }
   function activity(id) {
+    if (A.live) {
+      const isMe = id === A.me, name = first(A.P(id));
+      return '<section class="card sec"><div class="sec__h"><h2>Activity</h2>' + (isMe ? '<button class="btn btn--secondary btn--sm" data-act="lp-compose">' + I('edit', 'ico-16') + 'Start a post</button>' : '') + '</div>' +
+        A.Posts.html('author:' + id, { limit: 3, empty: '<p class="muted small">' + (isMe ? 'You haven’t posted yet. Share news, an offer or something you’re looking for: your connections see it in their feed.' : esc(name) + ' hasn’t posted yet.') + '</p>' }) + '</section>';
+    }
     const posts = A.S.myPosts.concat(A.posts).filter(function (p) { return p.who === id; });
     const u = A.P(id);
     return '<section class="card"><div class="sec" style="padding-bottom:12px"><div class="sec__h" style="margin-bottom:4px"><h2>Activity</h2></div><div class="small link">' + fmt(u.followers) + ' followers</div></div>' +
@@ -119,6 +124,7 @@
       const btns = isMe
         ? (A.live ? '<button class="btn btn--secondary" data-act="edit-profile">' + I('edit', 'ico-20') + 'Edit profile</button><button class="btn btn--secondary" data-act="pf-linkedin">Fill from LinkedIn</button>' : '') + '<a class="btn btn--primary" href="#policy">Edit agent policy</a><button class="btn btn--secondary" data-act="copy" data-text="' + esc(addr) + '" data-msg="Agent address copied.">Share agent address</button><a class="btn btn--muted" href="#a.' + id + '">View as sender</a>'
         : (p.kind === 'agent' ? '<button class="btn btn--danger" data-act="soon" data-msg="This agent is already blocked by your policy.">' + I('block', 'ico-20') + 'Blocked by your agent</button>'
+          : A.live ? '<a class="btn btn--primary" href="#send.' + id + '">' + I('spark', 'ico-20') + 'Knock</a>' + A.Posts.connectBtn(id)
           : '<a class="btn btn--primary" href="#send.' + id + '">' + I('spark', 'ico-20') + 'Knock</a><button class="btn btn--secondary" data-act="connect" data-id="' + id + '"' + (conn || p.degree === '1st' ? ' disabled' : '') + '>' + (p.degree === '1st' ? I('check', 'ico-20') + 'Connected' : conn ? I('clock', 'ico-20') + 'Pending' : I('plus', 'ico-20') + 'Connect') + '</button><button class="btn btn--muted" data-act="follow" data-id="' + id + '">' + (fol ? 'Following' : 'Follow') + '</button>');
       return '<div class="page"><div class="scaffold scaffold--mr"><div class="main">' +
         '<div class="card phead"><div class="phead__main">' +
@@ -127,7 +133,7 @@
             '<h1 class="phead__name">' + esc(p.name) + ((p.verified || []).length ? A.verifiedBadge(p.verified.map(function (v) { return A.CLAIMS[v]; }).join(', ')) : '') + '</h1>' +
             '<div class="phead__hl">' + esc(p.headline) + '</div>' +
             ((p.topics || []).length && !p.kind ? '<div class="phead__tags">' + p.topics.slice(0, 4).map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join('') + '</div>' : '') +
-            '<div class="phead__meta"><span>' + esc(p.loc || '') + '</span>' + siteLink(p.website) + (o ? '<a href="#company.' + p.org + '">' + esc(o.name) + '</a>' : '') + '<a href="#network">' + esc(p.connections || (p.mutuals ? p.mutuals * 23 + '' : '120')) + ' connections</a>' + (p.followers ? '<span>' + fmt(p.followers) + ' followers</span>' : '') + '<button data-act="contact" data-id="' + id + '">Contact info</button></div>' +
+            '<div class="phead__meta"><span>' + esc(p.loc || '') + '</span>' + siteLink(p.website) + (o ? '<a href="#company.' + p.org + '">' + esc(o.name) + '</a>' : '') + (A.live ? (isMe ? '<a href="#network">' + A.pymk.filter(function (x) { return A.P(x).degree === '1st'; }).length + ' connections</a>' : '') : '<a href="#network">' + esc(p.connections || (p.mutuals ? p.mutuals * 23 + '' : '120')) + ' connections</a>') + (p.followers ? '<span>' + fmt(p.followers) + ' followers</span>' : '') + '<button data-act="contact" data-id="' + id + '">Contact info</button></div>' +
             (!isMe && p.mutuals ? '<div class="row small muted" style="margin-top:10px"><span class="av-stack">' + mutualIds.map(function (m) { return A.avatar(A.P(m), 22, 'av--ring'); }).join('') + '</span>' + esc(mutualIds.map(function (m) { return first(A.P(m)); }).join(', ')) + ' and ' + Math.max(1, p.mutuals - 2) + ' other mutual connections</div>' : '') +
             '<div class="ptop__btns">' + btns + '</div></div></div>' +
           (p.kind === 'agent'
@@ -146,7 +152,12 @@
           '<div class="card pad stack-12"><h2 class="card__h">Agent address</h2><div class="addr"><span>' + esc(addr) + '</span><button class="iconbtn" data-act="copy" data-text="' + esc(addr) + '" data-msg="Agent address copied." aria-label="Copy agent address">' + I('copy', 'ico-16') + '</button></div><p class="small muted">Works in bios, signatures and decks. Senders don’t need an account.</p></div>' +
           alsoViewed(id) + '<div class="sticky">' + A.ui.appFooter() + '</div></aside></div></div>';
     },
-    mount: function (arg) { const id = A.people[arg] ? arg : A.me; if (A.live && A.P(id).kind === 'company' && A.ui.companyMount) A.ui.companyMount(id); },
+    mount: function (arg) {
+      const id = A.people[arg] ? arg : A.me;
+      if (!A.live) return;
+      if (A.P(id).kind === 'company') { if (A.ui.companyMount) A.ui.companyMount(id); }
+      else A.Posts.load('author:' + id);
+    },
   });
 
   A.act.connect = function (el) {

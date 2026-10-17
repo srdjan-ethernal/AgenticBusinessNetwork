@@ -332,6 +332,11 @@ svg { flex: none; }
 .post__body .more:hover { color: var(--accent); text-decoration: underline; }
 .post__body .hashtag { font-weight: 500; }
 .post__media { margin-top: 12px; }
+.post__img { display: block; width: 100%; max-height: 640px; object-fit: contain; background: var(--card-alt); }
+.post__hd > .iconbtn { margin-left: auto; align-self: flex-start; }
+.lp-prev { position: relative; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+.lp-prev img { display: block; width: 100%; max-height: 320px; object-fit: contain; background: var(--card-alt); }
+.lp-prev .iconbtn { position: absolute; top: 8px; right: 8px; background: var(--card); box-shadow: 0 1px 4px rgba(0,0,0,.2); }
 .post__foot { display: flex; align-items: center; gap: 2px; margin-top: 12px; padding: 6px 8px; border-top: 1px solid var(--line); }
 .post__act { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding-inline: 10px; border-radius: 8px; color: var(--fg-2); font-size: 13px; font-weight: 500; }
 .post__act:hover { background: var(--hover); color: var(--fg); }
